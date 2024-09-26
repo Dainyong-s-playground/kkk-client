@@ -8,4 +8,8 @@
 export default {};
 </script>
 
-<style scoped></style>
+<style scoped>
+div {
+    color: #1d1d1d;
+}
+</style>

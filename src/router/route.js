@@ -1,18 +1,20 @@
-import MiddleFront from "@/components/layout/MiddleFront.vue";
-import PageMain from "@/components/pages/PageMain.vue";
+import MiddleFront from '@/components/layout/MiddleFront.vue';
+import PageMain from '@/components/pages/PageMain.vue';
+import FairyTaleList from '@/components/pages/FairyTaleList.vue';
 
 const routes = [
     {
-        path: "/",
+        path: '/',
         component: MiddleFront,
         children: [
             {
-                path: "",
+                path: '',
                 component: PageMain,
             },
             {
-                path: "main",
-                component: PageMain,
+                path: '/fairyTaleList',
+                name: 'FairyTaleList',
+                component: FairyTaleList,
             },
         ],
     },
