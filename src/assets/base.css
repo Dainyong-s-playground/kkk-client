@@ -8,15 +8,20 @@
 html,
 body {
     font-family: 'CookieRun-Regular', sans-serif;
-    overflow-y: hidden;
     overflow-x: hidden;
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
     margin: 0px;
+}
+
+body::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 .app-container {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    min-height: 100vh;
     justify-content: space-between;
     align-items: center;
     margin: 0px;
@@ -32,28 +37,34 @@ body {
 }
 
 .header {
-    height: 8%;
-    background-color: #ffffff;
+    width: 100%;
     user-select: none;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+    z-index: 1000;
 }
 
 .middle {
     flex: 1;
-    justify-content: center;
-    align-items: center;
+    flex-direction: column;
     overflow-y: auto;
-    height: 82%;
     box-sizing: border-box;
     transition: height 0.3s ease;
-    color: black;
+    padding: 20px;
+    padding-top: 10vh;
 }
 
 .footer {
-    height: 8%;
+    position: fixed;
+    bottom: 0px;
+    height: 5vh;
     justify-content: center;
     align-items: center;
-    background-color: #ffffff;
-    position: relative;
+    background-color: rgba(255, 255, 255, 0.379);
+    backdrop-filter: blur(3px);
     user-select: none;
 }
