@@ -11,14 +11,12 @@ import FooterCompo from './components/layout/FooterCompo.vue';
 import HeaderCompo from './components/layout/HeaderCompo.vue';
 import MiddleCompo from './components/layout/MiddleCompo.vue';
 
-
 export default {
     name: 'App',
     components: {
         HeaderCompo,
         MiddleCompo,
-        FooterCompo
-
+        FooterCompo,
     },
 };
 </script>
@@ -26,6 +24,6 @@ export default {
 <style>
 @import 'assets/base.css';
 div {
-    color: #2c3e50;
+    color: #252f39;
 }
 </style>
