@@ -9,14 +9,17 @@
                 <button class="info-button">ⓘ 상세 정보</button>
             </div>
         </section>
-
         <section class="category recently-watched">
             <h2 class="category-title">나님이 시청 중인 콘텐츠</h2>
             <div class="content-slider">
                 <div v-for="(item, index) in recentlyWatched" :key="index" class="content-item">
                     <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <div class="gradient-overlay"></div>
                         <div class="play-overlay">▶</div>
+                        <div class="progress-bar">
+                            <div class="progress" :style="{ width: `${item.progress}%` }"></div>
+                        </div>
                     </div>
                     <div class="content-info recently-watched-info">
                         <span class="title">{{ item.title }}</span>
@@ -65,81 +68,97 @@ export default {
                     title: '큼이네집 한글놀이 자음모음편',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
                     episode: '자음모음편: 50%',
+                    progress: 90,
                 },
                 {
                     title: '소미의 소리 가득 하루',
                     thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
                     episode: '의성어로 만나는 신나는 세상',
+                    progress: 45,
                 },
                 {
                     title: '쓱쓱 싹싹',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 꿈나무 그림책 111',
+                    progress: 72,
                 },
                 {
                     title: '토네이똥',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
                     episode: '똥똥똥',
+                    progress: 41,
                 },
                 {
                     title: '달은 어떻게 달이 될까?',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 궁금해 시리즈 25',
+                    progress: 10,
                 },
                 {
                     title: '아빠의 토마토스튜',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
                     episode: '오늘 아침은 뭘 먹을까?',
+                    progress: 50,
                 },
                 {
                     title: '고양이 산책',
                     thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
                     episode: '물구나무 세상보기',
+                    progress: 80,
                 },
                 {
                     title: '엄마에게 비밀이!',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
                     episode: '6년 만에 엄마에게 비밀이 생겼다!',
+                    progress: 20,
                 },
                 {
                     title: '큼이네집 한글놀이 자음모음편',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
                     episode: '자음모음편: 50%',
+                    progress: 30,
                 },
                 {
                     title: '소미의 소리 가득 하루',
                     thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
                     episode: '의성어로 만나는 신나는 세상',
+                    progress: 20,
                 },
                 {
                     title: '쓱쓱 싹싹',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 꿈나무 그림책 111',
+                    progress: 70,
                 },
                 {
                     title: '토네이똥',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
                     episode: '똥똥똥',
+                    progress: 40,
                 },
                 {
                     title: '달은 어떻게 달이 될까?',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 궁금해 시리즈 25',
+                    progress: 50,
                 },
                 {
                     title: '아빠의 토마토스튜',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
                     episode: '오늘 아침은 뭘 먹을까?',
+                    progress: 50,
                 },
                 {
                     title: '고양이 산책',
                     thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
                     episode: '물구나무 세상보기',
+                    progress: 50,
                 },
                 {
                     title: '엄마에게 비밀이!',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
                     episode: '6년 만에 엄마에게 비밀이 생겼다!',
+                    progress: 50,
                 },
                 // Add more items...
             ],
@@ -408,15 +427,45 @@ export default {
 }
 
 .recently-watched .thumbnail-container {
+    position: relative;
     overflow: hidden;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
 }
 
 .recently-watched .thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
     border-radius: 0;
     border-top-left-radius: 6px;
     border-top-right-radius: 6px;
+}
+
+.recently-watched .gradient-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35px; /* 그라데이션의 높이를 조절할 수 있습니다 */
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));
+    z-index: 100;
+}
+
+.recently-watched .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 102;
+}
+
+.recently-watched .progress {
+    height: 100%;
+    background-color: #e50914; /* Netflix 스타일 빨간색 */
+    transition: width 0.3s ease;
 }
 
 .recently-watched .content-info.recently-watched-info {
@@ -444,10 +493,22 @@ export default {
 }
 
 /* play-overlay 위치 조정 */
-.recently-watched .play-overlay {
-    bottom: auto;
+.play-overlay {
+    position: absolute;
     top: 50%;
+    left: 50%;
     transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 /* more-info 버튼 위치 조정 */
