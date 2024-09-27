@@ -133,7 +133,7 @@ export default {
 }
 
 .logo {
-    font-size: 1.5rem;
+    font-size: 2rem;
     font-weight: bold;
     padding: 10px 0;
     color: #e50914;
@@ -162,7 +162,7 @@ nav {
     color: #000000;
     text-decoration: none;
     margin-right: 10px;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     padding: 3px 10px;
     transition: all 0.3s ease;
     border: 1px solid #000000;
