@@ -6,7 +6,7 @@
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
                     <button @click="openModal">
-                        <img src="/images/create-profile.png" alt="프로필 생성" />
+                        <img src="@/assets/images/createProfile.png" alt="프로필 생성" />
                     </button>
                 </div>
             </div>
@@ -14,18 +14,21 @@
                 <div class="card" v-for="profile in profiles" :key="profile.id">
                     <button @click="selectProfile(profile.id)">
                         <img :src="profile.image" />
+                        <!-- <img src="@/assets/images/addProfile.png" /> -->
                         <p>{{ profile.nickname }}</p>
                     </button>
                 </div>
                 <div v-if="profiles.length < 3">
                     <div class="card">
                         <button @click="openModal">
-                            <img src="/images/create-profile.png" alt="프로필 생성" />
+                            <img src="@/assets/images/createProfile.png" alt="프로필 생성" />
+                            <p>프로필 생성</p>
                         </button>
                     </div>
                 </div>
             </div>
         </div>
+
         <!-- 프로필 생성 모달 -->
         <div v-if="showModal" class="modal" @click.self="closeModal">
             <!-- 모달 외부 클릭으로 닫기 -->
@@ -119,7 +122,7 @@ export default {
         } else {
             console.error('JWT 토큰이 없습니다.');
             // 필요에 따라 프로필 선택 페이지로 리다이렉트
-            this.$router.push('/main');
+            this.$router.push('/');
         }
 
         // 'Esc' 키 입력 시 모달 닫기 기능
@@ -166,7 +169,7 @@ export default {
                 }
 
                 // 메인 페이지로 라우팅
-                this.$router.push('/main'); // 메인 페이지로 이동
+                this.$router.push('/fairyTaleList'); // 메인 페이지로 이동
             } catch (error) {
                 console.error('프로필 선택 중 오류가 발생했습니다.', error);
             }
@@ -181,12 +184,33 @@ export default {
             this.selectedImage = image; // 선택한 이미지 저장
             this.newProfile.image = image; // 새 프로필 이미지로 설정
         },
-        createProfile() {
-            // 새 프로필을 profiles 배열에 추가
-            this.profiles.push({ ...this.newProfile, id: this.profiles.length + 1 });
-            this.newProfile = { nickname: '', gender: 'M', birth: '', image: null }; // 입력값 초기화
-            this.selectedImage = null; // 선택된 이미지 초기화
-            this.closeModal(); // 모달 닫기
+        async createProfile() {
+            try {
+                const token = this.getJwtToken(); // JWT 토큰 가져오기
+
+                if (!token) {
+                    throw new Error('JWT 토큰이 없습니다.');
+                }
+
+                // 새 프로필 데이터를 백엔드로 POST 요청
+                const response = await axios.post('http://localhost:7771/api/createProfile', this.newProfile, {
+                    headers: {
+                        Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                    },
+                    withCredentials: true, // 인증 정보를 포함하여 요청
+                });
+
+                // 프로필 생성이 성공하면 profiles 리스트를 업데이트
+                this.profiles.push(response.data);
+
+                // 프로필 생성 완료 후 모달 닫기 및 초기화
+                this.newProfile = { nickname: '', gender: 'M', birth: '', image: null }; // 입력값 초기화
+                this.selectedImage = null; // 선택된 이미지 초기화
+                //this.closeModal(); // 모달 닫기
+                this.$router.go(0);
+            } catch (error) {
+                console.error('프로필 생성 중 오류가 발생했습니다.', error);
+            }
         },
 
         handleEscKey(event) {
@@ -200,7 +224,7 @@ export default {
 
 <style>
 .profile-container {
-    margin-top: 200px;
+    margin-top: 150px;
     width: 100%;
 }
 
@@ -225,19 +249,22 @@ export default {
 .profile-card .card {
     width: 300px;
     height: 400px;
+    animation: profile-card-scale-in 0.5s ease-in-out;
 }
 
 .card button {
     width: 100%;
     height: 100%;
     background: none;
-    border-radius: 8px;
+    border: none;
 }
 
 .card button img {
     width: 100%;
     height: 85%;
+    border-radius: 50%;
     object-fit: contain;
+    border: 1px solid #45a049;
 }
 
 .modal {
@@ -261,6 +288,7 @@ export default {
     width: 90%;
     max-width: 500px;
     position: relative;
+    animation: modal-scale-in 0.5s ease-in-out;
 }
 
 .close-btn {
@@ -288,6 +316,8 @@ export default {
 
 .image-option.selected {
     border-color: blue; /* 선택된 이미지의 테두리 강조 */
+    transition: transform 0.3s ease;
+    transform: scale(1.1); /* 선택된 이미지에 크기 변화 */
 }
 
 .profile-image {
@@ -330,6 +360,10 @@ input[type='radio'] {
 label {
     font-size: 20px;
 }
+.card p {
+    margin: 0px 0 10px 0;
+    font-family: 'CookieRun-Regular', sans-serif;
+}
 
 p {
     font-size: 24px;
@@ -345,5 +379,28 @@ p {
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+
+/* 모달 애니메이션 */
+@keyframes modal-scale-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes profile-card-scale-in {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 </style>

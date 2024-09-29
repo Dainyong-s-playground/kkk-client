@@ -24,6 +24,11 @@ const routes = [
         path: '/profiles',
         component: ProfileView,
     },
+
+    // {
+    //     path: '/login',
+    //     redirect: '/',
+    // },
 ];
 
 export default routes;

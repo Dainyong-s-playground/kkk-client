@@ -58,10 +58,11 @@
                         <div class="login-profile" @click="toggleDropdown">
                             <!-- <img class="profile-image" alt="프로필 이미지" />
                             <span>{{ loginUser.nickname }}</span> -->
-                            <input v-model="loginUser.nickname" class="profile-image" readonly />
+                            <!-- <input v-model="loginUser.nickname" class="profile-image" readonly /> -->
+                            <img :src="loginUser.image" class="profile-image" />
                         </div>
 
-                        <div v-if="showDropdown" class="dropdown-menu">
+                        <div v-if="showDropdown" class="dropdown-menu" ref="dropdownMenu">
                             <button @click="goToMyPage">마이페이지</button>
                             <button @click="changeProfile">프로필 변경</button>
                             <button @click="logout">로그아웃</button>
@@ -106,10 +107,12 @@ export default {
     },
     mounted() {
         window.addEventListener('scroll', this.handleScroll);
+        window.addEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 추가
         this.checkLoginStatus();
     },
     beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
+        window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
     },
     methods: {
         handleScroll() {
@@ -132,20 +135,37 @@ export default {
         },
 
         //김범철 로그인
+        handleOutsideClick(event) {
+            const dropdownMenu = this.$refs.dropdownMenu;
+            const loginProfile = event.target.closest('.login-profile');
+            // 드롭다운이 열려 있고, 클릭된 요소가 드롭다운 메뉴나 프로필이 아닐 경우 닫기
+            if (this.showDropdown && dropdownMenu && !dropdownMenu.contains(event.target) && !loginProfile) {
+                this.showDropdown = false;
+            }
+        },
+
         onNaverLogin() {
             // 네이버 로그인 페이지로 리다이렉트
             window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
         },
         async logout() {
+            const jwt = this.getCookie('Authorization');
             try {
                 // 서버로 로그아웃 요청 보내기
-                await axios.post('http://localhost:7771/auth/logout', {}, { withCredentials: true });
+                const response = await axios.post(
+                    'http://localhost:7771/auth/logout',
+                    {},
+                    { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
+                );
 
                 this.deleteCookie('jwt');
                 this.isLoggedIn = false;
                 this.nickname = '';
                 this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
-
+                if (response.status === 200) {
+                    // 로그아웃 성공
+                    this.$router.push('/'); // Vue.js의 경로로 리다이렉션
+                }
                 alert('로그아웃 성공!');
             } catch (error) {
                 alert('로그아웃 실패: ' + error.message);
@@ -165,6 +185,7 @@ export default {
                     console.log(response.data);
                     // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
                     this.loginUser = response.data;
+                    console.log(this.loginUser);
                     this.isLoggedIn = true; // 로그인 상태 업데이트
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
@@ -188,7 +209,7 @@ export default {
         },
         changeProfile() {
             // 프로필 변경 페이지로 이동하는 로직
-            this.$router.push('/profile/edit');
+            this.$router.push('/profiles');
             this.showDropdown = false; // 드롭다운 닫기
         },
     },
