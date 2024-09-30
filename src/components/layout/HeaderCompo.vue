@@ -8,7 +8,7 @@
                 >
                     나 님
                 </div>
-
+                <div class="blank"></div>
                 <div class="search-container">
                     <input
                         v-if="isSearchVisible"
@@ -52,6 +52,27 @@
                         </svg>
                     </i>
                 </div>
+
+                <div class="login">
+                    <div v-if="isLoggedIn" class="login-container">
+                        <div class="login-profile" @click="toggleDropdown">
+                            <!-- <img class="profile-image" alt="프로필 이미지" />
+                            <span>{{ loginUser.nickname }}</span> -->
+                            <!-- <input v-model="loginUser.nickname" class="profile-image" readonly /> -->
+                            <img :src="loginUser.image" class="profile-image" />
+                        </div>
+
+                        <div v-if="showDropdown" class="dropdown-menu" ref="dropdownMenu">
+                            <button @click="goToMyPage">마이페이지</button>
+                            <button @click="changeProfile">프로필 변경</button>
+                            <button @click="logout">로그아웃</button>
+                        </div>
+                    </div>
+
+                    <div v-else>
+                        <button @click="onNaverLogin" class="profile-image">로그인</button>
+                    </div>
+                </div>
             </div>
             <nav :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
                 <a href="#" class="nav-item">최근 시청 동화</a>
@@ -63,6 +84,7 @@
 </template>
 
 <script>
+import axios from 'axios';
 export default {
     data() {
         return {
@@ -70,6 +92,9 @@ export default {
             isNavHidden: false,
             wasNavHidden: false,
             lastScrollPosition: 0,
+            isLoggedIn: false, // 로그인 여부를 저장
+            loginUser: '', // 닉네임 저장
+            showDropdown: false, // 드롭다운 메뉴 표시 여부
         };
     },
     computed: {
@@ -82,9 +107,12 @@ export default {
     },
     mounted() {
         window.addEventListener('scroll', this.handleScroll);
+        window.addEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 추가
+        this.checkLoginStatus();
     },
     beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
+        window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
     },
     methods: {
         handleScroll() {
@@ -105,6 +133,85 @@ export default {
 
             this.lastScrollPosition = currentScrollPosition;
         },
+
+        //김범철 로그인
+        handleOutsideClick(event) {
+            const dropdownMenu = this.$refs.dropdownMenu;
+            const loginProfile = event.target.closest('.login-profile');
+            // 드롭다운이 열려 있고, 클릭된 요소가 드롭다운 메뉴나 프로필이 아닐 경우 닫기
+            if (this.showDropdown && dropdownMenu && !dropdownMenu.contains(event.target) && !loginProfile) {
+                this.showDropdown = false;
+            }
+        },
+
+        onNaverLogin() {
+            // 네이버 로그인 페이지로 리다이렉트
+            window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+        },
+        async logout() {
+            const jwt = this.getCookie('Authorization');
+            try {
+                // 서버로 로그아웃 요청 보내기
+                const response = await axios.post(
+                    'http://localhost:7771/auth/logout',
+                    {},
+                    { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
+                );
+
+                this.deleteCookie('jwt');
+                this.isLoggedIn = false;
+                this.nickname = '';
+                this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
+                if (response.status === 200) {
+                    // 로그아웃 성공
+                    this.$router.push('/'); // Vue.js의 경로로 리다이렉션
+                }
+                alert('로그아웃 성공!');
+            } catch (error) {
+                alert('로그아웃 실패: ' + error.message);
+            }
+        },
+        deleteCookie(name) {
+            document.cookie = name + '=; Max-Age=0; path=/;';
+        },
+        async checkLoginStatus() {
+            const jwt = this.getCookie('Authorization'); // JWT 쿠키 가져오기
+            if (jwt) {
+                try {
+                    const response = await axios.get('http://localhost:7771/api/me', {
+                        headers: { Authorization: `Bearer ${jwt}` },
+                        withCredentials: true, // 쿠키 전달
+                    });
+                    console.log(response.data);
+                    // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
+                    this.loginUser = response.data;
+                    console.log(this.loginUser);
+                    this.isLoggedIn = true; // 로그인 상태 업데이트
+                } catch (error) {
+                    console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
+                    this.isLoggedIn = false;
+                }
+            }
+        },
+        getCookie(name) {
+            const matches = document.cookie.match(
+                new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[]\\\/+^])/g, '\\$1') + '=([^;]*)'),
+            );
+            return matches ? decodeURIComponent(matches[1]) : undefined;
+        },
+        toggleDropdown() {
+            this.showDropdown = !this.showDropdown; // 드롭다운 메뉴 표시/숨김 토글
+        },
+        goToMyPage() {
+            // 마이페이지로 이동하는 로직
+            this.$router.push('/mypage');
+            this.showDropdown = false; // 드롭다운 닫기
+        },
+        changeProfile() {
+            // 프로필 변경 페이지로 이동하는 로직
+            this.$router.push('/profiles');
+            this.showDropdown = false; // 드롭다운 닫기
+        },
     },
 };
 </script>
@@ -123,6 +230,7 @@ export default {
 .content {
     display: flex;
     width: 100%;
+    height: 100px;
     align-items: center;
     justify-content: space-between;
 }
@@ -138,6 +246,7 @@ export default {
     padding: 10px 0;
     color: #e50914;
     transition: all 0.5s ease;
+    width: 15%;
 }
 
 .logo-move-down {
@@ -229,5 +338,64 @@ nav.nav-hidden {
 
 .search-icon {
     display: flex;
+}
+
+/* 김범철 로그인 css */
+.login {
+    width: 5%;
+}
+.login-container {
+    position: relative;
+}
+
+.login-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.profile-image {
+    width: 75px;
+    height: 75px;
+    border-radius: 50%;
+    object-fit: cover;
+    text-align: center;
+    font-size: 18px;
+    font-family: 'CookieRun-Regular', sans-serif;
+}
+
+/* 드롭다운 메뉴 스타일 */
+.dropdown-menu {
+    position: absolute;
+    /* top: 50px; */
+    right: 0;
+    background-color: white;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-menu button {
+    background: none;
+    border: none;
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 16px;
+    width: 150px;
+}
+
+.dropdown-menu button:hover {
+    background-color: #f0f0f0;
+}
+
+.blank {
+    width: 60%;
+}
+.search-container {
+    width: 20%;
 }
 </style>
