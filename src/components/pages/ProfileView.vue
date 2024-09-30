@@ -6,7 +6,7 @@
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
                     <button @click="openModal">
-                        <img src="@/assets/images/createProfile.png" alt="프로필 생성" />
+                        <img src="https://ifh.cc/g/RXF45B.png" alt="프로필 생성" />
                     </button>
                 </div>
             </div>
