@@ -338,14 +338,16 @@ nav.nav-hidden {
 
 .search-icon {
     display: flex;
+    flex-direction: row-reverse;
 }
 
 /* 김범철 로그인 css */
 .login {
-    width: 5%;
+    width: 10%;
 }
 .login-container {
     position: relative;
+    width: 100%;
 }
 
 .login-profile {
@@ -353,6 +355,7 @@ nav.nav-hidden {
     align-items: center;
     gap: 10px;
     cursor: pointer;
+    justify-content: flex-end;
 }
 
 .profile-image {
