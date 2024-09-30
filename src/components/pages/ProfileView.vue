@@ -163,7 +163,7 @@ export default {
                 );
 
                 // 서버에서 새로 발급된 JWT 토큰이 있는 경우 저장
-                const newToken = response.data.token; // 서버가 반환하는 새로운 JWT 토큰
+                const newToken = response.data.newToken; // 서버가 반환하는 새로운 JWT 토큰
                 if (newToken) {
                     cookies.set('Authorization', newToken); // 쿠키에 새로운 토큰 저장
                 }

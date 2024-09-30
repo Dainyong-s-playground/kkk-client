@@ -18,24 +18,24 @@ router.beforeEach((to, from, next) => {
     }
 });
 
-let sessionTimeout = 30 * 60 * 1000; // 30분
+// let sessionTimeout = 30 * 60 * 1000; // 30분
 
-let logoutTimer = setTimeout(() => {
-    // 쿠키 삭제 후 로그아웃 처리
-    document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-    window.location.href = '/'; // 리다이렉트
-}, sessionTimeout);
+// let logoutTimer = setTimeout(() => {
+//     // 쿠키 삭제 후 로그아웃 처리
+//     document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+//     window.location.href = '/'; // 리다이렉트
+// }, sessionTimeout);
 
-// 사용자가 활동할 때마다 타이머 리셋 (마우스 클릭, 키보드 입력 등)
-document.addEventListener('click', resetTimer);
-document.addEventListener('keypress', resetTimer);
+// // 사용자가 활동할 때마다 타이머 리셋 (마우스 클릭, 키보드 입력 등)
+// document.addEventListener('click', resetTimer);
+// document.addEventListener('keypress', resetTimer);
 
-function resetTimer() {
-    clearTimeout(logoutTimer);
-    logoutTimer = setTimeout(() => {
-        document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-        window.location.href = '/';
-    }, sessionTimeout);
-}
+// function resetTimer() {
+//     clearTimeout(logoutTimer);
+//     logoutTimer = setTimeout(() => {
+//         document.cookie = 'Authorization=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+//         window.location.href = '/';
+//     }, sessionTimeout);
+// }
 
 export default router;
