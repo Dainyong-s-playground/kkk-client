@@ -9,10 +9,16 @@
                 <button class="info-button">ⓘ 상세 정보</button>
             </div>
         </section>
+        <!-- 나님이 시청 중인 콘텐츠 -->
         <section class="category recently-watched">
             <h2 class="category-title">나님이 시청 중인 콘텐츠</h2>
             <div class="content-slider">
-                <div v-for="(item, index) in recentlyWatched" :key="index" class="content-item">
+                <div
+                    v-for="(item, index) in recentlyWatched"
+                    :key="index"
+                    class="content-item"
+                    @click="showDetail(item)"
+                >
                     <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
                         <div class="gradient-overlay"></div>
@@ -30,25 +36,33 @@
             </div>
         </section>
 
+        <!-- 오늘 TOP 5 동화 -->
         <section class="category top-5">
             <h2 class="category-title">오늘 TOP 5 동화</h2>
             <div class="content-slider">
-                <div v-for="(item, index) in top5Series" :key="index" class="content-item">
+                <div v-for="(item, index) in top5Series" :key="index" class="content-item" @click="showDetail(item)">
                     <div class="rank">{{ index + 1 }}</div>
                     <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <div class="play-overlay">▶</div>
                     </div>
-                    <!-- <div class="title">{{ item.title }}</div> -->
                 </div>
             </div>
         </section>
 
-        <section class="category">
+        <!-- 추천 동화 -->
+        <section class="category recommended">
             <h2 class="category-title">추천 동화</h2>
             <div class="content-slider">
-                <div v-for="(item, index) in categoryContent" :key="index" class="content-item base-item">
-                    <div class="thumbnail-container base-thumbnail">
+                <div
+                    v-for="(item, index) in categoryContent"
+                    :key="index"
+                    class="content-item"
+                    @click="showDetail(item)"
+                >
+                    <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <div class="play-overlay">▶</div>
                     </div>
                     <div class="content-info">
                         <span class="title">{{ item.title }}</span>
@@ -56,11 +70,21 @@
                 </div>
             </div>
         </section>
+
+        <!-- 동화 상세 정보 오버레이 -->
+        <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
+            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" />
+        </div>
     </div>
 </template>
 
 <script>
+import FairyTaleDetail from './FairyTaleDetail.vue';
+
 export default {
+    components: {
+        FairyTaleDetail,
+    },
     data() {
         return {
             recentlyWatched: [
@@ -221,7 +245,19 @@ export default {
                 },
                 // 추가 아이템...
             ],
+            selectedFairyTale: null,
         };
+    },
+    methods: {
+        showDetail(item) {
+            this.selectedFairyTale = {
+                ...item,
+                description: '이 동화의 상세 설명입니다.', // 실제로는 API에서 가져올 수 있습니다
+            };
+        },
+        closeDetail() {
+            this.selectedFairyTale = null;
+        },
     },
 };
 </script>
@@ -309,41 +345,45 @@ export default {
 
 .content-item {
     flex: 0 0 auto;
-    width: 200px; /* 고정 너비 */
+    width: 200px;
     margin-right: 20px;
+    position: relative;
+    cursor: pointer;
 }
 
 .thumbnail-container {
-    width: 100%;
     position: relative;
+    width: 100%;
     overflow: hidden;
 }
+
 .thumbnail {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    object-fit: contain;
+    object-fit: cover;
     border-radius: 6px;
-    z-index: 100;
 }
+
 .play-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background-color: rgba(255, 255, 255, 0.7);
-    color: #000;
-    width: 3vw;
-    height: 3vw;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: flex;
     justify-content: center;
     align-items: center;
-    font-size: 1.2vw;
+    font-size: 24px;
     opacity: 0;
     transition: opacity 0.3s ease;
+    z-index: 110;
 }
 
 .content-item:hover .play-overlay {
@@ -385,6 +425,123 @@ export default {
     cursor: pointer;
 }
 
+/* 나님이 시청 중인 콘텐츠 스타일 */
+.recently-watched .content-item {
+    width: 200px;
+}
+
+.recently-watched .thumbnail-container {
+    padding-top: 120%; /* 2:3 비율로 수정 */
+}
+
+.recently-watched .content-info.recently-watched-info {
+    padding: 10px;
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    height: 90px;
+    background-color: #333333;
+    margin-top: -2px;
+}
+
+.recently-watched .content-info.recently-watched-info .title,
+.recently-watched .content-info.recently-watched-info .episode {
+    color: #ffffff;
+}
+
+.recently-watched .content-item:hover .content-info.recently-watched-info {
+    background-color: #4a4a4a;
+}
+
+.recently-watched .gradient-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));
+    z-index: 100;
+}
+
+.recently-watched .progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 102;
+}
+
+.recently-watched .progress {
+    height: 100%;
+    background-color: #e50914;
+    transition: width 0.3s ease;
+}
+
+.recently-watched .more-info {
+    bottom: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+/* TOP 5 동화 스타일 */
+.top-5 {
+    margin-bottom: 3vw;
+    overflow: hidden; /* 세로 스크롤 비활성화 */
+}
+
+.top-5 .content-slider {
+    padding-left: 5%;
+    overflow-y: hidden; /* 세로 스크롤 비활성화 */
+}
+
+.top-5 .content-item {
+    width: 200px;
+    height: 300px; /* 높이 증가 */
+    margin-right: 100px;
+}
+
+.top-5 .thumbnail-container {
+    height: 100%;
+    padding-top: 0;
+}
+
+.top-5 .rank {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    position: absolute;
+    right: 78%;
+    bottom: 8px;
+    font-size: 230px;
+    font-weight: bold;
+    color: black;
+    -webkit-text-stroke: 4px white;
+    line-height: 0.8;
+}
+
+/* 추천 동화 스타일 */
+.recommended .content-item {
+    width: 200px;
+}
+
+.recommended .thumbnail-container {
+    padding-top: 140%; /* 2:3 비율로 수정 */
+}
+
+/* 동화 상세 페이지 오버레이 스타일 */
+.fairy-tale-detail-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* 반응형 스타일 */
 @media (max-width: 768px) {
     .content-item {
         width: 150px;
@@ -407,279 +564,67 @@ export default {
         font-size: 2.5vw;
         padding: 1vw 3vw;
     }
+
+    .top-5 .content-item {
+        width: 150px;
+        height: 225px; /* 높이 조정 */
+        margin-right: 50px;
+    }
+
+    .top-5 .rank {
+        font-size: 150px;
+        right: 70%;
+        bottom: -20px;
+    }
 }
 
-.recently-watched .content-info.recently-watched-info {
-    padding: 10px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    height: 90px;
+@media (max-width: 576px) {
+    .content-item {
+        width: 120px;
+    }
+
+    .top-5 .content-item {
+        width: 120px;
+        height: 180px; /* 높이 조정 */
+        margin-right: 30px;
+    }
+
+    .top-5 .rank {
+        font-size: 100px;
+        right: 60%;
+        bottom: -15px;
+    }
 }
 
-.recently-watched .content-info.recently-watched-info .title,
-.recently-watched .content-info.recently-watched-info .episode {
-    color: #ffffff; /* 텍스트 색상을 흰색으로 변경 */
-}
-
-/* 필요하다면 hover 효과도 추가할 수 있습니다 */
-.recently-watched .content-item:hover .content-info.recently-watched-info {
-    background-color: #4a4a4a; /* hover 시 약간 밝은 회색으로 변경 */
-}
-
-.recently-watched .thumbnail-container {
-    position: relative;
-    overflow: hidden;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-}
-
-.recently-watched .thumbnail {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 0;
-    border-top-left-radius: 6px;
-    border-top-right-radius: 6px;
-}
-
-.recently-watched .gradient-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 35px; /* 그라데이션의 높이를 조절할 수 있습니다 */
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.7));
-    z-index: 100;
-}
-
-.recently-watched .progress-bar {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 4px;
-    background-color: rgba(255, 255, 255, 0.3);
-    z-index: 102;
-}
-
-.recently-watched .progress {
-    height: 100%;
-    background-color: #e50914; /* Netflix 스타일 빨간색 */
-    transition: width 0.3s ease;
-}
-
-.recently-watched .content-info.recently-watched-info {
-    background-color: #333333;
-    padding: 10px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    margin-top: -2px; /* 썸네일과의 간격을 없애기 위해 추가 */
-}
-
-.recently-watched .content-item {
-    overflow: hidden; /* 내부 요소들이 둥근 모서리를 벗어나지 않도록 */
-    border-radius: 6px; /* content-item 전체에 둥근 모서리 적용 */
-    background-color: #333333; /* content-item 전체 배경색 설정 */
-}
-
-.recently-watched .content-info.recently-watched-info .title,
-.recently-watched .content-info.recently-watched-info .episode {
-    color: #ffffff;
-}
-
-/* hover 효과 */
-.recently-watched .content-item:hover .content-info.recently-watched-info {
-    background-color: #4a4a4a;
-}
-
-/* play-overlay 위치 조정 */
-.play-overlay {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: rgba(0, 0, 0, 0.7);
-    color: white;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 24px;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-
-/* more-info 버튼 위치 조정 */
-.recently-watched .more-info {
-    bottom: 10px;
-    right: 10px;
-    z-index: 100;
-}
-
-.content-item {
-    flex: 0 0 auto;
-    width: 14%;
-    margin-right: 1.5vw;
-    position: relative;
-    min-width: 200px; /* 최소 너비 설정 */
-}
-
-.thumbnail-container {
-    position: relative;
-    padding-top: 120.25%; /* 16:9 비율 유지 */
-    overflow: hidden;
-}
-
-.thumbnail {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* 대형 화면 (1200px 이상) */
+/* 추가 반응형 스타일 */
 @media (min-width: 1200px) {
     .content-item {
         width: 14%;
     }
 }
 
-/* 중형 화면 (992px - 1199px) */
 @media (min-width: 992px) and (max-width: 1199px) {
     .content-item {
         width: 18%;
     }
 }
 
-/* 태블릿 (768px - 991px) */
 @media (min-width: 768px) and (max-width: 991px) {
     .content-item {
         width: 23%;
     }
 }
 
-/* 큰 모바일 화면 (576px - 767px) */
 @media (min-width: 576px) and (max-width: 767px) {
     .content-item {
         width: 31.33%;
     }
 }
 
-/* 작은 모바일 화면 (575px 이하) */
 @media (max-width: 575px) {
     .content-item {
         width: 45%;
-        min-width: 150px; /* 더 작은 화면에서의 최소 너비 */
+        min-width: 150px;
     }
-}
-
-/* 추가적인 스타일 조정 */
-.category-title {
-    font-size: calc(1rem + 1vw);
-    margin-bottom: 1rem;
-}
-
-.title {
-    font-size: calc(0.8rem + 0.5vw);
-}
-
-.episode,
-.status {
-    font-size: calc(0.6rem + 0.3vw);
-}
-
-.play-overlay {
-    width: calc(2rem + 2vw);
-    height: calc(2rem + 2vw);
-    font-size: calc(1rem + 0.5vw);
-}
-
-.more-info {
-    width: calc(1.5rem + 1vw);
-    height: calc(1.5rem + 1vw);
-    font-size: calc(0.8rem + 0.3vw);
-}
-</style>
-
-<style scoped>
-.top-5 {
-    margin-bottom: 3vw;
-    overflow-x: hidden;
-}
-
-.top-5 .category-title {
-    font-size: 24px;
-    margin-bottom: 20px;
-}
-
-.top-5 .content-slider {
-    display: flex;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    padding-left: 5%; /* 슬라이드가 조금 더 자연스럽게 보이도록 패딩 조정 */
-    -ms-overflow-style: none; /* 인터넷 익스플로러의 스크롤바 숨기기 */
-    scrollbar-width: none; /* 파이어폭스의 스크롤바 숨기기 */
-}
-
-.top-5 .content-slider::-webkit-scrollbar {
-    display: none; /* 웹킷 브라우저(크롬, 사파리 등)의 스크롤바 숨기기 */
-}
-
-.top-5 .content-item {
-    flex: 0 0 auto;
-    width: 200px; /* 고정 너비 */
-    height: 280px; /* 고정 높이 */
-    margin-right: 100px;
-    position: relative;
-}
-
-/* top-5 섹션에서는 미디어 쿼리에서도 크기 변경 없음 */
-@media (max-width: 768px) {
-    .top-5 .content-item {
-        width: 200px; /* 고정된 너비 유지 */
-        height: 280px; /* 고정된 높이 유지 */
-    }
-}
-
-@media (max-width: 576px) {
-    .top-5 .content-item {
-        width: 200px; /* 고정된 너비 유지 */
-        height: 280px; /* 고정된 높이 유지 */
-    }
-}
-
-.top-5 .rank {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    position: absolute;
-    right: 78%;
-    bottom: 0;
-    font-size: 230px;
-    font-weight: bold;
-    color: black;
-    -webkit-text-stroke: 4px white;
-    line-height: 0.8;
-    z-index: 10;
-}
-
-.top-5 .thumbnail-container {
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-}
-.top-5 .thumbnail {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* 다른 섹션의 스타일이 top-5에 영향을 주지 않도록 재정의 */
-.top-5 .thumbnail-container {
-    padding-top: 0;
 }
 </style>
