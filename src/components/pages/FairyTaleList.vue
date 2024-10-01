@@ -1,10 +1,14 @@
 <template>
     <div class="main-container">
         <section class="hero-section">
-            <img src="https://i.ibb.co/xFTyX1B/beak.jpg" alt="Hero Image" class="hero-image" />
+            <img
+                src="https://dainyong-s-playground.github.io/imageServer/Tumb1.png"
+                alt="Hero Image"
+                class="hero-image"
+            />
             <div class="hero-content">
-                <h1>내가 바로 백설공주다</h1>
-                <p>동화에 대한 간단한 설명이 여기에 들어갑니다.</p>
+                <h1>잭과 콩나물</h1>
+                <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
                 <button class="play-button">▶ 재생</button>
                 <button class="info-button">ⓘ 상세 정보</button>
             </div>
