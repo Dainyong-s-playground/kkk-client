@@ -92,9 +92,9 @@ export default {
             selectedImage: null, // 사용자가 선택한 이미지
             imageList: [
                 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1', // 미리 정의된 이미지 경로
-                'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
+                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01.jpeg',
+                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02.png',
+                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03.png',
             ], // 프로필 이미지 리스트
         };
     },
@@ -312,6 +312,11 @@ export default {
     border: 2px solid transparent;
     padding: 5px;
     transition: border-color 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 120px;
+    height: 120px;
 }
 
 .image-option.selected {
