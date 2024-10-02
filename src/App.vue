@@ -1,7 +1,8 @@
 <template>
     <div class="app-container">
         <header-compo v-if="showHeader"></header-compo>
-        <middle-compo></middle-compo>
+        <middle-compo v-if="showMiddleCompo"></middle-compo>
+        <fairy-player v-else></fairy-player>
         <footer-compo v-if="showHeader"></footer-compo>
     </div>
 </template>
@@ -10,19 +11,27 @@
 import FooterCompo from './components/layout/FooterCompo.vue';
 import HeaderCompo from './components/layout/HeaderCompo.vue';
 import MiddleCompo from './components/layout/MiddleCompo.vue';
-//import { mapState } from 'vuex'; // 상태 관리 사용 시
+import FairyPlayer from './components/pages/FairyPlayer.vue';
 
 export default {
     name: 'App',
     components: {
         HeaderCompo,
         MiddleCompo,
+        FairyPlayer,
         FooterCompo,
     },
     computed: {
-        // Vuex나 Pinia로 showHeader 상태 관리 가능
         showHeader() {
-            return this.$route.path !== '/profiles'; // '/profiles' 페이지에서만 Header 숨김
+            const hiddenHeaderRoutes = ['/profiles', /^\/fairyplayer\/\d+$/];
+            return !hiddenHeaderRoutes.some((route) =>
+                typeof route === 'string'
+                    ? route === this.$route.path.toLowerCase()
+                    : route.test(this.$route.path.toLowerCase()),
+            );
+        },
+        showMiddleCompo() {
+            return !/^\/fairyplayer\/\d+$/.test(this.$route.path.toLowerCase());
         },
     },
 };
