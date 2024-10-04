@@ -170,7 +170,6 @@ export default {
                     { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
                 );
                 this.clearUserData();
-                this.deleteCookie('Au');
                 this.isLoggedIn = false;
                 this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
                 if (response.status === 200) {
@@ -189,7 +188,8 @@ export default {
             const jwt = this.getCookie('Authorization');
             const decodedToken = jwtDecode(jwt);
             const userId = decodedToken.profileId; // JWT 쿠키 가져오기
-            if (userId) {
+            console.log('프로필정보:' + this.loginUser.nickname);
+            if (userId && !this.loginUser.id) {
                 try {
                     const response = await axios.get('http://localhost:7771/api/me', {
                         headers: { Authorization: `Bearer ${jwt}` },
@@ -198,6 +198,7 @@ export default {
                     // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
                     const userLogin = response.data;
                     this.setSelectedProfile(userLogin);
+                    console.log('대입 프로필정보:' + this.loginUser.nickname);
                     this.isLoggedIn = true; // 로그인 상태 업데이트
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
@@ -221,6 +222,8 @@ export default {
         },
         changeProfile() {
             // 프로필 변경 페이지로 이동하는 로직
+            this.clearUserData();
+            console.log(this.loginUser.nickname);
             this.$router.push('/profiles');
             this.showDropdown = false; // 드롭다운 닫기
         },
