@@ -206,7 +206,6 @@ export default {
                 // 프로필 생성 완료 후 모달 닫기 및 초기화
                 this.newProfile = { nickname: '', gender: 'M', birth: '', image: null }; // 입력값 초기화
                 this.selectedImage = null; // 선택된 이미지 초기화
-                //this.closeModal(); // 모달 닫기
                 this.$router.go(0);
             } catch (error) {
                 console.error('프로필 생성 중 오류가 발생했습니다.', error);
