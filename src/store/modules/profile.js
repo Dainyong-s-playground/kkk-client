@@ -1,10 +1,9 @@
-import { createStore } from 'vuex';
-
-export default createStore({
+const store = {
+    namespaced: true,
     state: {
-        loginId: null, // 로그인한 유저의 ID
-        selectedProfile: {}, // 선택된 프로필 정보
-        jwtToken: null, // JWT 토큰 정보
+        loginId: null,
+        selectedProfile: {},
+        jwtToken: null,
     },
     mutations: {
         SET_LOGIN_ID(state, loginId) {
@@ -41,4 +40,5 @@ export default createStore({
         getSelectedProfile: (state) => state.selectedProfile,
         getJwtToken: (state) => state.jwtToken,
     },
-});
+};
+export default store;

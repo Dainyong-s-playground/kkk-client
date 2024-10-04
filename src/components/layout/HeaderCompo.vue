@@ -85,6 +85,7 @@
 
 <script>
 import axios from 'axios';
+import { jwtDecode } from 'jwt-decode';
 import { mapActions, mapGetters } from 'vuex';
 
 export default {
@@ -99,7 +100,7 @@ export default {
         };
     },
     computed: {
-        ...mapGetters(['getSelectedProfile']),
+        ...mapGetters({ getSelectedProfile: 'profile/getSelectedProfile' }),
         loginUser() {
             console.log(this.getSelectedProfile);
             return this.getSelectedProfile; // 선택된 프로필 정보를 가져옴
@@ -115,14 +116,17 @@ export default {
     mounted() {
         window.addEventListener('scroll', this.handleScroll);
         window.addEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 추가
-        this.checkLoginStatus();
+        const jwt = this.getCookie('Authorization');
+        if (jwt) {
+            this.checkLoginStatus(); // JWT가 있을 때만 로그인 상태 확인
+        }
     },
     beforeUnmount() {
         window.removeEventListener('scroll', this.handleScroll);
         window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
     },
     methods: {
-        ...mapActions(['setSelectedProfile', 'setJwtToken', 'clearUserData']),
+        ...mapActions({ setSelectedProfile: 'profile/setSelectedProfile', clearUserData: 'profile/clearUserData' }),
         handleScroll() {
             const currentScrollPosition = window.scrollY;
             this.isScrolled = currentScrollPosition > 10;
@@ -182,8 +186,10 @@ export default {
             document.cookie = name + '=; Max-Age=0; path=/;';
         },
         async checkLoginStatus() {
-            const jwt = this.getCookie('Authorization'); // JWT 쿠키 가져오기
-            if (jwt) {
+            const jwt = this.getCookie('Authorization');
+            const decodedToken = jwtDecode(jwt);
+            const userId = decodedToken.profileId; // JWT 쿠키 가져오기
+            if (userId) {
                 try {
                     const response = await axios.get('http://localhost:7771/api/me', {
                         headers: { Authorization: `Bearer ${jwt}` },
