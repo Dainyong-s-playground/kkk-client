@@ -341,6 +341,7 @@ export default {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
+    justify-content: space-around;
 }
 
 .content-slider::-webkit-scrollbar {
