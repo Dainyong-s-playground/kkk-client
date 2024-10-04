@@ -268,7 +268,7 @@ nav {
     transition: all 0.3s ease;
     transform-origin: top right;
     max-height: 50px;
-    padding-bottom: 10px;
+    padding: 0px;
     overflow: hidden;
 }
 
@@ -291,6 +291,14 @@ nav {
 .header.scrolled {
     background-color: rgba(54, 54, 54, 0.8);
     backdrop-filter: blur(10px);
+}
+
+.header.scrolled nav {
+    padding-bottom: 10px;
+}
+
+.header.scrolled .nav-hidden {
+    padding-bottom: 0px;
 }
 
 .header.scrolled .nav-item {
