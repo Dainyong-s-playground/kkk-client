@@ -85,6 +85,8 @@
 
 <script>
 import axios from 'axios';
+import { mapActions, mapGetters } from 'vuex';
+
 export default {
     data() {
         return {
@@ -93,11 +95,16 @@ export default {
             wasNavHidden: false,
             lastScrollPosition: 0,
             isLoggedIn: false, // 로그인 여부를 저장
-            loginUser: '', // 닉네임 저장
             showDropdown: false, // 드롭다운 메뉴 표시 여부
         };
     },
     computed: {
+        ...mapGetters(['getSelectedProfile']),
+        loginUser() {
+            console.log(this.getSelectedProfile);
+            return this.getSelectedProfile; // 선택된 프로필 정보를 가져옴
+        },
+
         headerContentStyle() {
             return {
                 padding: this.isScrolled && this.isNavHidden ? '0 30px' : '0 10px',
@@ -115,6 +122,7 @@ export default {
         window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
     },
     methods: {
+        ...mapActions(['setSelectedProfile', 'setJwtToken', 'clearUserData']),
         handleScroll() {
             const currentScrollPosition = window.scrollY;
             this.isScrolled = currentScrollPosition > 10;
@@ -157,10 +165,9 @@ export default {
                     {},
                     { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
                 );
-
-                this.deleteCookie('jwt');
+                this.clearUserData();
+                this.deleteCookie('Au');
                 this.isLoggedIn = false;
-                this.nickname = '';
                 this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
                 if (response.status === 200) {
                     // 로그아웃 성공
@@ -182,10 +189,9 @@ export default {
                         headers: { Authorization: `Bearer ${jwt}` },
                         withCredentials: true, // 쿠키 전달
                     });
-                    console.log(response.data);
                     // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
-                    this.loginUser = response.data;
-                    console.log(this.loginUser);
+                    const userLogin = response.data;
+                    this.setSelectedProfile(userLogin);
                     this.isLoggedIn = true; // 로그인 상태 업데이트
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
