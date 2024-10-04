@@ -7,43 +7,64 @@
         <div class="story-info">
             <div class="story-title">
                 <img :src="guideCharacterImage" alt="Guide Character" class="guide-character" />
-                <span class="green-icon">🟢</span>
-                {{ storyTitle }}
-                <span class="play-icon">▶</span>
+                <div class="story-text">{{ currentLine }}</div>
             </div>
             <div class="controls">
                 <button @click="playPause" class="control-button">
                     {{ isPlaying ? '⏸️' : '▶️' }}
                 </button>
-                <button @click="nextScene" class="control-button">⏭️</button>
+                <button @click="nextLine" class="control-button">⏭️</button>
             </div>
         </div>
     </div>
 </template>
+
 <script>
 export default {
     name: 'FairyPlayer',
     data() {
         return {
             isPlaying: false,
-            storyTitle: '다이농 가이드',
             currentStoryImage: 'https://dainyong-s-playground.github.io/imageServer/Tumb1.png',
             guideCharacterImage:
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
-            // 여기에 더 많은 장면이나 오디오 파일 등을 추가할 수 있습니다.
+            storyLines: [
+                '옛날 옛날에 어미니와 사이좋은 오누이가 살았습니다.',
+                '어머니는 시장에 떡을 팔러 나갔습니다.',
+                '집에 돌아오던 중, 호랑이 한 마리를 만났습니다.',
+                '어흥',
+            ],
+            currentLineIndex: 0,
+            playInterval: null,
         };
+    },
+    computed: {
+        currentLine() {
+            return this.storyLines[this.currentLineIndex];
+        },
     },
     methods: {
         playPause() {
             this.isPlaying = !this.isPlaying;
-            // 여기에 실제 오디오 재생/일시정지 로직을 추가하세요
+            if (this.isPlaying) {
+                this.playInterval = setInterval(this.nextLine, 3000); // 3초마다 다음 줄로 넘어감
+            } else {
+                clearInterval(this.playInterval);
+            }
         },
-        nextScene() {
-            // 다음 장면으로 넘어가는 로직을 구현하세요
+        nextLine() {
+            if (this.currentLineIndex < this.storyLines.length - 1) {
+                this.currentLineIndex++;
+            } else {
+                this.currentLineIndex = 0; // 마지막 줄이면 처음으로 돌아감
+                this.isPlaying = false;
+                clearInterval(this.playInterval);
+            }
         },
     },
 };
 </script>
+
 <style scoped>
 .fairy-player {
     display: flex;
@@ -86,7 +107,6 @@ export default {
 
 .guide-character {
     max-height: 81px;
-    padding: 0 10px;
     object-fit: cover;
 }
 
@@ -96,15 +116,19 @@ export default {
     font-size: 40px;
     flex-grow: 1;
     justify-content: center;
-    position: relative; /* Add this line */
+    position: relative;
+}
+
+.story-text {
+    text-align: center;
+    max-width: 80%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .green-icon {
     margin: 0 5px;
-}
-
-.play-icon {
-    margin-left: 10px;
 }
 
 .controls {
