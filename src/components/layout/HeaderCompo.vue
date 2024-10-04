@@ -19,7 +19,6 @@
                         @blur="toggleSearch"
                     />
                     <i class="search-icon" @click="toggleSearch">
-                        <!-- <img src="https://i.ibb.co/W34yBxW/search24px.png" alt="searchIcon" /> -->
                         <svg
                             v-if="!isScrolled"
                             class="svg-icon"
@@ -34,7 +33,6 @@
                                 d="M 27 9 C 17.075 9 9 17.075 9 27 C 9 36.925 17.075 45 27 45 C 31.129213 45 34.9263 43.587367 37.966797 41.240234 L 51.048828 54.322266 C 51.952828 55.226266 53.418266 55.226266 54.322266 54.322266 C 55.226266 53.418266 55.226266 51.952828 54.322266 51.048828 L 41.240234 37.966797 C 43.587367 34.9263 45 31.129213 45 27 C 45 17.075 36.925 9 27 9 z M 27 13 C 34.719 13 41 19.281 41 27 C 41 34.719 34.719 41 27 41 C 19.281 41 13 34.719 13 27 C 13 19.281 19.281 13 27 13 z"
                             ></path>
                         </svg>
-
                         <svg
                             v-else
                             class="svg-icon"
@@ -56,9 +54,6 @@
                 <div class="login">
                     <div v-if="isLoggedIn" class="login-container">
                         <div class="login-profile" @click="toggleDropdown">
-                            <!-- <img class="profile-image" alt="프로필 이미지" />
-                            <span>{{ loginUser.nickname }}</span> -->
-                            <!-- <input v-model="loginUser.nickname" class="profile-image" readonly /> -->
                             <img :src="loginUser.image" class="profile-image" />
                         </div>
 
@@ -83,150 +78,110 @@
     </header>
 </template>
 
-<script>
-import axios from 'axios';
-import { jwtDecode } from 'jwt-decode';
-import { useProfileStore } from '@/store/profile';
+<script setup>
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
 
-export default {
-    data() {
-        return {
-            isScrolled: false,
-            isNavHidden: false,
-            wasNavHidden: false,
-            lastScrollPosition: 0,
-            isLoggedIn: false, // 로그인 여부를 저장
-            showDropdown: false, // 드롭다운 메뉴 표시 여부
-        };
-    },
-    computed: {
-        loginUser() {
-            const profileStore = useProfileStore();
-            return profileStore.getSelectedProfile;
-        },
+const router = useRouter();
+const profileStore = useProfileStore();
+const { isLoggedIn, selectedProfile: loginUser } = storeToRefs(profileStore);
 
-        headerContentStyle() {
-            return {
-                padding: this.isScrolled && this.isNavHidden ? '0 30px' : '0 10px',
-                transition: 'padding 0.5s ease',
-            };
-        },
-    },
-    mounted() {
-        window.addEventListener('scroll', this.handleScroll);
-        window.addEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 추가
-        const jwt = this.getCookie('Authorization');
-        if (jwt) {
-            this.checkLoginStatus(); // JWT가 있을 때만 로그인 상태 확인
+const isScrolled = ref(false);
+const isNavHidden = ref(false);
+const wasNavHidden = ref(false);
+const lastScrollPosition = ref(0);
+const showDropdown = ref(false);
+const isSearchVisible = ref(false);
+const searchQuery = ref('');
+
+const headerContentStyle = computed(() => ({
+    padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
+    transition: 'padding 0.5s ease',
+}));
+
+const handleScroll = () => {
+    const currentScrollPosition = window.scrollY;
+    isScrolled.value = currentScrollPosition > 10;
+
+    if (currentScrollPosition < lastScrollPosition.value) {
+        if (isNavHidden.value) {
+            wasNavHidden.value = true;
+            setTimeout(() => {
+                wasNavHidden.value = false;
+            }, 500);
         }
-    },
-    beforeUnmount() {
-        window.removeEventListener('scroll', this.handleScroll);
-        window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
-    },
-    methods: {
-        handleScroll() {
-            const currentScrollPosition = window.scrollY;
-            this.isScrolled = currentScrollPosition > 10;
+        isNavHidden.value = false;
+    } else {
+        isNavHidden.value = currentScrollPosition > 50;
+    }
 
-            if (currentScrollPosition < this.lastScrollPosition) {
-                if (this.isNavHidden) {
-                    this.wasNavHidden = true;
-                    setTimeout(() => {
-                        this.wasNavHidden = false;
-                    }, 500); // 애니메이션 지속 시간과 일치
-                }
-                this.isNavHidden = false;
-            } else {
-                this.isNavHidden = currentScrollPosition > 50;
-            }
-
-            this.lastScrollPosition = currentScrollPosition;
-        },
-
-        //김범철 로그인
-        handleOutsideClick(event) {
-            const dropdownMenu = this.$refs.dropdownMenu;
-            const loginProfile = event.target.closest('.login-profile');
-            // 드롭다운이 열려 있고, 클릭된 요소가 드롭다운 메뉴나 프로필이 아닐 경우 닫기
-            if (this.showDropdown && dropdownMenu && !dropdownMenu.contains(event.target) && !loginProfile) {
-                this.showDropdown = false;
-            }
-        },
-
-        onNaverLogin() {
-            // 네이버 로그인 페이지로 리다이렉트
-            window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
-        },
-        async logout() {
-            const jwt = this.getCookie('Authorization');
-            const profileStore = useProfileStore();
-            try {
-                // 서버로 로그아웃 요청 보내기
-                const response = await axios.post(
-                    'http://localhost:7771/auth/logout',
-                    {},
-                    { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
-                );
-                profileStore.clearUserData();
-                this.isLoggedIn = false;
-                this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
-                if (response.status === 200) {
-                    // 로그아웃 성공
-                    this.$router.push('/'); // Vue.js의 경로로 리다이렉션
-                }
-                alert('로그아웃 성공!');
-            } catch (error) {
-                alert('로그아웃 실패: ' + error.message);
-            }
-        },
-        deleteCookie(name) {
-            document.cookie = name + '=; Max-Age=0; path=/;';
-        },
-        async checkLoginStatus() {
-            const jwt = this.getCookie('Authorization');
-            const profileStore = useProfileStore();
-            const decodedToken = jwtDecode(jwt);
-            const profileId = decodedToken.profileId; // JWT 쿠키 가져오기
-            if (profileId && !profileStore.getSelectedProfile.id) {
-                try {
-                    const response = await axios.get('http://localhost:7771/api/me', {
-                        headers: { Authorization: `Bearer ${jwt}` },
-                        withCredentials: true, // 쿠키 전달
-                    });
-                    // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
-                    profileStore.setSelectedProfile(response.data);
-                    this.isLoggedIn = true; // 로그인 상태 업데이트
-                } catch (error) {
-                    console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
-                    this.isLoggedIn = false;
-                }
-            }
-        },
-        getCookie(name) {
-            const matches = document.cookie.match(
-                new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()[]\\\/+^])/g, '\\$1') + '=([^;]*)'),
-            );
-            return matches ? decodeURIComponent(matches[1]) : undefined;
-        },
-        toggleDropdown() {
-            this.showDropdown = !this.showDropdown; // 드롭다운 메뉴 표시/숨김 토글
-        },
-        goToMyPage() {
-            // 마이페이지로 이동하는 로직
-            this.$router.push('/mypage');
-            this.showDropdown = false; // 드롭다운 닫기
-        },
-        changeProfile() {
-            const profileStore = useProfileStore();
-            // 프로필 변경 페이지로 이동하는 로직
-            profileStore.clearUserData();
-            console.log(this.loginUser.nickname);
-            this.$router.push('/profiles');
-            this.showDropdown = false; // 드롭다운 닫기
-        },
-    },
+    lastScrollPosition.value = currentScrollPosition;
 };
+
+const handleOutsideClick = (event) => {
+    const dropdownMenu = document.querySelector('.dropdown-menu');
+    const loginProfile = event.target.closest('.login-profile');
+    if (showDropdown.value && dropdownMenu && !dropdownMenu.contains(event.target) && !loginProfile) {
+        showDropdown.value = false;
+    }
+};
+
+const onNaverLogin = () => {
+    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+};
+
+const logout = async () => {
+    try {
+        await profileStore.logout();
+        router.push('/');
+        alert('로그아웃 성공!');
+    } catch (error) {
+        alert('로그아웃 실패: ' + error.message);
+    }
+};
+
+const toggleDropdown = () => {
+    showDropdown.value = !showDropdown.value;
+};
+
+const goToMyPage = () => {
+    router.push('/mypage');
+    showDropdown.value = false;
+};
+
+const changeProfile = () => {
+    profileStore.clearUserData();
+    router.push('/profiles');
+    showDropdown.value = false;
+};
+
+const toggleSearch = () => {
+    isSearchVisible.value = !isSearchVisible.value;
+    if (!isSearchVisible.value) {
+        searchQuery.value = '';
+    }
+};
+// 상태 변화 감지
+watch(
+    loginUser,
+    (newValue, oldValue) => {
+        console.log('selectedProfile 변경됨:', newValue, oldValue);
+    },
+    { deep: true },
+);
+
+onMounted(() => {
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('click', handleOutsideClick);
+    profileStore.checkLoginStatus();
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleScroll);
+    window.removeEventListener('click', handleOutsideClick);
+});
 </script>
 
 <style scoped>
