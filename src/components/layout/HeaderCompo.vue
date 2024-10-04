@@ -86,7 +86,7 @@
 <script>
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
-import { mapActions, mapGetters } from 'vuex';
+import { useProfileStore } from '@/store/profile';
 
 export default {
     data() {
@@ -100,10 +100,9 @@ export default {
         };
     },
     computed: {
-        ...mapGetters({ getSelectedProfile: 'profile/getSelectedProfile' }),
         loginUser() {
-            console.log(this.getSelectedProfile);
-            return this.getSelectedProfile; // 선택된 프로필 정보를 가져옴
+            const profileStore = useProfileStore();
+            return profileStore.getSelectedProfile;
         },
 
         headerContentStyle() {
@@ -126,7 +125,6 @@ export default {
         window.removeEventListener('click', this.handleOutsideClick); // 전역 클릭 이벤트 제거
     },
     methods: {
-        ...mapActions({ setSelectedProfile: 'profile/setSelectedProfile', clearUserData: 'profile/clearUserData' }),
         handleScroll() {
             const currentScrollPosition = window.scrollY;
             this.isScrolled = currentScrollPosition > 10;
@@ -162,6 +160,7 @@ export default {
         },
         async logout() {
             const jwt = this.getCookie('Authorization');
+            const profileStore = useProfileStore();
             try {
                 // 서버로 로그아웃 요청 보내기
                 const response = await axios.post(
@@ -169,7 +168,7 @@ export default {
                     {},
                     { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
                 );
-                this.clearUserData();
+                profileStore.clearUserData();
                 this.isLoggedIn = false;
                 this.showDropdown = false; // 로그아웃 후 드롭다운 숨김
                 if (response.status === 200) {
@@ -186,19 +185,17 @@ export default {
         },
         async checkLoginStatus() {
             const jwt = this.getCookie('Authorization');
+            const profileStore = useProfileStore();
             const decodedToken = jwtDecode(jwt);
-            const userId = decodedToken.profileId; // JWT 쿠키 가져오기
-            console.log('프로필정보:' + this.loginUser.nickname);
-            if (userId && !this.loginUser.id) {
+            const profileId = decodedToken.profileId; // JWT 쿠키 가져오기
+            if (profileId && !profileStore.getSelectedProfile.id) {
                 try {
                     const response = await axios.get('http://localhost:7771/api/me', {
                         headers: { Authorization: `Bearer ${jwt}` },
                         withCredentials: true, // 쿠키 전달
                     });
                     // 백엔드에서 받은 응답에 nickname이 포함되는지 확인
-                    const userLogin = response.data;
-                    this.setSelectedProfile(userLogin);
-                    console.log('대입 프로필정보:' + this.loginUser.nickname);
+                    profileStore.setSelectedProfile(response.data);
                     this.isLoggedIn = true; // 로그인 상태 업데이트
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
@@ -221,8 +218,9 @@ export default {
             this.showDropdown = false; // 드롭다운 닫기
         },
         changeProfile() {
+            const profileStore = useProfileStore();
             // 프로필 변경 페이지로 이동하는 로직
-            this.clearUserData();
+            profileStore.clearUserData();
             console.log(this.loginUser.nickname);
             this.$router.push('/profiles');
             this.showDropdown = false; // 드롭다운 닫기
