@@ -1,39 +1,43 @@
 <template>
     <div class="game-container">
-        <!-- 성공 시 게이지 바가 사라지도록 v-if로 처리 -->
-        <gauge-bar v-if="!isSuccess && !showGuide" :value="gauge" :max="maxGauge" />
+        <div class="game-content">
+            <!-- 성공 시 게이지 바가 사라지도록 v-if로 처리 -->
+            <gauge-bar v-if="!isSuccess && !showGuide" :value="gauge" :max="maxGauge" />
 
-        <!-- 사과 이미지 -->
-        <div class="apple-container">
-            <img
-                v-if="!isSuccess && !showGuide"
-                class="apple"
-                src="https://dainyong-s-playground.github.io/imageServer/src/BeforeApple.png"
-                @click="handleClick"
-                @mousedown.prevent
-                @dragstart.prevent
-                alt="Apple"
-            />
-        </div>
-
-        <!-- 게임 가이드 모달 -->
-        <div v-if="showGuide" class="guide-modal" @click="closeGuide">
-            <div class="guide-content">
-                <h2>🍎 사과 게임 안내 🍎</h2>
-                <p>사과를 클릭하여 게이지를 채우세요!</p>
-                <p>게이지가 100%가 되면 게임이 성공합니다.</p>
-                <p>계속 클릭하여 사과를 베어 먹으세요!</p>
-                <button class="close-button" @click.stop="closeGuide">시작하기</button>
+            <!-- 사과 이미지 -->
+            <div class="apple-container">
+                <img
+                    v-if="!isSuccess && !showGuide"
+                    class="apple"
+                    src="https://dainyong-s-playground.github.io/imageServer/src/BeforeApple.png"
+                    @click="handleClick"
+                    @mousedown.prevent
+                    @dragstart.prevent
+                    alt="Apple"
+                />
             </div>
-        </div>
 
-        <!-- 성공 시 모달 표시 -->
-        <div v-if="isSuccess" class="modal-overlay">
-            <img
-                class="success-image"
-                src="https://dainyong-s-playground.github.io/imageServer/src/AfterApple.png"
-                alt="Eaten Apple"
-            />
+            <!-- 게임 가이드 모달 -->
+            <div v-if="showGuide" class="guide-modal" @click="closeGuide">
+                <div class="guide-content">
+                    <h2>🍎 사과 게임 안내 🍎</h2>
+                    <p>사과를 클릭하여 게이지를 채우세요!</p>
+                    <p>게이지가 100%가 되면 게임이 성공합니다.</p>
+                    <p>계속 클릭하여 사과를 베어 먹으세요!</p>
+                    <button class="close-button" @click.stop="closeGuide">시작하기</button>
+                </div>
+            </div>
+
+            <!-- 성공 시 모달 표시 -->
+            <div v-if="isSuccess" class="modal-overlay">
+                <img
+                    class="success-image"
+                    src="https://dainyong-s-playground.github.io/imageServer/src/AfterApple.png"
+                    @mousedown.prevent
+                    @dragstart.prevent
+                    alt="Eaten Apple"
+                />
+            </div>
         </div>
     </div>
 </template>
@@ -90,6 +94,12 @@ export default {
 <style scoped>
 /* 게임 전체 레이아웃 */
 .game-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+}
+
+.game-content {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -110,7 +120,6 @@ export default {
 /* 모달 창 스타일 */
 .modal-overlay {
     position: fixed;
-    top: 200;
     left: 0;
     width: 100%;
     height: 400px;
@@ -124,18 +133,15 @@ export default {
 /* 가이드 모달 스타일 */
 .guide-modal {
     position: fixed;
-    top: 200;
     left: 0;
     width: 100%;
-    height: 100%;
+    height: 400px;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
     animation: fade-in 0.5s ease-in-out;
-    width: 100%;
-    height: 400px;
 }
 
 .guide-content {
@@ -177,6 +183,7 @@ export default {
 /* 성공 시 이미지 확장 애니메이션 */
 .success-image {
     width: 300px;
+    cursor: pointer;
     animation: image-expand 1s ease-in-out;
 }
 
