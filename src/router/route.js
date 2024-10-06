@@ -1,4 +1,5 @@
 import MiddleFront from '@/components/layout/MiddleFront.vue';
+import FairyPlayer from '@/components/pages/FairyPlayer.vue';
 import FairyTaleList from '@/components/pages/FairyTaleList.vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
 import PageMain from '@/components/pages/PageMain.vue';
@@ -18,18 +19,17 @@ const routes = [
                 name: 'FairyTaleList',
                 component: FairyTaleList,
             },
+            {
+                path: '/fairyPlayer/:id',
+                name: 'FairyPlayer',
+                component: FairyPlayer,
+            },
         ],
     },
-
     {
         path: '/profiles',
         component: ProfileView,
     },
-
-    // {
-    //     path: '/login',
-    //     redirect: '/',
-    // },
     {
         path: '/game/hand',
         component: HandLandmark,
