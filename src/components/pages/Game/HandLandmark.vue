@@ -1,10 +1,8 @@
 <template>
     <div class="game-container">
         <h3>HandLandmarker Test</h3>
-        <svg class="background-image" xmlns="http://www.w3.org/2000/svg">
-            <rect class="svg-rect" /> <!-- 이 부분 이미지롣 대체 예정 -->
-        </svg>
-        <img src="@/assets/images/hand.png" class="hand-image" />
+        <img src="https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png" class="background-image" />
+        <img src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png" class="hand-image" />
         <div class="webcam-container">
             <video ref="video" class="video-element" autoplay playsinline></video>
             <canvas ref="canvas" class="webcam-canvas"></canvas>
