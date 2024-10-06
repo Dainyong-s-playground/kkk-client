@@ -93,8 +93,8 @@ onUnmounted(() => {
 .game-container {
     position: relative;
     width: 100%;
-    height: 480px;
-    margin-top: 200px;
+    height: 500px;
+    margin-top: 100px;
 }
 
 .background-image {
@@ -102,7 +102,7 @@ onUnmounted(() => {
     top: 0;
     left: 0;
     width: 100%;
-    height: 480px;
+    height: 500px;
     z-index: 1;
 }
 
@@ -129,7 +129,7 @@ onUnmounted(() => {
     object-fit: cover;
     z-index: 2;
     z-index: 4;
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
 .hand-image,
