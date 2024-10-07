@@ -347,7 +347,7 @@ nav.nav-hidden {
 /* 드롭다운 메뉴 스타일 */
 .dropdown-menu {
     position: absolute;
-    /* top: 50px; */
+    top: 90px;
     right: 0;
     background-color: white;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
