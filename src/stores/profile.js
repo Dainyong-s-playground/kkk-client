@@ -7,7 +7,7 @@ import cookies from 'js-cookie';
 export const useProfileStore = defineStore('profile', {
     state: () => ({
         loginId: null,
-        selectedProfile: {},
+        selectedProfile: null, // {} 대신 null로 초기화
         jwtToken: null,
         isLoggedIn: false,
     }),
@@ -34,18 +34,24 @@ export const useProfileStore = defineStore('profile', {
                 try {
                     const decodedToken = jwtDecode(jwt);
                     const profileId = decodedToken.profileId;
-                    if (profileId && !this.selectedProfile.id) {
+                    if (profileId) {
                         const response = await axios.get('http://localhost:7771/api/me', {
                             headers: { Authorization: `Bearer ${jwt}` },
                             withCredentials: true,
                         });
                         this.setSelectedProfile(response.data);
+                        this.setJwtToken(jwt);
                         this.isLoggedIn = true;
+                        console.log('프로필 정보:', response.data); // 디버깅용 로그
                     }
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
                     this.isLoggedIn = false;
+                    this.clearUserData();
                 }
+            } else {
+                this.isLoggedIn = false;
+                this.clearUserData();
             }
         },
         async logout() {
@@ -128,5 +134,6 @@ export const useProfileStore = defineStore('profile', {
         getLoginId: (state) => state.loginId,
         getSelectedProfile: (state) => state.selectedProfile,
         getJwtToken: (state) => state.jwtToken,
+        getUserName: (state) => state.selectedProfile?.nickname || '게스트',
     },
 });

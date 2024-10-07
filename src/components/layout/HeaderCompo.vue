@@ -6,7 +6,7 @@
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
                 >
-                    나 님
+                    {{ userName }} 님
                 </div>
                 <div class="blank"></div>
                 <div class="search-container">
@@ -95,6 +95,9 @@ const lastScrollPosition = ref(0);
 const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
+
+// 사용자 이름을 가져오는 computed 속성 추가
+const userName = computed(() => profileStore.getUserName);
 
 const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
@@ -212,7 +215,7 @@ onUnmounted(() => {
     font-size: 2rem;
     font-weight: bold;
     padding: 10px 0;
-    color: #e50914;
+    color: rgb(155, 190, 78);
     transition: all 0.5s ease;
     width: 15%;
 }
@@ -335,8 +338,8 @@ nav.nav-hidden {
 }
 
 .profile-image {
-    width: 75px;
-    height: 75px;
+    width: 85px;
+    height: 85px;
     border-radius: 50%;
     object-fit: cover;
     text-align: center;
