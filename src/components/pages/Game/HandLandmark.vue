@@ -2,11 +2,18 @@
     <div class="game-container">
         <h3>HandLandmarker Test</h3>
         <img src="https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png" class="background-image" />
-        <img src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png" class="hand-image" />
-        <div class="webcam-container">
+
+        <div class="webcam-container" v-show="!isSuccess">
             <video ref="video" class="video-element" autoplay playsinline></video>
             <canvas ref="canvas" class="webcam-canvas"></canvas>
         </div>
+
+        <transition name="fade" mode="out-in">
+            <img v-if="!isSuccess" src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png"
+                class="before-hand-image" />
+            <img v-else src="https://Dainyong-s-playground.github.io/imageServer/src/after_motion_sun.png"
+                class="after-hand-image" />
+        </transition>
     </div>
 </template>
 
