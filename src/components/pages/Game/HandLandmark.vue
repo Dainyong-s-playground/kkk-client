@@ -157,9 +157,11 @@ const checkHandInImage = (landmarks) => {
 
 // 컴포넌트가 언마운트될 때 웹캠 종료
 onUnmounted(() => {
-    const stream = video.value.srcObject;
-    const tracks = stream.getTracks();
-    tracks.forEach((track) => track.stop());
+    if (video.value && video.value.srcObject) {
+        const stream = video.value.srcObject;
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+    }
 });
 </script>
 
