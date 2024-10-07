@@ -44,7 +44,7 @@ const getImagePosition = () => {
         y = rect.top;
         imageHeight = rect.height;
     }
-}
+};
 
 // 컴포넌트가 마운트되면 handLandmarker 모델을 불러옴
 onMounted(async () => {
