@@ -24,7 +24,7 @@
 </template>
 
 <script setup>
-import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const video = ref(null);
@@ -109,6 +109,13 @@ const predictWebcam = async () => {
 
     // 예측 결과가 존재할 때, 판단 로직 적용
     if (result.landmarks && result.landmarks.length > 0) {
+        result.landmarks.forEach((landmarks) => {
+            const drawingUtils = new DrawingUtils(canvasCtx);
+            drawingUtils.drawLandmarks(landmarks, {
+                radius: (data) => (data.from ? DrawingUtils.lerp(data.from.z, -0.15, 0.1, 5, 1) : 1),
+            });
+            drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS);
+        });
         checkHandInImage(result.landmarks[0]);
     }
 
