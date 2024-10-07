@@ -223,7 +223,6 @@ export default {
 
 <style>
 .profile-container {
-    margin-top: 150px;
     width: 100%;
 }
 
@@ -231,7 +230,6 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    margin-top: 20px;
 }
 
 .profile-box h1 {
@@ -239,6 +237,7 @@ export default {
 }
 
 .profile-card {
+    width: 100%;
     display: flex;
     flex-wrap: wrap;
     gap: 20px;
@@ -246,21 +245,24 @@ export default {
 }
 
 .profile-card .card {
-    width: 300px;
-    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 350px;
+    height: 350px;
     animation: profile-card-scale-in 0.5s ease-in-out;
 }
 
 .card button {
-    width: 100%;
+    width: 350px;
     height: 100%;
     background: none;
     border: none;
 }
 
 .card button img {
-    width: 100%;
-    height: 85%;
+    width: 300px;
+    height: 300px;
     border-radius: 50%;
     object-fit: contain;
     border: 1px solid #45a049;
