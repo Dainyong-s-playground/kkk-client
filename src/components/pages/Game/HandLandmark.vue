@@ -13,13 +13,6 @@
                     class="after-hand-image" />
             </transition>
         </div>
-
-        <transition name="fade" mode="out-in">
-            <img v-if="!isSuccess" src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png"
-                class="before-hand-image" />
-            <img v-else src="https://Dainyong-s-playground.github.io/imageServer/src/after_motion_sun.png"
-                class="after-hand-image" />
-        </transition>
     </div>
 </template>
 
@@ -187,10 +180,13 @@ onUnmounted(() => {
 
 <style scoped>
 .game-container {
-    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url('https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png');
+    background-size: 100% 100%;
     width: 100%;
-    height: 500px;
-    margin-top: 100px;
+    height: 600px;
 }
 
 .background-image {
@@ -198,7 +194,7 @@ onUnmounted(() => {
     top: 0;
     left: 0;
     width: 100%;
-    height: 500px;
+    height: 600px;
     z-index: 1;
 }
 
@@ -209,45 +205,60 @@ onUnmounted(() => {
     fill: blue;
 }
 
-.webcam-conatiner {
+.content-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+}
+
+.webcam-container {
     position: relative;
     width: 100%;
-    height: auto;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .before-hand-image,
 .after-hand-image,
 .video-element,
 .webcam-canvas {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-47%, -50%);
     width: 35%;
     height: 100%;
     object-fit: cover;
 }
 
 .before-hand-image {
+    position: absolute;
+    width: auto;
+    height: 70%;
     z-index: 3;
     opacity: 0.4;
     transition: opacity 1s ease-in-out;
 }
 
 .after-hand-image {
+    width: 33%;
     z-index: 3;
     opacity: 1;
+
+    margin-left: 22px;
     transition: opacity 1s ease-in-out;
 }
 
 .video-element {
+    position: absolute;
     z-index: 2;
-    transform: translate(-50%, -50%) scaleX(-1);
+    transform: scaleX(-1);
+    height: 90%
 }
 
 .webcam-canvas {
     z-index: 3;
-    transform: translate(-50%, -50%) scaleX(-1);
+    transform: scaleX(-1);
 }
 
 /* 트랜지션을 적용한 애니메이션 */
