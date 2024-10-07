@@ -22,6 +22,8 @@ let canvasCtx = null;
 var y = 0;
 var imageHeight = 0;
 const image = ref(null);
+let stopLandmarkPrediction = false;
+const isSuccess = ref(false);
 
 const getImagePosition = () => {
     if (image.value) {
@@ -81,26 +83,76 @@ const enableWebcam = async () => {
 
 // 웹캠 예측 함수
 const predictWebcam = async () => {
+    if (stopLandmarkPrediction) {
+        console.log("중단");
+        return;
+    }
+
     // 비동기 방식으로 손 랜드마크 예측
     const result = await handLandmarker.detectForVideo(video.value, performance.now());
 
     // 캔버스 초기화
     canvasCtx.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-    // 예측 결과가 존재할 때, 각 손의 랜드마크와 연결선을 그림
-    if (result.landmarks) {
-
-        result.landmarks.forEach((landmarks) => {
-            const drawingUtils = new DrawingUtils(canvasCtx);
-            drawingUtils.drawLandmarks(landmarks, {
-                radius: (data) => (data.from ? DrawingUtils.lerp(data.from.z, -0.15, 0.1, 5, 1) : 1),
-            });
-            drawingUtils.drawConnectors(landmarks, HandLandmarker.HAND_CONNECTIONS);
-        });
+    // 예측 결과가 존재할 때, 판단 로직 적용
+    if (result.landmarks && result.landmarks.length > 0) {
+        checkHandInImage(result.landmarks[0]);
     }
 
     // 예측을 계속 실행하기 위해 requestAnimationFrame으로 다음 프레임 호출
-    requestAnimationFrame(predictWebcam);
+    if (!isSuccess.value) {
+        requestAnimationFrame(predictWebcam);
+    }
+};
+
+// 손이 이미지 안에 있는지 확인
+const checkHandInImage = (landmarks) => {
+    if (!landmarks || landmarks.length === 0) {
+        console.warn("랜드마크가 존재하지 않습니다.");
+        return; // 랜드마크가 없으면 함수 종료
+    }
+
+    const wrist = landmarks[0];
+    const fingertips = [landmarks[4], landmarks[8], landmarks[12], landmarks[16], landmarks[20]];
+
+    // 랜드마크가 유효한지 검사
+    if (!wrist || typeof wrist.y === 'undefined' || fingertips.some(fingertip => !fingertip || typeof fingertip.y === 'undefined')) {
+        console.warn("유효하지 않은 랜드마크 값이 있습니다.");
+        return;
+    }
+
+    // 정규화된 좌표를 이미지 크기로 변환
+    const wristY = wrist.y * imageHeight;
+    const fingertipsY = fingertips.map(fingertip => fingertip.y * imageHeight);
+
+    // 이미지의 상단, 하단 좌표 계산
+    const imageTop = y;
+    const imageBottom = y + imageHeight;
+
+    // 1. 손목이 이미지 하단 20% ~ 40%에 속하는지 확인
+    const isWristInBottom = (wristY <= imageBottom * 0.8) && (wristY >= imageBottom * 0.6);  // 하단 20%
+
+    // 2. 손가락 끝이 이미지 상단 10% ~ 50%에 속하는지 확인
+    const areFingertipsInTop = fingertipsY.every(fingertipY => (fingertipY >= (imageTop + imageHeight) * 0.1) && (fingertipY <= (imageTop + imageHeight) * 0.5));
+
+    if (isWristInBottom && areFingertipsInTop) {
+        console.log("성공");
+        // 2초 후 성공 이미지 표시
+        setTimeout(() => {
+            isSuccess.value = true;
+
+            // 카메라 스트림 종료
+            if (video.value && video.value.srcObject) {
+                const stream = video.value.srcObject;
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+            }
+            // requestAnimationFrame 중단을 위해 종료 플래그 설정
+            stopLandmarkPrediction = true;
+        }, 2000);  // 2초 지연
+    } else {
+        console.log("아직 성공하지 않았습니다.");
+    }
 };
 
 // 컴포넌트가 언마운트될 때 웹캠 종료
