@@ -202,34 +202,29 @@ onUnmounted(() => {
     height: auto;
 }
 
-.hand-image {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 480px;
-    height: 100%;
-    object-fit: cover;
-    z-index: 2;
-    z-index: 4;
-    opacity: 0.3;
-}
-
-.hand-image,
+.before-hand-image,
+.after-hand-image,
 .video-element,
 .webcam-canvas {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%); /* 중앙으로 위치 조정 */
-    width: 480px;
+    transform: translate(-47%, -50%);
+    width: 35%;
     height: 100%;
     object-fit: cover;
 }
 
-.hand-image {
+.before-hand-image {
     z-index: 3;
     opacity: 0.4;
+    transition: opacity 1s ease-in-out;
+}
+
+.after-hand-image {
+    z-index: 3;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
 }
 
 .video-element {
@@ -240,5 +235,16 @@ onUnmounted(() => {
 .webcam-canvas {
     z-index: 3;
     transform: translate(-50%, -50%) scaleX(-1);
+}
+
+/* 트랜지션을 적용한 애니메이션 */
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 1s ease-in-out;
+}
+
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>
