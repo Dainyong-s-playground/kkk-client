@@ -54,7 +54,7 @@ onMounted(async () => {
             delegate: 'GPU',
         },
         runningMode: 'VIDEO',
-        numHands: 1, // 감지할 손의 개수를 명확하게 설정
+        numHands: 1, // 감지할 손의 개수 설정
     });
 
     // 캔버스의 2D 컨텍스트를 가져옴
