@@ -11,7 +11,7 @@
 </template>
 
 <script setup>
-import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
+import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 const video = ref(null);
