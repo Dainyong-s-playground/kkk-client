@@ -19,8 +19,30 @@ const canvas = ref(null);
 let handLandmarker = null;
 let canvasCtx = null;
 
+var y = 0;
+var imageHeight = 0;
+const image = ref(null);
+
+const getImagePosition = () => {
+    if (image.value) {
+        const rect = image.value.getBoundingClientRect();
+        y = rect.top;
+        imageHeight = rect.height;
+    }
+}
+
 // 컴포넌트가 마운트되면 handLandmarker 모델을 불러옴
 onMounted(async () => {
+    if (image.value) {
+        // 이미지가 로드된 경우
+        if (image.value.complete) {
+            getImagePosition();
+        } else {
+            // 이미지가 아직 로드되지 않은 경우, load 이벤트를 기다림
+            image.value.addEventListener('load', getImagePosition);
+        }
+    }
+
     const vision = await FilesetResolver.forVisionTasks(
         'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
     );
