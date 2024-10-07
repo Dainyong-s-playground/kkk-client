@@ -149,11 +149,11 @@ const checkHandInImage = (landmarks) => {
     const imageTop = y;
     const imageBottom = y + imageHeight;
 
-    // 1. 손목이 이미지 하단 20% ~ 40%에 속하는지 확인
-    const isWristInBottom = (wristY <= imageBottom * 0.8) && (wristY >= imageBottom * 0.6);  // 하단 20%
+    // 1. 손목이 이미지 하단 10% ~ 30%에 속하는지 확인
+    const isWristInBottom = (wristY <= imageBottom * 0.9) && (wristY >= imageBottom * 0.7);
 
-    // 2. 손가락 끝이 이미지 상단 10% ~ 50%에 속하는지 확인
-    const areFingertipsInTop = fingertipsY.every(fingertipY => (fingertipY >= (imageTop + imageHeight) * 0.1) && (fingertipY <= (imageTop + imageHeight) * 0.5));
+    // 2. 손가락 끝이 이미지 상단 10% ~ 30%에 속하는지 확인
+    const areFingertipsInTop = fingertipsY.every(fingertipY => (fingertipY >= (imageTop + imageHeight) * 0.1) && (fingertipY <= (imageTop + imageHeight) * 0.3));
 
     if (isWristInBottom && areFingertipsInTop) {
         console.log("성공");
