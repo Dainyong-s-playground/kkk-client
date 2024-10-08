@@ -172,6 +172,8 @@ export default {
 }
 
 .calendar-container {
+    margin-top: 20px;
+    padding-top: 20px;
     width: 60%;
     height: 700px;
     display: flex;
@@ -263,5 +265,10 @@ export default {
     padding: 10px;
     text-align: center;
     font-size: 1.2rem;
+}
+
+button {
+    background: none;
+    border: none;
 }
 </style>

@@ -2,10 +2,21 @@
     <div class="right-container">
         <!-- 프로필 정보 영역 -->
         <div class="profile-container">
-            <img v-if="selectedProfile.image" :src="selectedProfile.image" alt="프로필 이미지" class="profile-image" />
-            <div>
-                <h2>{{ selectedProfile.nickname || '닉네임 없음' }}</h2>
-                <p class="profile-description">{{ selectedProfile.description || '프로필 설명이 없습니다.' }}</p>
+            <div class="profile-card">
+                <img
+                    v-if="selectedProfile.image"
+                    :src="selectedProfile.image"
+                    alt="프로필 이미지"
+                    class="profile-image"
+                />
+                <div class="profile-data">
+                    <h2>{{ selectedProfile.nickname || '닉네임 없음' }} | {{ selectedProfile.gender }}</h2>
+                    <p>{{ selectedProfile.birth }}</p>
+                </div>
+            </div>
+            <div class="total-reads">
+                <h2>총 독서량</h2>
+                <p>{{ this.totalFairyTales }}</p>
             </div>
         </div>
 
@@ -64,7 +75,8 @@ export default {
             favorChartData: null, // 태그 선호도 차트 데이터
             recordChartData: null, // 녹음 참여율 차트 데이터
             motionChartData: null, // 모션 인식 참여율 차트 데이터
-            gameChartData: null, // 게임 참여율 차트 데이터
+            gameChartData: null,
+            totalFairyTales: null, // 게임 참여율 차트 데이터
             chartOptions: {
                 responsive: true,
                 maintainAspectRatio: false, // 비율을 유지하지 않도록 설정
@@ -110,39 +122,40 @@ export default {
                 const participateData = participateResponse.data;
 
                 // 전체 동화 수 및 각 컨텐츠별 참여도 계산
-                const totalFairyTales = 13; // 전체 읽은 동화 수를 명시적으로 지정
+                this.totalFairyTales = participateData.reduce((sum, item) => sum + item.totalReads, 0);
+                console.log('동화읽은 수:' + this.totalFairyTales); // 전체 읽은 동화 수를 명시적으로 지정
                 const totalRecordCount = participateData.reduce((sum, item) => sum + item.recordParticipation, 0);
                 const totalMotionCount = participateData.reduce((sum, item) => sum + item.motionParticipation, 0);
                 const totalGameCount = participateData.reduce((sum, item) => sum + item.gameParticipation, 0);
 
                 // 각각의 도넛 차트를 위한 데이터 생성
                 this.recordChartData = {
-                    labels: ['참여', '미참여'],
+                    labels: ['수행', '스킵'],
                     datasets: [
                         {
                             label: '녹음 참여율',
                             backgroundColor: ['#4caf50', '#e0e0e0'],
-                            data: [totalRecordCount, totalFairyTales - totalRecordCount],
+                            data: [totalRecordCount, this.totalFairyTales - totalRecordCount],
                         },
                     ],
                 };
                 this.motionChartData = {
-                    labels: ['참여', '미참여'],
+                    labels: ['수행', '스킵'],
                     datasets: [
                         {
                             label: '모션 인식 참여율',
                             backgroundColor: ['#03a9f4', '#e0e0e0'],
-                            data: [totalMotionCount, totalFairyTales - totalMotionCount],
+                            data: [totalMotionCount, this.totalFairyTales - totalMotionCount],
                         },
                     ],
                 };
                 this.gameChartData = {
-                    labels: ['참여', '미참여'],
+                    labels: ['수행', '스킵'],
                     datasets: [
                         {
                             label: '게임 참여율',
                             backgroundColor: ['#ff9800', '#e0e0e0'],
-                            data: [totalGameCount, totalFairyTales - totalGameCount],
+                            data: [totalGameCount, this.totalFairyTales - totalGameCount],
                         },
                     ],
                 };
@@ -166,10 +179,98 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    height: 200px;
 }
 
 .doughnut-item {
     width: 150px; /* 각 도넛 차트의 너비 */
     height: 150px; /* 각 도넛 차트의 높이 */
+}
+
+.profile-container {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 180px;
+}
+.profile-card {
+    display: flex;
+    justify-content: left;
+    align-items: center;
+    width: 60%;
+    height: 180px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-image {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+    margin-left: 20px;
+}
+
+.profile-data {
+    width: 50%;
+}
+.total-reads {
+    width: 40%;
+    margin-left: 20px;
+    height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+.total-reads h2 {
+    margin-top: 0;
+}
+.total-reads p {
+    margin: 0;
+}
+.profile-description {
+    margin: 10px 0;
+    font-size: 1.1rem;
+}
+
+.favor-container,
+.participate-container {
+    margin-top: 20px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.doughnut-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.doughnut-item {
+    width: 150px; /* 각 도넛 차트의 너비 */
+    height: 150px; /* 각 도넛 차트의 높이 */
+}
+.doughnut-item h4 {
+    margin: 0;
+}
+.favor-chart {
+    height: 200px; /* 차트 높이 조절 */
+    width: 95%;
+}
+
+canvas {
+    max-width: 100%;
 }
 </style>
