@@ -1,6 +1,6 @@
 <template>
-    <div class="fairy-tale-detail">
-        <div class="detail-content">
+    <div class="fairy-tale-detail" @click="closeDetail">
+        <div class="detail-content" @click.stop>
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.thumbnail" :alt="fairyTale.title" class="detail-image" />
@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { defineProps, ref } from 'vue';
+import { defineProps, ref, defineEmits } from 'vue';
 
 const props = defineProps({
     fairyTale: {
@@ -76,6 +76,12 @@ const playFairyTale = () => {
     // 새 탭에서 FairyPlayer 열기
     const url = `/fairyPlayer/${tempId}?title=${encodeURIComponent(props.fairyTale.title)}`;
     window.open(url, '_blank');
+};
+
+const emit = defineEmits(['close']);
+
+const closeDetail = () => {
+    emit('close');
 };
 </script>
 
