@@ -6,9 +6,31 @@
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
                 >
-                    {{ userName }} 님
+                    <img src="https://dainyong-s-playground.github.io/imageServer/src/kkkLogo.png" />
                 </div>
-                <div class="blank"></div>
+                <div class="menu-container">
+                    <div class="menu-button">
+                        <img
+                            src="https://dainyong-s-playground.github.io/imageServer/src/fairytaleBook.png"
+                            class="menu-img"
+                        />
+                        <span>동화놀이터</span>
+                    </div>
+                    <div class="menu-button">
+                        <img
+                            src="https://dainyong-s-playground.github.io/imageServer/src/parentDashboard.png"
+                            class="menu-img"
+                        />
+                        <span>가정통신문</span>
+                    </div>
+                    <div class="menu-button">
+                        <img
+                            src="https://dainyong-s-playground.github.io/imageServer/src/resister.png"
+                            class="menu-img"
+                        />
+                        <span>도전! 동화</span>
+                    </div>
+                </div>
                 <div class="search-container">
                     <input
                         v-if="isSearchVisible"
@@ -111,8 +133,6 @@ const isSearchVisible = ref(false);
 const searchQuery = ref('');
 
 const emit = defineEmits(['toggle-search']);
-// 사용자 이름을 가져오는 computed 속성 추가
-const userName = computed(() => profileStore.getUserName);
 
 const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
@@ -223,14 +243,16 @@ onUnmounted(() => {
 }
 
 .logo {
-    font-size: 2rem;
-    font-weight: bold;
-    padding: 10px 0;
-    color: rgb(155, 190, 78);
-    transition: all 0.5s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 15%;
 }
-
+.logo img {
+    width: 90%;
+    height: 90px;
+    object-fit: contain;
+}
 .logo-move-down {
     animation: logoMoveDown 0.5s ease forwards;
 }
@@ -385,10 +407,23 @@ nav.nav-hidden {
     background-color: #f0f0f0;
 }
 
-.blank {
-    width: 60%;
+.menu-container {
+    display: flex;
+    width: 70%;
+    justify-content: left;
+    align-items: center;
 }
+.menu-button {
+    display: flex;
+    flex-direction: column;
+    margin-right: 40px;
+}
+.menu-img {
+    width: 60px;
+    object-fit: contain;
+}
+
 .search-container {
-    width: 20%;
+    width: 5%;
 }
 </style>
