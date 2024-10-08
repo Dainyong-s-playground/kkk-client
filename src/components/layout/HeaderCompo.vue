@@ -18,7 +18,7 @@
                         v-model="searchQuery"
                         @blur="toggleSearch"
                     />
-                    <i class="search-icon" @click="toggleSearch">
+                    <i class="search-icon" @click="triggerSearchToggle">
                         <svg
                             v-if="!isScrolled"
                             class="svg-icon"
@@ -81,7 +81,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import { useLayoutStore } from '@/stores/layout';
@@ -110,6 +110,7 @@ const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
 
+const emit = defineEmits(['toggle-search']);
 // 사용자 이름을 가져오는 computed 속성 추가
 const userName = computed(() => profileStore.getUserName);
 
@@ -117,6 +118,10 @@ const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
     transition: 'padding 0.5s ease',
 }));
+
+const triggerSearchToggle = () => {
+    emit('toggle-search');
+};
 
 const handleScroll = () => {
     const currentScrollPosition = window.scrollY;
