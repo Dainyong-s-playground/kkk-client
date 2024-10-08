@@ -1,6 +1,6 @@
 <template>
-    <div class="calendar-container">
-        <div class="calendar">
+    <div class="calendar-container" @click="closeDropdown">
+        <div class="calendar" @click.stop>
             <div class="calendar-header">
                 <button @click="prevMonth">◀</button>
                 <span>{{ year }}년 {{ month + 1 }}월</span>
@@ -22,28 +22,39 @@
                             weekend: day?.date && isWeekend(day.date),
                             'empty-day': !day,
                         }"
+                        @click.stop
                     >
                         {{ day?.day || '' }}
                     </div>
-                    <img v-if="day?.date && events[day.date]" src="@/assets/images/stamp.png" class="has-data" />
+                    <img
+                        v-if="day?.date && events[day.date]"
+                        src="@/assets/images/stamp.png"
+                        class="has-data"
+                        @click.stop
+                    />
                 </div>
             </div>
         </div>
-    </div>
-    <!-- 드롭다운 창 -->
-    <div
-        v-if="showDropdown"
-        :style="{ top: dropdownPosition.top, left: dropdownPosition.left }"
-        class="dropdown-content"
-    >
-        <h3>{{ selectedDate }}의 데이터</h3>
-        <div v-if="dayData">
-            <button @click="checkData">데이터 확인</button>
+        <!-- 드롭다운 창 -->
+        <div
+            v-if="showDropdown"
+            :style="{ top: dropdownPosition.top, left: dropdownPosition.left }"
+            class="dropdown-content"
+        >
+            <div class="dropdown-data">
+                <div class="dropdown-header">
+                    <h3>{{ selectedDate }}의 데이터</h3>
+                </div>
+                <div v-if="dayData">
+                    <button @click="checkData">데이터 확인</button>
+                </div>
+                <div v-else-if="isFutureDate(selectedDate)">
+                    <button @click="makeReservation">예약하기</button>
+                </div>
+                <div v-else>해당 날짜에 데이터가 없습니다.</div>
+            </div>
+            <button class="close-button" @click="closeDropdown">x</button>
         </div>
-        <div v-else-if="isFutureDate(selectedDate)">
-            <button @click="makeReservation">예약하기</button>
-        </div>
-        <div v-else>해당 날짜에 데이터가 없습니다.</div>
     </div>
 </template>
 
@@ -63,8 +74,8 @@ export default {
             },
             daysInMonth: [],
             loading: true,
-            showDropdown: false, // 드롭다운 창의 가시성
-            dropdownPosition: { top: '0px', left: '0px' }, // 드롭다운 창 위치
+            showDropdown: false,
+            dropdownPosition: { top: '0px', left: '0px' },
         };
     },
     watch: {
@@ -77,6 +88,10 @@ export default {
     },
     mounted() {
         this.updateDaysInMonth();
+        document.addEventListener('keydown', this.handleKeydown);
+    },
+    beforeUnmount() {
+        document.removeEventListener('keydown', this.handleKeydown);
     },
     methods: {
         async updateDaysInMonth() {
@@ -104,7 +119,6 @@ export default {
 
             this.$nextTick(() => {
                 this.loading = false;
-                console.log('Updated daysInMonth:', this.daysInMonth);
             });
         },
 
@@ -138,13 +152,12 @@ export default {
             this.selectedDate = date;
             this.dayData = this.events[date] || null;
 
-            // 드롭다운 창의 위치를 클릭된 요소의 위치로 설정
             const rect = event.target.getBoundingClientRect();
             this.dropdownPosition = {
-                top: `${rect.bottom + window.scrollY}px`, // 요소의 아래쪽
-                left: `${rect.left + window.scrollX}px`, // 요소의 왼쪽
+                top: `${rect.bottom + window.scrollY}px`,
+                left: `${rect.left + window.scrollX}px`,
             };
-            this.showDropdown = true; // 드롭다운 창 표시
+            this.showDropdown = true;
         },
 
         isFutureDate(dateString) {
@@ -158,7 +171,23 @@ export default {
         },
 
         makeReservation() {
-            alert(`날짜: ${this.selectedDate}에 예약을 진행합니다.`);
+            // '예약하기' 버튼 클릭 시, 새 창에서 search.vue 파일 열기
+            const newWindow = window.open('/search', '_blank', 'width=800,height=600');
+            if (newWindow) {
+                newWindow.focus();
+            } else {
+                alert('팝업 차단이 활성화되어 새 창을 열 수 없습니다.');
+            }
+        },
+
+        closeDropdown() {
+            this.showDropdown = false;
+        },
+
+        handleKeydown(event) {
+            if (event.key === 'Escape' || event.key === 'Esc') {
+                this.closeDropdown();
+            }
         },
     },
 };
@@ -251,7 +280,9 @@ export default {
     position: absolute;
     border: 1px solid #365563;
     background: #fff;
+    display: flex;
     padding: 10px;
+    border-radius: 10px;
     z-index: 1000;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     transition: opacity 0.3s ease;
@@ -270,5 +301,10 @@ export default {
 button {
     background: none;
     border: none;
+}
+
+.close-button {
+    height: 10%;
+    font-size: 1rem;
 }
 </style>
