@@ -64,12 +64,14 @@
                         </div>
                     </div>
 
-                    <div v-else>
-                        <button @click="onNaverLogin" class="profile-image">로그인</button>
+                    <div v-else class="login-container">
+                        <div class="login-profile">
+                            <button @click="onNaverLogin" class="profile-image">로그인</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <nav :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
+            <nav v-if="showNav" :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
                 <a href="#" class="nav-item">최근 시청 동화</a>
                 <a href="#" class="nav-item">동화</a>
                 <a href="#" class="nav-item">카테고리 ▽</a>
@@ -79,14 +81,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
+import { useLayoutStore } from '@/stores/layout';
 import { storeToRefs } from 'pinia';
+
+// ESLint 오류를 방지하기 위한 주석
+// eslint-disable-next-line no-undef
+defineProps({
+    showNav: {
+        type: Boolean,
+        default: false,
+    },
+});
 
 const router = useRouter();
 const profileStore = useProfileStore();
+const layoutStore = useLayoutStore();
 const { isLoggedIn, selectedProfile: loginUser } = storeToRefs(profileStore);
+const { showNav } = storeToRefs(layoutStore);
 
 const isScrolled = ref(false);
 const isNavHidden = ref(false);
@@ -139,7 +153,7 @@ const logout = async () => {
     try {
         await profileStore.logout();
         router.push('/');
-        alert('로그아웃 성공!');
+        window.location.reload(); // 로그아웃 후 페이지 새로고침
     } catch (error) {
         alert('로그아웃 실패: ' + error.message);
     }
@@ -166,14 +180,6 @@ const toggleSearch = () => {
         searchQuery.value = '';
     }
 };
-// 상태 변화 감지
-watch(
-    loginUser,
-    (newValue, oldValue) => {
-        console.log('selectedProfile 변경됨:', newValue, oldValue);
-    },
-    { deep: true },
-);
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
