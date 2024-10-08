@@ -12,6 +12,7 @@
             <div v-if="daysInMonth.length" class="calendar-days">
                 <div
                     class="cal-day"
+                    :class="{ today: day?.date && isToday(day.date) }"
                     v-for="day in daysInMonth"
                     :key="day?.date || day"
                     @click="day?.date && handleDayClick(day.date, $event)"
@@ -192,6 +193,10 @@ export default {
             const date = new Date(dateString);
             const dayOfWeek = date.getUTCDay();
             return dayOfWeek === 0 || dayOfWeek === 6;
+        },
+        isToday(dateString) {
+            const today = new Date().toISOString().slice(0, 10);
+            return today === dateString;
         },
         prevMonth() {
             if (this.month === 0) {
@@ -441,5 +446,8 @@ li {
 }
 ul {
     padding: 0;
+}
+.today {
+    background-color: #f2e88d; /* 오늘 날짜의 배경색 노란색으로 설정 */
 }
 </style>
