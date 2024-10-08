@@ -155,6 +155,7 @@ export default {
     height: 20%;
     margin-bottom: 20px;
     border-bottom: 2px solid #171717;
+    box-sizing: border-box;
 }
 
 .tag-item {
