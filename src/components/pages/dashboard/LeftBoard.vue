@@ -429,6 +429,10 @@ button {
 .close-button {
     height: 10%;
     font-size: 1rem;
+    border-radius: 50%;
+    border: 1px solid #7e7e7e;
+    background: #7e7e7e;
+    color: #fff;
 }
 li {
     list-style-type: none; /* 기본 점표시 제거 */
