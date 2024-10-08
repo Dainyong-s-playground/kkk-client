@@ -1,14 +1,9 @@
 <template>
-    <div class="right-container">
+    <div v-if="isProfileReady" class="right-container">
         <!-- 프로필 정보 영역 -->
         <div class="profile-container">
             <div class="profile-card">
-                <img
-                    v-if="selectedProfile.image"
-                    :src="selectedProfile.image"
-                    alt="프로필 이미지"
-                    class="profile-image"
-                />
+                <img :src="selectedProfile.image" alt="프로필 이미지" class="profile-image" />
                 <div class="profile-data">
                     <h2>{{ selectedProfile.nickname || '닉네임 없음' }} | {{ selectedProfile.gender }}</h2>
                     <p>{{ selectedProfile.birth }}</p>
@@ -16,7 +11,7 @@
             </div>
             <div class="total-reads">
                 <h2>총 독서량</h2>
-                <p>{{ this.totalFairyTales }}</p>
+                <p>{{ totalFairyTales }}</p>
             </div>
         </div>
 
@@ -52,6 +47,10 @@
             </div>
         </div>
     </div>
+    <!-- 프로필이 로드되지 않았을 때 로딩 화면 -->
+    <div v-else class="loading-container">
+        <p>프로필 정보를 불러오는 중입니다...</p>
+    </div>
 </template>
 
 <script>
@@ -67,26 +66,27 @@ ChartJS.register(Title, Tooltip, Legend, ArcElement, BarElement, CategoryScale, 
 export default {
     name: 'ProfileContainer',
     components: {
-        Bar, // `Bar` 컴포넌트를 등록
-        Doughnut, // `Doughnut` 컴포넌트를 등록
+        Bar,
+        Doughnut,
     },
     data() {
         return {
-            favorChartData: null, // 태그 선호도 차트 데이터
-            recordChartData: null, // 녹음 참여율 차트 데이터
-            motionChartData: null, // 모션 인식 참여율 차트 데이터
+            favorChartData: null,
+            recordChartData: null,
+            motionChartData: null,
             gameChartData: null,
-            totalFairyTales: null, // 게임 참여율 차트 데이터
+            totalFairyTales: null,
+            isProfileReady: false,
             chartOptions: {
                 responsive: true,
-                maintainAspectRatio: false, // 비율을 유지하지 않도록 설정
+                maintainAspectRatio: false,
             },
             doughnutOptions: {
                 responsive: true,
                 maintainAspectRatio: false,
-                cutout: '60%', // 도넛의 내부 비율 조정
-                rotation: -90, // 도넛 그래프를 90도 회전하여 반달 모양으로 표현
-                circumference: 180, // 반달 모양 설정
+                cutout: '60%',
+                rotation: -90,
+                circumference: 180,
             },
         };
     },
@@ -94,16 +94,33 @@ export default {
         ...mapState(useProfileStore, ['selectedProfile']),
     },
     async mounted() {
-        await this.loadChartData();
+        if (!this.selectedProfile || Object.keys(this.selectedProfile).length === 0) {
+            // 프로필이 설정되지 않았을 때 다시 체크
+            await this.loadProfile();
+        }
+
+        if (this.selectedProfile && Object.keys(this.selectedProfile).length > 0) {
+            this.isProfileReady = true;
+            await this.loadChartData();
+        } else {
+            console.error('프로필 정보를 불러올 수 없습니다.');
+        }
     },
     methods: {
+        async loadProfile() {
+            try {
+                const profileStore = useProfileStore();
+                await profileStore.checkLoginStatus(); // 로그인 상태 및 프로필 정보 로드
+            } catch (error) {
+                console.error('프로필 정보를 불러오는 중 오류가 발생했습니다.', error);
+                this.isProfileReady = false;
+            }
+        },
         async loadChartData() {
             try {
-                // 1. 태그 선호도 데이터를 비동기식으로 가져오기
                 const favorResponse = await axios.get('/favorData.json');
                 const favorTags = favorResponse.data;
 
-                // 가져온 데이터를 기반으로 차트 데이터 생성
                 this.favorChartData = {
                     labels: favorTags.map((item) => item.tag),
                     datasets: [
@@ -117,18 +134,14 @@ export default {
                     ],
                 };
 
-                // 2. 컨텐츠 참여도 데이터를 비동기식으로 가져오기
                 const participateResponse = await axios.get('/participateData.json');
                 const participateData = participateResponse.data;
 
-                // 전체 동화 수 및 각 컨텐츠별 참여도 계산
                 this.totalFairyTales = participateData.reduce((sum, item) => sum + item.totalReads, 0);
-                console.log('동화읽은 수:' + this.totalFairyTales); // 전체 읽은 동화 수를 명시적으로 지정
                 const totalRecordCount = participateData.reduce((sum, item) => sum + item.recordParticipation, 0);
                 const totalMotionCount = participateData.reduce((sum, item) => sum + item.motionParticipation, 0);
                 const totalGameCount = participateData.reduce((sum, item) => sum + item.gameParticipation, 0);
 
-                // 각각의 도넛 차트를 위한 데이터 생성
                 this.recordChartData = {
                     labels: ['수행', '스킵'],
                     datasets: [

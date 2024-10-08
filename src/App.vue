@@ -40,7 +40,7 @@ onUnmounted(() => {
 });
 
 const showHeader = computed(() => {
-    const hiddenHeaderRoutes = ['/profiles', /^\/fairyplayer\/\d+$/];
+    const hiddenHeaderRoutes = ['/profiles', '/search', /^\/fairyplayer\/\d+$/];
     const isMainPage = route.path === '/';
 
     if (isMainPage && !isLoggedIn.value) {
