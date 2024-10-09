@@ -29,13 +29,25 @@
                 </div>
                 <div class="detail-info">
                     <div class="button-group">
-                        <button class="play-button" @click="playFairyTale">
+                        <button
+                            v-if="fairyTale.price === 0 || fairyTale.isOwned"
+                            class="play-button"
+                            @click="playFairyTale"
+                        >
                             <img
                                 src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
                                 alt="재생"
                                 class="play-icon"
                             />
-                            재생
+                            재생하기
+                        </button>
+                        <button v-else class="rent-buy-button" @click="openRentBuyModal">
+                            <img
+                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
+                                alt="구매"
+                                class="cart-icon"
+                            />
+                            동화 대여/소장하기
                         </button>
                         <button class="download-button">
                             <img
@@ -60,11 +72,31 @@
                 </div>
             </div>
         </div>
+
+        <!-- 모달 컴포넌트 -->
+        <div v-if="showRentBuyModal" class="modal-overlay" @click="closeRentBuyModal">
+            <div class="modal-content" @click.stop>
+                <h2>{{ fairyTale.title }} 대여/소장하기</h2>
+                <div class="price-options">
+                    <div class="price-option">
+                        <h3>대여하기</h3>
+                        <p class="price">{{ rentPrice }}원</p>
+                        <button @click="rentFairyTale" class="rent-button">대여하기</button>
+                    </div>
+                    <div class="price-option">
+                        <h3>소장하기</h3>
+                        <p class="price">{{ buyPrice }}원</p>
+                        <button @click="buyFairyTale" class="buy-button">소장하기</button>
+                    </div>
+                </div>
+                <button @click="closeRentBuyModal" class="close-modal-button">닫기</button>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { defineProps, ref, defineEmits } from 'vue';
+import { defineProps, ref, defineEmits, computed } from 'vue';
 import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
@@ -76,7 +108,8 @@ const props = defineProps({
                 value &&
                 typeof value.title !== 'undefined' &&
                 typeof value.price !== 'undefined' &&
-                typeof value.viewCount !== 'undefined'
+                typeof value.viewCount !== 'undefined' &&
+                typeof value.isOwned !== 'undefined'
             );
         },
     },
@@ -118,6 +151,31 @@ onUnmounted(() => {
     document.removeEventListener('wheel', disableScroll);
     document.removeEventListener('touchmove', disableScroll);
 });
+
+const showRentBuyModal = ref(false);
+
+const openRentBuyModal = () => {
+    console.log('모달 열기');
+    showRentBuyModal.value = true;
+};
+
+const closeRentBuyModal = () => {
+    showRentBuyModal.value = false;
+};
+
+const rentFairyTale = () => {
+    console.log('동화 대여 기능 실행');
+    closeRentBuyModal();
+};
+
+const buyFairyTale = () => {
+    console.log('동화 소장 기능 실행');
+    closeRentBuyModal();
+};
+
+// rentPrice와 buyPrice가 없을 경우를 대비한 계산된 속성 추가
+const rentPrice = computed(() => props.fairyTale.rentPrice || props.fairyTale.price);
+const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.price * 2);
 </script>
 
 <style scoped>
@@ -359,13 +417,13 @@ onUnmounted(() => {
 }
 
 .content-type-icon {
-    padding: 5px 10px;
+    padding: 5px 14px;
     border-radius: 15px;
-    font-size: 12px;
+    font-size: 15px;
     font-weight: bold;
     color: white;
     background-color: #4caf50;
-    margin-right: 10px;
+    margin-right: 9px;
 }
 
 .content-type-icon.paid {
@@ -387,5 +445,136 @@ onUnmounted(() => {
     height: 20px;
     margin-right: 5px;
     filter: brightness(0) invert(1);
+}
+
+.rent-buy-button {
+    width: 48%;
+    padding: 10px 20px;
+    font-size: 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1; /* 줄 간격을 최소화합니다 */
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    background-color: #ffa500;
+    color: white;
+    white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 합니다 */
+    overflow: hidden; /* 넘치는 텍스트를 숨깁니다 */
+    text-overflow: ellipsis; /* 필요한 경우 텍스트를 줄임표로 표시합니다 */
+}
+
+.rent-buy-button:hover {
+    transform: scale(0.97);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.rent-buy-button:active {
+    transform: scale(0.95);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+
+.cart-icon {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1);
+    flex-shrink: 0; /* 아이콘이 축소되지 않도록 합니다 */
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background-color: #2a2a2a;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 500px;
+    border: 1.5px solid rgb(68, 68, 68);
+}
+
+.modal-content h2 {
+    color: white;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.price-options {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.price-option {
+    text-align: center;
+    width: 48%;
+}
+
+.price-option h3 {
+    color: white;
+    margin-bottom: 10px;
+}
+
+.price {
+    color: #ffa500;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.rent-button,
+.buy-button {
+    width: 88%;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.rent-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.buy-button {
+    background-color: #ffa500;
+    color: white;
+}
+
+.close-modal-button {
+    display: block;
+    width: 90%;
+    margin: 0 auto;
+    padding: 10px 20px;
+    background-color: #666;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.rent-button:hover,
+.buy-button:hover,
+.close-modal-button:hover {
+    opacity: 0.8;
 }
 </style>
