@@ -6,6 +6,19 @@
                     <img :src="fairyTale.thumbnail" :alt="fairyTale.title" class="detail-image" />
                     <div class="image-overlay"></div>
                     <h2 class="detail-title">{{ fairyTale.title }}</h2>
+                    <div class="content-info">
+                        <div class="content-type-icon" :class="{ paid: fairyTale.price > 0 }">
+                            {{ fairyTale.price > 0 ? '유료' : '무료' }}
+                        </div>
+                        <div class="view-count">
+                            <img
+                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/eyeIcon.png"
+                                alt="조회수"
+                                class="eye-icon"
+                            />
+                            <span>{{ fairyTale.viewCount }}</span>
+                        </div>
+                    </div>
                     <button @click="$emit('close')" class="close-button">
                         <img
                             src="https://dainyong-s-playground.github.io/imageServer/detailPage/closeButton.png"
@@ -59,7 +72,12 @@ const props = defineProps({
         type: Object,
         required: true,
         validator: (value) => {
-            return value && typeof value.title !== 'undefined';
+            return (
+                value &&
+                typeof value.title !== 'undefined' &&
+                typeof value.price !== 'undefined' &&
+                typeof value.viewCount !== 'undefined'
+            );
         },
     },
 });
@@ -329,5 +347,45 @@ onUnmounted(() => {
     margin-top: 5px;
     text-align: center;
     color: white;
+}
+
+.content-info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: center;
+    z-index: 2;
+}
+
+.content-type-icon {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: #4caf50;
+    margin-right: 10px;
+}
+
+.content-type-icon.paid {
+    background-color: #ffa500;
+}
+
+.view-count {
+    display: flex;
+    align-items: center;
+    background-color: rgba(103, 103, 103, 0.796);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    color: white;
+}
+
+.eye-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+    filter: brightness(0) invert(1);
 }
 </style>
