@@ -24,19 +24,19 @@
                     @click="showDetail(item)"
                 >
                     <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
                         <div class="gradient-overlay"></div>
                         <div class="play-overlay">▶</div>
                         <div class="progress-bar">
                             <div class="progress" :style="{ width: `${item.progress}%` }"></div>
                         </div>
-                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
-                            {{ item.price > 0 ? '유료' : '무료' }}
+                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                     </div>
                     <div class="content-info recently-watched-info">
                         <span class="title">{{ item.title }}</span>
-                        <span class="episode">{{ item.episode }}</span>
+                        <span class="episode">{{ item.description }}</span>
                     </div>
                     <button class="more-info">ⓘ</button>
                 </div>
@@ -50,10 +50,10 @@
                 <div v-for="(item, index) in top5Series" :key="index" class="content-item" @click="showDetail(item)">
                     <div class="rank">{{ index + 1 }}</div>
                     <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
                         <div class="play-overlay">▶</div>
-                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
-                            {{ item.price > 0 ? '유료' : '무료' }}
+                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                     </div>
                 </div>
@@ -71,11 +71,10 @@
                     @click="showDetail(item)"
                 >
                     <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
+                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
                         <div class="play-overlay">▶</div>
-                        <!-- 유료/무료 아이콘 추가 -->
-                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
-                            {{ item.price > 0 ? '유료' : '무료' }}
+                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                     </div>
                     <div class="content-info">
@@ -87,13 +86,14 @@
 
         <!-- 동화 상세 정보 오버레이 -->
         <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
-            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" />
+            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" @update:views="updateFairyTaleViews" />
         </div>
     </div>
 </template>
 
 <script>
 import FairyTaleDetail from './FairyTaleDetail.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -104,217 +104,249 @@ export default {
             recentlyWatched: [
                 {
                     title: '큼이네집 한글놀이 자음모음편',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    episode: '자음모음편: 50%',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
+                    description: '자음모음편: 50%',
                     progress: 90,
-                    price: 0,
-                    viewCount: 1234, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 1234,
                 },
                 {
                     title: '소미의 소리 가득 하루',
-                    thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    episode: '의성어로 만나는 신나는 세상',
+                    imageUrl: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
+                    description: '의성어로 만나는 신나는 세상',
                     progress: 45,
-                    price: 3000,
-                    viewCount: 5678, // 조회수 추가
-                    isOwned: true, // 대여 여부 추가
+                    rentalPrice: 3000,
+                    views: 5678,
+                    isOwned: true,
                 },
                 {
                     title: '쓱쓱 싹싹',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 꿈나무 그림책 111',
+                    imageUrl: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
+                    description: '북극곰 꿈나무 그림책 111',
                     progress: 72,
-                    price: 2500,
-                    viewCount: 9012, // 조회수 추가
-                    isOwned: true, // 대여 여부 추가
+                    rentalPrice: 2500,
+                    views: 9012,
+                    isOwned: true,
                 },
                 {
                     title: '토네이똥',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    episode: '똥똥똥',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
+                    description: '똥똥똥',
                     progress: 41,
-                    price: 0,
-                    viewCount: 3456, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 3456,
                 },
                 {
                     title: '달은 어떻게 달이 될까?',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 궁금해 시리즈 25',
+                    imageUrl: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
+                    description: '북극곰 궁금해 시리즈 25',
                     progress: 10,
-                    price: 1500,
-                    isRented: true, // 대여한 동화
-                    viewCount: 7890, // 조회수 추가
+                    rentalPrice: 1500,
+                    isRented: true,
+                    views: 7890,
                 },
                 {
                     title: '아빠의 토마토스튜',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    episode: '오늘 아침은 뭘 먹을까?',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
+                    description: '오늘 아침은 뭘 먹을까?',
                     progress: 50,
-                    price: 0,
-                    viewCount: 2345, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 2345,
                 },
                 {
                     title: '고양이 산책',
-                    thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
-                    episode: '물구나무 세상보기',
+                    imageUrl: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
+                    description: '물구나무 세상보기',
                     progress: 80,
-                    price: 2000,
-                    isRented: true, // 대여한 동화
-                    viewCount: 6789, // 조회수 추가
+                    rentalPrice: 2000,
+                    isRented: true,
+                    views: 6789,
                 },
                 {
                     title: '엄마에게 비밀이!',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    episode: '6년 만에 엄마에게 비밀이 생겼다!',
+                    imageUrl: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
+                    description: '6년 만에 엄마에게 비밀이 생겼다!',
                     progress: 20,
-                    price: 0,
-                    viewCount: 4567, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 4567,
                 },
                 {
                     title: '큼이네집 한글놀이 자음모음편',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    episode: '자음모음편: 50%',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
+                    description: '자음모음편: 50%',
                     progress: 30,
-                    price: 0,
-                    viewCount: 8901, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 8901,
                 },
                 {
                     title: '소미의 소리 가득 하루',
-                    thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    episode: '의성어로 만나는 신나는 세상',
+                    imageUrl: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
+                    description: '의성어로 만나는 신나는 세상',
                     progress: 20,
-                    isRented: true, // 대여한 동화
-                    price: 3000,
-                    viewCount: 2345, // 조회수 추가
+                    isRented: true,
+                    rentalPrice: 3000,
+                    views: 2345,
                 },
 
                 {
                     title: '토네이똥',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    episode: '똥똥똥',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
+                    description: '똥똥똥',
                     progress: 40,
-                    price: 0,
-                    viewCount: 1234, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 1234,
                 },
 
                 {
                     title: '아빠의 토마토스튜',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    episode: '오늘 아침은 뭘 먹을까?',
+                    imageUrl: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
+                    description: '오늘 아침은 뭘 먹을까?',
                     progress: 50,
-                    price: 0,
-                    viewCount: 9012, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 9012,
                 },
 
                 {
                     title: '엄마에게 비밀이!',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    episode: '6년 만에 엄마에게 비밀이 생겼다!',
+                    imageUrl: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
+                    description: '6년 만에 엄마에게 비밀이 생겼다!',
                     progress: 50,
-                    price: 0,
-                    viewCount: 7890, // 조회수 추가
+                    rentalPrice: 0,
+                    views: 7890,
                 },
             ],
-            top5Series: [
-                {
-                    title: '감각 통합 놀이',
-                    thumbnail: 'https://img.ridicdn.net/cover/3397000176/xxlarge?dpi=xxhdpi#1',
-                    price: 2500,
-                },
-                {
-                    title: '조용한 빵 가게',
-                    thumbnail: 'https://img.ridicdn.net/cover/1351000111/xxlarge?dpi=xxhdpi#1',
-                    price: 0,
-                },
-                {
-                    title: '소나기',
-                    thumbnail: 'https://img.ridicdn.net/cover/852001701/xxlarge?dpi=xxhdpi#1',
-                    price: 1800,
-                },
-                {
-                    title: '우리아이 괜찮아요 1권',
-                    thumbnail: 'https://img.ridicdn.net/cover/887000033/xxlarge?dpi=xxhdpi#1',
-                    price: 2200,
-                },
-                {
-                    title: '우리아이 괜찮아요 2권',
-                    thumbnail: 'https://img.ridicdn.net/cover/734001025/xxlarge?dpi=xxhdpi#1',
-                    price: 0,
-                },
-            ],
+            top5Series: [],
             categoryContent: [
                 {
                     title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    price: 3000,
-                    isOwned: true, // 소장한 동화
-                    viewCount: 1500,
-                    progress: 60, // 소장한 동화이므로 진행률 유지
+                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 3000,
+                    purchasePrice: 6000,
+                    isOwned: true,
+                    views: 1500,
+                    progress: 60,
+                    description: '붉은 여우 루비의 모험 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    price: 0,
-                    viewCount: 2000,
-                    progress: 30, // 무료 동화이므로 진행률 유지
+                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 0,
+                    views: 2000,
+                    progress: 30,
+                    description: '알렉스 미아의 장난감 공장 비밀 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    price: 3000,
-                    isOwned: true, // 소장한 동화
-                    viewCount: 1500,
-                    progress: 60, // 소장한 동화이므로 진행률 유지
+                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 3000,
+                    purchasePrice: 6000,
+                    isOwned: true,
+                    views: 1500,
+                    progress: 60,
+                    description: '붉은 여우 루비의 모험 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    price: 0,
-                    viewCount: 2000,
-                    progress: 30, // 무료 동화이므로 진행률 유지
+                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 0,
+                    views: 2000,
+                    progress: 30,
+                    description: '알렉스 미아의 장난감 공장 비밀 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '우리 바다 친구들',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    price: 2500,
-                    isRented: true, // 대여한 동화
-                    viewCount: 1800,
-                    progress: 45, // 대여한 동화이므로 진행률 유지
+                    imageUrl: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 2500,
+                    isRented: true,
+                    views: 1800,
+                    progress: 45,
+                    description: '바다 친구들의 모험 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '꼬마 마법사의 모험',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    price: 3500,
-                    viewCount: 2200,
-                    // 구매하지 않은 유료 동화이므로 progress 제거
+                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 3500,
+                    views: 2200,
+                    description: '꼬마 마법사의 모험 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '숲속 동물들의 파티',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    price: 0,
-                    viewCount: 1700,
+                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 0,
+                    views: 1700,
+                    description: '숲속 동물들의 파티 이야기',
+                    author: '작가이름',
                 },
                 {
                     title: '용감한 기사의 여행',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    price: 4000,
-                    viewCount: 2500,
+                    imageUrl: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
+                    rentalPrice: 4000,
+                    views: 2500,
+                    description: '용감한 기사의 여행 이야기',
+                    author: '작가이름',
                 },
                 // 추가 아이템...
             ],
             selectedFairyTale: null,
+            fairyTales: {}, // 동화 데이터를 저장할 객체
         };
     },
     methods: {
-        showDetail(item) {
-            this.selectedFairyTale = {
-                ...item,
-                description: '이 동화의 상세 설명입니다.', // 실제로는 API에서 가져올 수 있습니다
-            };
+        async showDetail(item) {
+            if (!this.fairyTales[item.id]) {
+                try {
+                    const response = await axios.get(`http://localhost:7772/api/fairytales/${item.id}`);
+                    this.fairyTales[item.id] = response.data;
+                } catch (error) {
+                    console.error('동화 데이터를 가져오는 데 실패했습니다:', error);
+                    this.fairyTales[item.id] = item;
+                }
+            }
+            this.selectedFairyTale = this.fairyTales[item.id];
         },
         closeDetail() {
             this.selectedFairyTale = null;
         },
+        updateFairyTaleViews(id, newViews) {
+            if (this.fairyTales[id]) {
+                this.fairyTales[id].views = newViews;
+            }
+            this.updateArrayItemViews(this.recentlyWatched, id, newViews);
+            this.updateArrayItemViews(this.top5Series, id, newViews);
+            this.updateArrayItemViews(this.categoryContent, id, newViews);
+        },
+        updateArrayItemViews(array, id, newViews) {
+            const item = array.find((item) => item.id === id);
+            if (item) {
+                item.views = newViews;
+            }
+        },
+        async fetchTop5FairyTales() {
+            try {
+                const response = await axios.get('http://localhost:7772/api/fairytales/top5');
+                this.top5Series = response.data.map((item) => ({
+                    title: item.title,
+                    imageUrl: item.imageUrl,
+                    rentalPrice: item.rentalPrice,
+                    purchasePrice: item.purchasePrice,
+                    description: item.description,
+                    author: item.author,
+                    views: item.views,
+                    id: item.id,
+                }));
+            } catch (error) {
+                console.error('TOP 5 동화를 가져오는 데 실패했습니다:', error);
+            }
+        },
+    },
+    mounted() {
+        this.fetchTop5FairyTales();
     },
 };
 </script>
