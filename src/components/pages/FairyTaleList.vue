@@ -117,6 +117,7 @@ export default {
                     progress: 45,
                     price: 3000,
                     viewCount: 5678, // 조회수 추가
+                    isOwned: true, // 대여 여부 추가
                 },
                 {
                     title: '쓱쓱 싹싹',
@@ -125,6 +126,7 @@ export default {
                     progress: 72,
                     price: 2500,
                     viewCount: 9012, // 조회수 추가
+                    isOwned: true, // 대여 여부 추가
                 },
                 {
                     title: '토네이똥',
@@ -140,6 +142,7 @@ export default {
                     episode: '북극곰 궁금해 시리즈 25',
                     progress: 10,
                     price: 1500,
+                    isRented: true, // 대여한 동화
                     viewCount: 7890, // 조회수 추가
                 },
                 {
@@ -156,6 +159,7 @@ export default {
                     episode: '물구나무 세상보기',
                     progress: 80,
                     price: 2000,
+                    isRented: true, // 대여한 동화
                     viewCount: 6789, // 조회수 추가
                 },
                 {
@@ -179,17 +183,11 @@ export default {
                     thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
                     episode: '의성어로 만나는 신나는 세상',
                     progress: 20,
+                    isRented: true, // 대여한 동화
                     price: 3000,
                     viewCount: 2345, // 조회수 추가
                 },
-                {
-                    title: '쓱쓱 싹싹',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 꿈나무 그림책 111',
-                    progress: 70,
-                    price: 2500,
-                    viewCount: 6789, // 조회수 추가
-                },
+
                 {
                     title: '토네이똥',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
@@ -198,14 +196,7 @@ export default {
                     price: 0,
                     viewCount: 1234, // 조회수 추가
                 },
-                {
-                    title: '달은 어떻게 달이 될까?',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 궁금해 시리즈 25',
-                    progress: 50,
-                    price: 1500,
-                    viewCount: 5678, // 조회수 추가
-                },
+
                 {
                     title: '아빠의 토마토스튜',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
@@ -214,14 +205,7 @@ export default {
                     price: 0,
                     viewCount: 9012, // 조회수 추가
                 },
-                {
-                    title: '고양이 산책',
-                    thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
-                    episode: '물구나무 세상보기',
-                    progress: 50,
-                    price: 2000,
-                    viewCount: 3456, // 조회수 추가
-                },
+
                 {
                     title: '엄마에게 비밀이!',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
@@ -265,12 +249,29 @@ export default {
                     price: 3000,
                     isOwned: true, // 소장한 동화
                     viewCount: 1500,
+                    progress: 60, // 소장한 동화이므로 진행률 유지
                 },
                 {
                     title: '알렉스 미아와 장난감 공장의 비밀',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
                     price: 0,
                     viewCount: 2000,
+                    progress: 30, // 무료 동화이므로 진행률 유지
+                },
+                {
+                    title: 'The story of 붉은 여우 루비',
+                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    price: 3000,
+                    isOwned: true, // 소장한 동화
+                    viewCount: 1500,
+                    progress: 60, // 소장한 동화이므로 진행률 유지
+                },
+                {
+                    title: '알렉스 미아와 장난감 공장의 비밀',
+                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    price: 0,
+                    viewCount: 2000,
+                    progress: 30, // 무료 동화이므로 진행률 유지
                 },
                 {
                     title: '우리 바다 친구들',
@@ -278,12 +279,14 @@ export default {
                     price: 2500,
                     isRented: true, // 대여한 동화
                     viewCount: 1800,
+                    progress: 45, // 대여한 동화이므로 진행률 유지
                 },
                 {
                     title: '꼬마 마법사의 모험',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
                     price: 3500,
                     viewCount: 2200,
+                    // 구매하지 않은 유료 동화이므로 progress 제거
                 },
                 {
                     title: '숲속 동물들의 파티',

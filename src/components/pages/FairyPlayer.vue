@@ -48,7 +48,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -57,15 +57,12 @@ export default {
         const route = useRoute();
         const fairyTaleId = ref(route.params.id);
         const storyTitle = ref(route.query.title || '제목 없음');
-
-        onMounted(() => {
-            // 여기서 fairyTaleId를 사용하여 서버에서 동화 데이터를 가져올 수 있습니다.
-            console.log('동화 ID:', fairyTaleId.value);
-        });
+        const initialProgress = ref(parseInt(route.query.progress) || 0);
 
         return {
             fairyTaleId,
             storyTitle,
+            initialProgress,
         };
     },
     data() {
@@ -148,10 +145,28 @@ export default {
                 this.previousLine();
             }
         },
+        setInitialProgress() {
+            const totalLines = this.storyLines.length;
+            const lineToStart = Math.floor((this.initialProgress / 100) * totalLines);
+            this.currentLineIndex = Math.min(lineToStart, totalLines - 1);
+        },
+        saveProgress() {
+            const progress = Math.round((this.currentLineIndex / this.storyLines.length) * 100);
+            // 여기서 progress를 서버에 저장하는 로직을 구현합니다.
+            console.log(`진행률 저장: ${progress}%`);
+        },
+    },
+    watch: {
+        currentLineIndex: {
+            handler() {
+                this.saveProgress();
+            },
+        },
     },
     mounted() {
         document.addEventListener('fullscreenchange', this.updateFullscreenState);
         window.addEventListener('keydown', this.handleKeydown);
+        this.setInitialProgress();
     },
     beforeUnmount() {
         document.removeEventListener('fullscreenchange', this.updateFullscreenState);

@@ -4,7 +4,19 @@
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.thumbnail" :alt="fairyTale.title" class="detail-image" />
+                    <!-- 프로그레스 바 추가 -->
+                    <div v-if="fairyTale.progress > 0" class="progress-bar-container">
+                        <div class="progress-bar" :style="{ width: `${fairyTale.progress}%` }"></div>
+                    </div>
                     <div class="image-overlay"></div>
+                    <!-- 대여/소장 상태 표시 추가 -->
+                    <div
+                        v-if="fairyTale.isOwned || fairyTale.isRented"
+                        class="ownership-status"
+                        :class="{ owned: fairyTale.isOwned, rented: fairyTale.isRented }"
+                    >
+                        {{ fairyTale.isOwned ? '소장' : '대여 중' }}
+                    </div>
                     <h2 class="detail-title">{{ fairyTale.title }}</h2>
                     <div class="content-info">
                         <div class="content-type-icon" :class="{ paid: fairyTale.price > 0 }">
@@ -30,7 +42,7 @@
                 <div class="detail-info">
                     <div class="button-group">
                         <button
-                            v-if="fairyTale.price === 0 || fairyTale.isOwned"
+                            v-if="fairyTale.price === 0 || fairyTale.isOwned || fairyTale.isRented"
                             class="play-button"
                             @click="playFairyTale"
                         >
@@ -39,7 +51,7 @@
                                 alt="재생"
                                 class="play-icon"
                             />
-                            재생하기
+                            {{ fairyTale.progress > 0 ? `이어보기 (${fairyTale.progress}%)` : '재생하기' }}
                         </button>
                         <button v-else class="rent-buy-button" @click="openRentBuyModal">
                             <img
@@ -86,7 +98,7 @@
                     <div class="price-option">
                         <h3>소장하기</h3>
                         <p class="price">{{ buyPrice }}원</p>
-                        <button @click="buyFairyTale" class="buy-button">소장하기</button>
+                        <button @click="buyFairyTale" class="buy-button">장하기</button>
                     </div>
                 </div>
                 <button @click="closeRentBuyModal" class="close-modal-button">닫기</button>
@@ -98,6 +110,9 @@
 <script setup>
 import { defineProps, ref, defineEmits, computed } from 'vue';
 import { onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const props = defineProps({
     fairyTale: {
@@ -108,8 +123,7 @@ const props = defineProps({
                 value &&
                 typeof value.title !== 'undefined' &&
                 typeof value.price !== 'undefined' &&
-                typeof value.viewCount !== 'undefined' &&
-                typeof value.isOwned !== 'undefined'
+                typeof value.viewCount !== 'undefined'
             );
         },
     },
@@ -125,8 +139,17 @@ const playFairyTale = () => {
     // 임시 ID 생성 (실제로는 서버에서 제공하는 고유 ID를 사용해야 합니다)
     const tempId = Math.floor(Math.random() * 1000);
 
-    // 새 탭에서 FairyPlayer 열기
-    const url = `/fairyPlayer/${tempId}?title=${encodeURIComponent(props.fairyTale.title)}`;
+    // FairyPlayer로 이동하는 URL 생성
+    const url = router.resolve({
+        name: 'FairyPlayer',
+        params: { id: tempId },
+        query: {
+            title: props.fairyTale.title,
+            progress: props.fairyTale.progress || 0,
+        },
+    }).href;
+
+    // 새 탭에서 URL 열기
     window.open(url, '_blank');
 };
 
@@ -220,7 +243,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
 
 .detail-title {
     position: absolute;
-    bottom: 20px;
+    bottom: 30px;
     left: 20px;
     font-size: 36px;
     font-weight: bold;
@@ -228,6 +251,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     margin: 0;
     z-index: 1;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .close-button {
@@ -287,6 +311,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     font-size: 14px;
     color: #aaa;
     margin-bottom: 20px;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .button-group {
@@ -309,6 +334,10 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     line-height: 1;
     transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .play-button {
@@ -367,6 +396,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     font-weight: bold;
     margin-bottom: 10px;
     color: white;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .recommendations-list {
@@ -405,6 +435,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     margin-top: 5px;
     text-align: center;
     color: white;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .content-info {
@@ -424,6 +455,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     color: white;
     background-color: #4caf50;
     margin-right: 9px;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .content-type-icon.paid {
@@ -438,6 +470,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     border-radius: 15px;
     font-size: 12px;
     color: white;
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .eye-icon {
@@ -465,6 +498,7 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
     white-space: nowrap; /* 텍스트가 한 줄로 유지되도록 합니다 */
     overflow: hidden; /* 넘치는 텍스트를 숨깁니다 */
     text-overflow: ellipsis; /* 필요한 경우 텍스트를 줄임표로 표시합니다 */
+    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .rent-buy-button:hover {
@@ -576,5 +610,45 @@ const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.pric
 .buy-button:hover,
 .close-modal-button:hover {
     opacity: 0.8;
+}
+
+.progress-bar-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.3);
+    z-index: 2;
+}
+
+.progress-bar {
+    height: 100%;
+    background-color: #ff0000;
+    transition: width 0.3s ease;
+}
+
+.ownership-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    bottom: 78px;
+    left: 20px;
+    color: white;
+    padding: 6px 14px;
+    border-radius: 15px;
+    font-size: 15px;
+    font-weight: bold;
+    z-index: 3;
+    line-height: 1;
+}
+
+.ownership-status.owned {
+    background-color: rgba(128, 0, 128, 0.7); /* 소장 상태의 색상 (보라색) */
+}
+
+.ownership-status.rented {
+    background-color: rgba(0, 123, 255, 0.7); /* 대여 상태의 색상 (파란색) */
 }
 </style>
