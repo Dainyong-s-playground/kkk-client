@@ -7,7 +7,7 @@
                 <div class="card">
                     <button @click="openModal">
                         <img
-                            src="https://dainyong-s-playground.github.io/imageServer/profile/AddProfile.png"
+                            src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
                             alt="프로필 생성"
                         />
                     </button>
@@ -25,7 +25,7 @@
                     <div class="card">
                         <button @click="openModal">
                             <img
-                                src="https://dainyong-s-playground.github.io/imageServer/profile/AddProfile.png"
+                                src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
                                 alt="프로필 생성"
                             />
                             <p>프로필 생성</p>
@@ -311,7 +311,6 @@ export default {
 .image-list {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
 }
 
 .image-option {
@@ -391,6 +390,10 @@ p {
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+
+.profile-dataform input[type='text']:focus {
+    outline: none; /* outline 제거 */
 }
 
 /* 모달 애니메이션 */

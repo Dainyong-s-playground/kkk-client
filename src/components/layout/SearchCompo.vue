@@ -234,30 +234,4 @@ const adjustedStories = computed(() => {
     text-align: center;
     margin: 0;
 }
-/* 애니메이션 클래스 */
-@keyframes slide-in {
-    from {
-        transform: translateX(100%); /* 시작 위치: 화면 오른쪽 */
-    }
-    to {
-        transform: translateX(0); /* 최종 위치: 화면 중앙 */
-    }
-}
-
-@keyframes slide-out {
-    from {
-        transform: translateX(0); /* 시작 위치: 화면 중앙 */
-    }
-    to {
-        transform: translateX(100%); /* 최종 위치: 화면 오른쪽 */
-    }
-}
-
-.animate-slide-in {
-    animation: slide-in 0.5s forwards; /* 진입 애니메이션 */
-}
-
-.animate-slide-out {
-    animation: slide-out 0.5s forwards; /* 퇴장 애니메이션 */
-}
 </style>
