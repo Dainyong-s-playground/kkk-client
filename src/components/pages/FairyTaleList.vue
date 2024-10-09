@@ -264,32 +264,40 @@ export default {
                 {
                     title: 'The story of 붉은 여우 루비',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    price: 3000, // 유료 콘텐츠
+                    price: 3000,
+                    isOwned: true, // 소장한 동화
+                    viewCount: 1500,
                 },
                 {
                     title: '알렉스 미아와 장난감 공장의 비밀',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    price: 0, // 무료 콘텐츠
+                    price: 0,
+                    viewCount: 2000,
                 },
                 {
                     title: '우리 바다 친구들',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    price: 2500, // 유료 콘텐츠
+                    price: 2500,
+                    isRented: true, // 대여한 동화
+                    viewCount: 1800,
                 },
                 {
                     title: '꼬마 마법사의 모험',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    price: 3500, // 유료 콘텐츠
+                    price: 3500,
+                    viewCount: 2200,
                 },
                 {
                     title: '숲속 동물들의 파티',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    price: 0, // 무료 콘텐츠
+                    price: 0,
+                    viewCount: 1700,
                 },
                 {
                     title: '용감한 기사의 여행',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    price: 4000, // 유료 콘텐츠
+                    price: 4000,
+                    viewCount: 2500,
                 },
                 // 추가 아이템...
             ],
@@ -601,7 +609,7 @@ export default {
     position: absolute;
     top: 8px;
     left: 8px;
-    padding: 5px 12px;
+    padding: 4px 12px;
     border-radius: 15px;
     font-size: 14px;
     font-weight: bold;
