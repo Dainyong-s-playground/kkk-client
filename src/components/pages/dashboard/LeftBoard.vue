@@ -29,7 +29,7 @@
                     </div>
                     <img
                         v-if="day?.date && pastEvents[day.date]"
-                        src="@/assets/images/stamp.png"
+                        src="https://dainyong-s-playground.github.io/imageServer/src/stamp.png"
                         class="has-data"
                         @click.stop
                     />
@@ -37,7 +37,7 @@
                         v-if="day?.date && futureEvents[day.date] && isFutureDay(day.date)"
                         class="has-data"
                         @click.stop
-                        src="@/assets/images/reservation.png"
+                        src="https://dainyong-s-playground.github.io/imageServer/src/reservation.png"
                     />
                 </div>
                 <!-- 미래 예약 이벤트가 존재할 경우 -->
@@ -48,11 +48,13 @@
             v-if="showDropdown"
             :style="{ top: dropdownPosition.top, left: dropdownPosition.left }"
             class="dropdown-content"
+            @click.stop
         >
             <div class="dropdown-data">
                 <div class="dropdown-header">
                     <h3>{{ selectedDate }}의 동화</h3>
                 </div>
+
                 <div v-if="pastEvents[selectedDate]" class="dropdown-list">
                     <div v-for="(event, index) in pastEvents[selectedDate]" :key="index" class="list-data">
                         <img :src="event.image" class="dropdown-data-img" />
@@ -77,20 +79,40 @@
                     >
                         <img v-if="event.image" :src="event.image" class="dropdown-data-img" />
                         <p>{{ event.title }}</p>
-                        <button @click="cancleReservation()">취소</button>
+                        <button @click="cancleReservation()">x</button>
                     </div>
 
-                    <div class="event-list-button">
-                        <button @click="makeReservation()">예약하기</button>
-                    </div>
+                    <button @click="makeReservation()" class="event-list-button">예약하기</button>
                 </div>
                 <div v-else-if="isFutureDate(selectedDate)" class="dropdown-list">
-                    <div class="event-list-button">
-                        <button @click="makeReservation()">예약하기</button>
-                    </div>
+                    <button @click="makeReservation()" class="event-list-button">예약하기</button>
                 </div>
                 <div v-else class="dropdown-list">
                     <span>읽은동화가 없어요!( ᴗ_ᴗ̩̩ ) </span>
+                </div>
+
+                <!-- 댓글 출력 필드 -->
+                <div v-if="pastEvents[selectedDate]?.dailyComment" class="comment-display">
+                    <h4>엄마의 한말씀</h4>
+                    <p class="comment-text">
+                        {{ pastEvents[selectedDate].dailyComment }}
+                        <span v-if="pastEvents[selectedDate].useComplimentBadge" class="compliment-badge"> 👍 </span>
+                    </p>
+                </div>
+
+                <!-- 댓글 작성 필드 (오늘 이전 날짜일 때만 표시) -->
+                <div class="comment-section" v-if="isPastDate(selectedDate)">
+                    <h4>내아이 칭찬타임</h4>
+                    <input
+                        type="text"
+                        v-model="dailyComment"
+                        class="comment-input"
+                        placeholder="오늘의 독서 활동에 대한 총평을 작성하세요..."
+                    />
+                    <div class="badge-setting">
+                        <input type="checkbox" v-model="useComplimentBadge" /> 칭찬도장 추가
+                    </div>
+                    <button @click="submitDailyComment(selectedDate)" class="comment-button">댓글 작성</button>
                 </div>
             </div>
             <button class="close-button" @click="closeDropdown">x</button>
@@ -115,6 +137,9 @@ export default {
             loading: true,
             showDropdown: false,
             dropdownPosition: { top: '0px', left: '0px' },
+            dailyComment: '', // 댓글 입력 필드 상태
+            commentData: {},
+            useComplimentBadge: false, // 칭찬도장 여부
         };
     },
     watch: {
@@ -129,6 +154,7 @@ export default {
         this.updateDaysInMonth();
         this.updatePastEvents();
         this.updateFutureEvents();
+        // this.loadComments(); // 댓글 데이터 로드
         document.addEventListener('keydown', this.handleKeydown);
         window.addEventListener('message', this.handleMessage, false);
     },
@@ -173,9 +199,25 @@ export default {
                     acc[event.readsDay].push(event);
                     return acc;
                 }, {});
+
+                const response2 = await axios.get('/comments.json');
+                this.commentData = response2.data;
+
+                Object.keys(this.commentData).forEach((date) => {
+                    if (this.pastEvents[date]) {
+                        Object.assign(this.pastEvents[date], this.commentData[date]);
+                    }
+                });
             } catch (error) {
                 console.error('과거 정보를 가져오는 중 오류 발생:', error);
             }
+        },
+        saveComment(event, date) {
+            if (!event.comment || event.comment.trim() === '') return;
+            // 새로운 댓글 추가
+            event.comments.push(event.comment);
+            event.comment = ''; // 입력 필드 초기화
+            console.log(`날짜: ${date}의 이벤트에 댓글이 추가되었습니다.`);
         },
         async updateFutureEvents() {
             try {
@@ -224,6 +266,7 @@ export default {
                 top: `${rect.bottom + window.scrollY}px`,
                 left: `${rect.left + window.scrollX}px`,
             };
+
             this.showDropdown = true;
             console.log('드롭다운활성화');
         },
@@ -280,6 +323,47 @@ export default {
 
             // 오늘 날짜보다 이후인 경우에만 true 반환
             return selectedDate >= today.setHours(0, 0, 0, 0);
+        },
+
+        // 댓글 데이터 로드
+        // async loadComments() {
+        //     try {
+
+        //         // 각 날짜에 댓글 데이터를 매핑
+        //     } catch (error) {
+        //         console.error('댓글 데이터를 로드하는 중 오류가 발생했습니다:', error);
+        //     }
+        // },
+
+        async submitDailyComment(date) {
+            try {
+                const commentData = {
+                    date: date,
+                    comment: this.dailyComment,
+                    useComplimentBadge: this.useComplimentBadge,
+                };
+
+                // 백엔드로 POST 요청 전송
+                await axios.post('/api/comments', commentData);
+
+                // UI에 반영
+                this.$set(this.pastEvents, date, {
+                    ...this.pastEvents[date],
+                    dailyComment: this.dailyComment,
+                    useComplimentBadge: this.useComplimentBadge,
+                });
+
+                this.dailyComment = '';
+                this.useComplimentBadge = false;
+            } catch (error) {
+                console.error('댓글 저장 중 오류 발생:', error);
+            }
+        },
+
+        // 오늘 이전 날짜인지 확인
+        isPastDate(dateString) {
+            const today = new Date().toISOString().slice(0, 10);
+            return dateString < today;
         },
     },
 };
@@ -377,43 +461,55 @@ export default {
     z-index: 1000;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
     transition: opacity 0.3s ease;
-    width: 200px;
+    width: 400px;
 }
 .dropdown-data {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: left;
-    width: 90%;
+    width: 100%;
 }
 .dropdown-list {
     display: flex;
     flex-direction: column;
     justify-content: center;
     width: 100%;
+    border: 1px solid #f0c674;
+    border-radius: 10px;
+    margin-bottom: 10px;
 }
 .dropdown-list p {
     margin: 0;
     font-size: medium;
-    width: 60%;
+    width: 70%;
     padding-left: 5px;
+}
+.dropdown-list span {
+    padding: 10px;
 }
 .list-data {
     width: 100%;
     display: flex;
     justify-content: left;
     align-items: center;
+    padding: 10px;
 }
 .dropdown-data-img {
-    width: 20px;
-    height: 20px;
+    width: 50px;
     object-fit: cover;
-    border-radius: 50%;
+    border-radius: 10px;
     margin-left: 5px;
 }
 .event-list-button {
+    background-color: #4caf50;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    width: 50%;
     align-self: center;
-    margin-top: 15px;
+    margin: 10px;
 }
 .profile-container {
     width: 100%;
@@ -432,12 +528,14 @@ button {
 }
 
 .close-button {
-    height: 10%;
     font-size: 1rem;
     border-radius: 50%;
     border: 1px solid #7e7e7e;
     background: #7e7e7e;
     color: #fff;
+    position: absolute;
+    right: 10px;
+    top: 10px;
 }
 li {
     list-style-type: none; /* 기본 점표시 제거 */
@@ -449,5 +547,69 @@ ul {
 }
 .today {
     background-color: #f2e88d; /* 오늘 날짜의 배경색 노란색으로 설정 */
+}
+
+/* 스타일 정의 */
+.comment-section {
+    margin-top: 10px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    border: 1px solid #f0c674;
+    border-radius: 10px;
+}
+
+.comment-input {
+    width: 95%;
+    height: 20px;
+    margin: 10px;
+}
+
+.comment-button {
+    background-color: #4caf50;
+    color: white;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    width: 50%;
+    align-self: center;
+    margin-bottom: 20px;
+}
+
+.comment-display {
+    width: 100%;
+    border: 1px solid #f0c674;
+    border-radius: 10px;
+}
+
+.comment-text {
+    padding: 10px;
+}
+
+.compliment-badge {
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 5px;
+}
+
+.badge-setting {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-bottom: 10px;
+}
+
+.badge-setting input {
+    margin-right: 5px;
+}
+
+.dropdown-content h4 {
+    margin: 0;
+    padding: 10px;
+}
+.dropdown-content p {
+    margin: 0;
+    padding: 10px;
 }
 </style>
