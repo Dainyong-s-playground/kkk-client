@@ -61,7 +61,6 @@ export default {
         onMounted(() => {
             // 여기서 fairyTaleId를 사용하여 서버에서 동화 데이터를 가져올 수 있습니다.
             console.log('동화 ID:', fairyTaleId.value);
-            // 예: fetchFairyTaleData(fairyTaleId.value);
         });
 
         return {

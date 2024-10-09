@@ -230,7 +230,6 @@ export default {
                     price: 0,
                     viewCount: 7890, // 조회수 추가
                 },
-                // Add more items...
             ],
             top5Series: [
                 {
@@ -258,7 +257,6 @@ export default {
                     thumbnail: 'https://img.ridicdn.net/cover/734001025/xxlarge?dpi=xxhdpi#1',
                     price: 0,
                 },
-                // Add more items...
             ],
             categoryContent: [
                 {
