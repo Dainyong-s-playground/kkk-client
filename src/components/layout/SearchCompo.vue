@@ -1,9 +1,5 @@
 <template>
-    <div
-        v-show="isAnimating"
-        class="search-container"
-        :class="{ 'animate-slide-in': isVisible, 'animate-slide-out': !isVisible }"
-    >
+    <div v-show="isAnimating" class="search-container">
         <div class="search-area-container">
             <div class="search-close-button" @click="closeSearch">
                 <img src="https://dainyong-s-playground.github.io/imageServer/src/backspace.png" />
