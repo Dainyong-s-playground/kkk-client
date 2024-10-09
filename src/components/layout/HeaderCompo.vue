@@ -5,10 +5,13 @@
                 <div
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
+                    @click="goToMain"
                 >
                     {{ userName }} 님
                 </div>
-                <div class="blank"></div>
+                <div :class="['center-logo', { 'logo-invert': isScrolled }]" @click="goToMain">
+                    <img src="https://dainyong-s-playground.github.io/imageServer/src/kkkLogo_none.png" />
+                </div>
                 <div class="search-container">
                     <input
                         v-if="isSearchVisible"
@@ -18,7 +21,7 @@
                         v-model="searchQuery"
                         @blur="toggleSearch"
                     />
-                    <i class="search-icon" @click="toggleSearch">
+                    <i class="search-icon" @click="triggerSearchToggle">
                         <svg
                             v-if="!isScrolled"
                             class="svg-icon"
@@ -81,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import { useLayoutStore } from '@/stores/layout';
@@ -109,14 +112,18 @@ const lastScrollPosition = ref(0);
 const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
-
-// 사용자 이름을 가져오는 computed 속성 추가
 const userName = computed(() => profileStore.getUserName);
+
+const emit = defineEmits(['toggle-search']);
 
 const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
     transition: 'padding 0.5s ease',
 }));
+
+const triggerSearchToggle = () => {
+    emit('toggle-search');
+};
 
 const handleScroll = () => {
     const currentScrollPosition = window.scrollY;
@@ -166,6 +173,10 @@ const toggleDropdown = () => {
 const goToMyPage = () => {
     router.push('/mypage');
     showDropdown.value = false;
+};
+
+const goToMain = () => {
+    router.push('/');
 };
 
 const changeProfile = () => {
@@ -232,6 +243,21 @@ onUnmounted(() => {
 
 .logo-move-up {
     animation: logoMoveUp 0.5s ease forwards;
+}
+
+.center-logo {
+    width: 70%;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+}
+.center-logo img {
+    width: 450px;
+    object-fit: contain;
+}
+
+.center-logo.logo-invert img {
+    filter: invert(1); /* 이미지 색 반전 효과 */
 }
 
 nav {
@@ -380,10 +406,7 @@ nav.nav-hidden {
     background-color: #f0f0f0;
 }
 
-.blank {
-    width: 60%;
-}
 .search-container {
-    width: 20%;
+    width: 5%;
 }
 </style>
