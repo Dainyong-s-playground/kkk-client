@@ -21,6 +21,21 @@
     top: 100px;
     left: 0;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    transition: width 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        /* 화면이 줄어들 때 사이드바 너비 축소 */
+        width: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .sidebar {
+        /* 더 작은 화면에서는 더 축소 */
+        width: 70px;
+    }
 }
 
 .sidebar ul {
