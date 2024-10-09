@@ -187,6 +187,7 @@ onUnmounted(() => {
 .detail-image {
     width: 100%;
     height: 100%;
+    max-height: 450px;
     object-fit: contain;
     border-radius: 9px 9px 0 0;
     background-color: #191919;
