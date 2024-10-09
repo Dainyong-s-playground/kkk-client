@@ -1,5 +1,5 @@
 <template>
-    <div class="fairy-tale-detail" @click="closeDetail">
+    <div class="fairy-tale-detail" @click="closeDetail" @wheel.prevent @touchmove.prevent>
         <div class="detail-content" @click.stop>
             <div class="detail-body">
                 <div class="image-container">
@@ -52,6 +52,7 @@
 
 <script setup>
 import { defineProps, ref, defineEmits } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     fairyTale: {
@@ -83,6 +84,22 @@ const emit = defineEmits(['close']);
 const closeDetail = () => {
     emit('close');
 };
+
+const disableScroll = (e) => {
+    e.preventDefault();
+};
+
+onMounted(() => {
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('wheel', disableScroll, { passive: false });
+    document.addEventListener('touchmove', disableScroll, { passive: false });
+});
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
+    document.removeEventListener('wheel', disableScroll);
+    document.removeEventListener('touchmove', disableScroll);
+});
 </script>
 
 <style scoped>
@@ -95,7 +112,9 @@ const closeDetail = () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000;
+    z-index: 9999; /* z-index 값을 높임 */
+    background-color: rgba(0, 0, 0, 0.5); /* 배경에 반투명한 오버레이 추가 */
+    overflow: hidden; /* 외부 스크롤 완전히 차단 */
 }
 
 .overlay {
@@ -118,6 +137,9 @@ const closeDetail = () => {
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.4); /* 그림자 효과 추가 */
+    max-height: 90vh; /* 뷰포트 높이의 90%로 제한 */
+    overflow-y: auto; /* 내용이 넘칠 경우 스크롤 허용 */
+    -webkit-overflow-scrolling: touch; /* iOS 스크롤 개선 */
 }
 
 .detail-title {
@@ -156,7 +178,7 @@ const closeDetail = () => {
 
 .detail-body {
     display: flex;
-    height: 800px;
+    height: 900px;
     flex-direction: column;
     border-radius: 10px;
     border: 1.5px solid rgb(68, 68, 68);
@@ -164,8 +186,8 @@ const closeDetail = () => {
 
 .detail-image {
     width: 100%;
-    height: 450px;
-    object-fit: cover;
+    height: 100%;
+    object-fit: contain;
     border-radius: 9px 9px 0 0;
     background-color: #191919;
 }
