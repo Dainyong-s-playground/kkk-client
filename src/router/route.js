@@ -1,4 +1,6 @@
 import MiddleFront from '@/components/layout/MiddleFront.vue';
+import DashBoard from '@/components/pages/dashboard/DashBoard.vue';
+import ReservationSearch from '@/components/pages/dashboard/ReservationSearch.vue';
 import FairyPlayer from '@/components/pages/FairyPlayer.vue';
 import FairyTaleList from '@/components/pages/FairyTaleList.vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
@@ -34,6 +36,14 @@ const routes = [
     {
         path: '/game/hand',
         component: HandLandmark,
+    },
+    {
+        path: '/dashboard',
+        component: DashBoard,
+    },
+    {
+        path: '/search',
+        component: ReservationSearch,
     },
 ];
 
