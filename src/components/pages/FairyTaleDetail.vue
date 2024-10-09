@@ -136,16 +136,21 @@ const recommendedTales = ref([
 ]);
 
 const playFairyTale = () => {
-    const tempId = Math.floor(Math.random() * 1000);
+    // fairyTale 객체에 id가 없는 경우를 대비해 임시 ID를 생성합니다.
+    const fairyTaleId = props.fairyTale.id || `temp_${Math.floor(Math.random() * 1000)}`;
+
+    // 새 탭에서 열 URL을 생성합니다.
     const url = router.resolve({
         name: 'FairyPlayer',
-        params: { id: tempId },
+        params: { id: fairyTaleId },
         query: {
             title: props.fairyTale.title,
             progress: props.fairyTale.progress || 0,
             imageUrl: props.fairyTale.imageUrl,
         },
     }).href;
+
+    // 새 탭에서 URL을 엽니다.
     window.open(url, '_blank');
 };
 

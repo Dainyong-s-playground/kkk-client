@@ -56,18 +56,14 @@ onUnmounted(() => {
 });
 
 const showHeader = computed(() => {
-    const hiddenHeaderRoutes = ['/profiles', '/search', /^\/fairyplayer\/\d+$/];
+    const hiddenHeaderRoutes = ['/profiles', '/search', '/fairyplayer'];
     const isMainPage = route.path === '/';
 
     if (isMainPage && !isLoggedIn.value) {
         return false;
     }
 
-    return !hiddenHeaderRoutes.some((hiddenRoute) =>
-        typeof hiddenRoute === 'string'
-            ? hiddenRoute === route.path.toLowerCase()
-            : hiddenRoute.test(route.path.toLowerCase()),
-    );
+    return !hiddenHeaderRoutes.some((hiddenRoute) => route.path.toLowerCase().startsWith(hiddenRoute.toLowerCase()));
 });
 
 const showMiddleCompo = computed(() => {

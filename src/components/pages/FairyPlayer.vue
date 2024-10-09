@@ -1,5 +1,5 @@
 <template>
-    <div class="fairy-player" :class="{ fullscreen: isFullscreen }">
+    <div class="fairy-player" :class="{ fullscreen: isFullscreen }" ref="playerRef">
         <div v-if="isFullscreen" class="fullscreen-header">
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
@@ -31,7 +31,9 @@
                     </button>
                     <span class="tooltip">다음</span>
                 </div>
-                <span class="line-counter">{{ currentLineIndex + 1 }} / {{ storyLines.length }}</span>
+                <span class="line-counter" v-if="storyLines && storyLines.length">
+                    {{ currentLineIndex + 1 }} / {{ storyLines.length }}
+                </span>
             </div>
             <div class="story-title">
                 <img :src="guideCharacterImage" alt="Guide Character" class="guide-character" />
@@ -48,14 +50,118 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
+const fairyTaleId = ref(route.params.id);
 const storyTitle = ref(route.query.title || '제목 없음');
-const currentStoryImage = ref(route.query.imageUrl || 'default-image-url.jpg');
+const progress = ref(Number(route.query.progress) || 0);
+const imageUrl = ref(route.query.imageUrl || '기본 이미지 URL');
 
-// ... 기존 코드 ...
+const storyLines = ref([]);
+const currentLineIndex = ref(0);
+const isFullscreen = ref(false);
+const isPlaying = ref(false);
+const playerRef = ref(null);
+
+const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
+const currentStoryImage = computed(() => imageUrl.value);
+const progressPercentage = computed(() => {
+    return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
+});
+
+// 가이드 캐릭터 이미지 URL
+const guideCharacterImage = ref(
+    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+);
+
+// 컨트롤 아이콘 URL
+const previousIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png');
+const playIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png');
+const stopIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png');
+const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png');
+const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
+
+const playPause = () => {
+    isPlaying.value = !isPlaying.value;
+    // 여기에 실제 재생/일시정지 로직을 추가해야 합니다.
+};
+
+const previousLine = () => {
+    if (currentLineIndex.value > 0) {
+        currentLineIndex.value--;
+    }
+};
+
+const nextLine = () => {
+    if (currentLineIndex.value < storyLines.value.length - 1) {
+        currentLineIndex.value++;
+    }
+};
+
+const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        if (playerRef.value.requestFullscreen) {
+            playerRef.value.requestFullscreen();
+        } else if (playerRef.value.mozRequestFullScreen) {
+            // Firefox
+            playerRef.value.mozRequestFullScreen();
+        } else if (playerRef.value.webkitRequestFullscreen) {
+            // Chrome, Safari and Opera
+            playerRef.value.webkitRequestFullscreen();
+        } else if (playerRef.value.msRequestFullscreen) {
+            // IE/Edge
+            playerRef.value.msRequestFullscreen();
+        }
+        isFullscreen.value = true;
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            // Firefox
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            // Chrome, Safari and Opera
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            // IE/Edge
+            document.msExitFullscreen();
+        }
+        isFullscreen.value = false;
+    }
+};
+
+const handleFullscreenChange = () => {
+    isFullscreen.value = !!document.fullscreenElement;
+};
+
+const handleKeyDown = (event) => {
+    if (event.key === 'Escape' && isFullscreen.value) {
+        toggleFullscreen();
+    }
+};
+
+onMounted(() => {
+    // 여기에서 fairyTaleId를 사용하여 실제 스토리 데이터를 불러와야 합니다.
+    console.log('동화 ID:', fairyTaleId.value);
+    console.log('제목:', storyTitle.value);
+    console.log('진행률:', progress.value);
+    console.log('이미지 URL:', imageUrl.value);
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+});
 </script>
 
 <style scoped>
@@ -157,8 +263,8 @@ const currentStoryImage = ref(route.query.imageUrl || 'default-image-url.jpg');
 
 .guide-character {
     height: 80px;
+    width: 80px;
     object-fit: cover;
-    border-radius: 50%;
     margin-right: 10px;
 }
 
@@ -209,7 +315,7 @@ const currentStoryImage = ref(route.query.imageUrl || 'default-image-url.jpg');
 }
 
 .fairy-player.fullscreen .guide-character {
-    height: 65px;
+    height: 85px;
 }
 
 .progress-bar {
@@ -274,5 +380,63 @@ const currentStoryImage = ref(route.query.imageUrl || 'default-image-url.jpg');
     left: 0;
     right: 0;
     transform: translateX(-55%);
+}
+
+/* 반응형 스타일 추가 */
+@media (max-width: 768px) {
+    .story-info {
+        flex-wrap: wrap;
+        justify-content: center;
+        height: auto;
+        padding: 10px;
+    }
+
+    .controls {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .story-title {
+        position: static;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .guide-character {
+        height: 40px;
+        width: 40px;
+        min-width: 40px;
+    }
+
+    .story-text {
+        font-size: 16px;
+    }
+
+    .control-wrapper:last-child {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+}
+
+/* 더 작은 화면에 대한 추가 조정 */
+@media (max-width: 480px) {
+    .guide-character {
+        height: 30px;
+        width: 30px;
+        min-width: 30px;
+    }
+
+    .story-text {
+        font-size: 14px;
+    }
+
+    .control-icon {
+        width: 20px;
+        height: 20px;
+        margin: 0 4px;
+    }
 }
 </style>
