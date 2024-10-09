@@ -28,7 +28,7 @@
                                 alt="조회수"
                                 class="eye-icon"
                             />
-                            <span>{{ fairyTale.views }}</span>
+                            <span>{{ localViews }}</span>
                         </div>
                     </div>
                     <button @click="$emit('close')" class="close-button">
@@ -108,9 +108,10 @@
 </template>
 
 <script setup>
-import { defineProps, ref, defineEmits, computed } from 'vue';
-import { onMounted, onUnmounted } from 'vue';
+import { defineProps, ref, defineEmits, computed, onMounted, watch, nextTick } from 'vue';
+import { onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 
@@ -154,7 +155,7 @@ const playFairyTale = () => {
     window.open(url, '_blank');
 };
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close', 'update:views']);
 
 const closeDetail = () => {
     emit('close');
@@ -164,10 +165,26 @@ const disableScroll = (e) => {
     e.preventDefault();
 };
 
-onMounted(() => {
-    document.body.style.overflow = 'hidden';
-    document.addEventListener('wheel', disableScroll, { passive: false });
-    document.addEventListener('touchmove', disableScroll, { passive: false });
+const localViews = ref(props.fairyTale.views);
+
+const fetchAndIncrementViews = async () => {
+    try {
+        const response = await axios.post(`http://localhost:7772/api/fairytales/${props.fairyTale.id}/incrementViews`);
+        localViews.value = response.data.views;
+        emit('update:views', props.fairyTale.id, localViews.value);
+    } catch (error) {
+        console.error('조회수 증가 중 오류 발생:', error);
+    }
+};
+
+onMounted(async () => {
+    await nextTick();
+    fetchAndIncrementViews();
+});
+
+// localViews가 변경될 때마다 부모 컴포넌트에 알립니다
+watch(localViews, (newViews) => {
+    emit('update:views', props.fairyTale.id, newViews);
 });
 
 onUnmounted(() => {

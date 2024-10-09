@@ -86,7 +86,7 @@
 
         <!-- 동화 상세 정보 오버레이 -->
         <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
-            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" />
+            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" @update:views="updateFairyTaleViews" />
         </div>
     </div>
 </template>
@@ -294,17 +294,38 @@ export default {
                 // 추가 아이템...
             ],
             selectedFairyTale: null,
+            fairyTales: {}, // 동화 데이터를 저장할 객체
         };
     },
     methods: {
-        showDetail(item) {
-            this.selectedFairyTale = {
-                ...item,
-                description: item.description || '이 동화의 상세 설명입니다.',
-            };
+        async showDetail(item) {
+            if (!this.fairyTales[item.id]) {
+                try {
+                    const response = await axios.get(`http://localhost:7772/api/fairytales/${item.id}`);
+                    this.fairyTales[item.id] = response.data;
+                } catch (error) {
+                    console.error('동화 데이터를 가져오는 데 실패했습니다:', error);
+                    this.fairyTales[item.id] = item;
+                }
+            }
+            this.selectedFairyTale = this.fairyTales[item.id];
         },
         closeDetail() {
             this.selectedFairyTale = null;
+        },
+        updateFairyTaleViews(id, newViews) {
+            if (this.fairyTales[id]) {
+                this.fairyTales[id].views = newViews;
+            }
+            this.updateArrayItemViews(this.recentlyWatched, id, newViews);
+            this.updateArrayItemViews(this.top5Series, id, newViews);
+            this.updateArrayItemViews(this.categoryContent, id, newViews);
+        },
+        updateArrayItemViews(array, id, newViews) {
+            const item = array.find((item) => item.id === id);
+            if (item) {
+                item.views = newViews;
+            }
         },
         async fetchTop5FairyTales() {
             try {
