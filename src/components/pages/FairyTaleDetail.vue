@@ -3,7 +3,7 @@
         <div class="detail-content" @click.stop>
             <div class="detail-body">
                 <div class="image-container">
-                    <img :src="fairyTale.thumbnail" :alt="fairyTale.title" class="detail-image" />
+                    <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
                     <!-- 프로그레스 바 추가 -->
                     <div v-if="fairyTale.progress > 0" class="progress-bar-container">
                         <div class="progress-bar" :style="{ width: `${fairyTale.progress}%` }"></div>
@@ -19,8 +19,8 @@
                     </div>
                     <h2 class="detail-title">{{ fairyTale.title }}</h2>
                     <div class="content-info">
-                        <div class="content-type-icon" :class="{ paid: fairyTale.price > 0 }">
-                            {{ fairyTale.price > 0 ? '유료' : '무료' }}
+                        <div class="content-type-icon" :class="{ paid: fairyTale.rentalPrice > 0 }">
+                            {{ fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                         <div class="view-count">
                             <img
@@ -28,7 +28,7 @@
                                 alt="조회수"
                                 class="eye-icon"
                             />
-                            <span>{{ fairyTale.viewCount }}</span>
+                            <span>{{ fairyTale.views }}</span>
                         </div>
                     </div>
                     <button @click="$emit('close')" class="close-button">
@@ -42,7 +42,7 @@
                 <div class="detail-info">
                     <div class="button-group">
                         <button
-                            v-if="fairyTale.price === 0 || fairyTale.isOwned || fairyTale.isRented"
+                            v-if="fairyTale.rentalPrice === 0 || fairyTale.isOwned || fairyTale.isRented"
                             class="play-button"
                             @click="playFairyTale"
                         >
@@ -122,8 +122,8 @@ const props = defineProps({
             return (
                 value &&
                 typeof value.title !== 'undefined' &&
-                typeof value.price !== 'undefined' &&
-                typeof value.viewCount !== 'undefined'
+                typeof value.rentalPrice !== 'undefined' &&
+                typeof value.views !== 'undefined'
             );
         },
     },
@@ -136,20 +136,16 @@ const recommendedTales = ref([
 ]);
 
 const playFairyTale = () => {
-    // 임시 ID 생성 (실제로는 서버에서 제공하는 고유 ID를 사용해야 합니다)
     const tempId = Math.floor(Math.random() * 1000);
-
-    // FairyPlayer로 이동하는 URL 생성
     const url = router.resolve({
         name: 'FairyPlayer',
         params: { id: tempId },
         query: {
             title: props.fairyTale.title,
             progress: props.fairyTale.progress || 0,
+            imageUrl: props.fairyTale.imageUrl,
         },
     }).href;
-
-    // 새 탭에서 URL 열기
     window.open(url, '_blank');
 };
 
@@ -196,9 +192,9 @@ const buyFairyTale = () => {
     closeRentBuyModal();
 };
 
-// rentPrice와 buyPrice가 없을 경우를 대비한 계산된 속성 추가
-const rentPrice = computed(() => props.fairyTale.rentPrice || props.fairyTale.price);
-const buyPrice = computed(() => props.fairyTale.buyPrice || props.fairyTale.price * 2);
+// rentPrice와 buyPrice 계산된 속성 수정
+const rentPrice = computed(() => props.fairyTale.rentalPrice);
+const buyPrice = computed(() => props.fairyTale.purchasePrice || props.fairyTale.rentalPrice * 2);
 </script>
 
 <style scoped>

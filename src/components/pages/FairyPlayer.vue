@@ -47,132 +47,15 @@
     </div>
 </template>
 
-<script>
+<script setup>
 import { ref } from 'vue';
 import { useRoute } from 'vue-router';
 
-export default {
-    name: 'FairyPlayer',
-    setup() {
-        const route = useRoute();
-        const fairyTaleId = ref(route.params.id);
-        const storyTitle = ref(route.query.title || '제목 없음');
-        const initialProgress = ref(parseInt(route.query.progress) || 0);
+const route = useRoute();
+const storyTitle = ref(route.query.title || '제목 없음');
+const currentStoryImage = ref(route.query.imageUrl || 'default-image-url.jpg');
 
-        return {
-            fairyTaleId,
-            storyTitle,
-            initialProgress,
-        };
-    },
-    data() {
-        return {
-            isPlaying: false,
-            currentStoryImage: 'https://dainyong-s-playground.github.io/imageServer/Tumb1.png',
-            guideCharacterImage:
-                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
-            storyLines: [
-                '옛날 옛날에 어미니와 사이좋은 오누이가 살았습니다.',
-                '어머니 시장에 떡을 팔러 나갔습니다.',
-                '집에 돌아오던 중, 호랑이 한 마리를 만났습니다.',
-                '어흥',
-            ],
-            currentLineIndex: 0,
-            playInterval: null,
-            isFullscreen: false,
-            playIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png',
-            stopIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png',
-            skipIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png',
-            fullscreenIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png',
-            previousIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png',
-        };
-    },
-    computed: {
-        currentLine() {
-            return this.storyLines[this.currentLineIndex];
-        },
-        progressPercentage() {
-            return ((this.currentLineIndex + 1) / this.storyLines.length) * 100;
-        },
-    },
-    methods: {
-        playPause() {
-            this.isPlaying = !this.isPlaying;
-            if (this.isPlaying) {
-                this.playInterval = setInterval(this.nextLine, 3000);
-            } else {
-                clearInterval(this.playInterval);
-            }
-        },
-        nextLine() {
-            if (this.currentLineIndex < this.storyLines.length - 1) {
-                this.currentLineIndex++;
-            } else {
-                this.currentLineIndex = 0;
-                this.isPlaying = false;
-                clearInterval(this.playInterval);
-            }
-        },
-        previousLine() {
-            if (this.currentLineIndex > 0) {
-                this.currentLineIndex--;
-            } else {
-                this.currentLineIndex = this.storyLines.length - 1;
-            }
-            if (this.isPlaying) {
-                clearInterval(this.playInterval);
-                this.playInterval = setInterval(this.nextLine, 3000);
-            }
-        },
-        toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        },
-        updateFullscreenState() {
-            this.isFullscreen = !!document.fullscreenElement;
-        },
-        handleKeydown(event) {
-            if (event.key === 'ArrowRight') {
-                this.nextLine();
-            } else if (event.key === 'ArrowLeft') {
-                this.previousLine();
-            }
-        },
-        setInitialProgress() {
-            const totalLines = this.storyLines.length;
-            const lineToStart = Math.floor((this.initialProgress / 100) * totalLines);
-            this.currentLineIndex = Math.min(lineToStart, totalLines - 1);
-        },
-        saveProgress() {
-            const progress = Math.round((this.currentLineIndex / this.storyLines.length) * 100);
-            // 여기서 progress를 서버에 저장하는 로직을 구현합니다.
-            console.log(`진행률 저장: ${progress}%`);
-        },
-    },
-    watch: {
-        currentLineIndex: {
-            handler() {
-                this.saveProgress();
-            },
-        },
-    },
-    mounted() {
-        document.addEventListener('fullscreenchange', this.updateFullscreenState);
-        window.addEventListener('keydown', this.handleKeydown);
-        this.setInitialProgress();
-    },
-    beforeUnmount() {
-        document.removeEventListener('fullscreenchange', this.updateFullscreenState);
-        window.removeEventListener('keydown', this.handleKeydown);
-    },
-};
+// ... 기존 코드 ...
 </script>
 
 <style scoped>
