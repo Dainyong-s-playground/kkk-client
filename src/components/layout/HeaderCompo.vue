@@ -13,6 +13,7 @@
                         <img
                             src="https://dainyong-s-playground.github.io/imageServer/src/fairytaleBook.png"
                             class="menu-img"
+                            @click="goToFairytale"
                         />
                         <span>동화놀이터</span>
                     </div>
@@ -20,6 +21,7 @@
                         <img
                             src="https://dainyong-s-playground.github.io/imageServer/src/parentDashboard.png"
                             class="menu-img"
+                            @click="goToDashboard"
                         />
                         <span>가정통신문</span>
                     </div>
@@ -27,6 +29,7 @@
                         <img
                             src="https://dainyong-s-playground.github.io/imageServer/src/resister.png"
                             class="menu-img"
+                            @click="goToResister"
                         />
                         <span>도전! 동화</span>
                     </div>
@@ -183,7 +186,15 @@ const logout = async () => {
         alert('로그아웃 실패: ' + error.message);
     }
 };
-
+const goToFairytale = () => {
+    router.push('/fairyTaleList');
+};
+const goToDashboard = () => {
+    router.push('/dashboard');
+};
+const goToResister = () => {
+    alert('도전! 만화 페이지 이동');
+};
 const toggleDropdown = () => {
     showDropdown.value = !showDropdown.value;
 };
