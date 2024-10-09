@@ -17,7 +17,6 @@
                 <div class="card" v-for="profile in profiles" :key="profile.id">
                     <button @click="selectProfile(profile.id)">
                         <img :src="profile.image" />
-                        <!-- <img src="@/assets/images/addProfile.png" /> -->
                         <p>{{ profile.nickname }}</p>
                     </button>
                 </div>
