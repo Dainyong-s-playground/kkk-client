@@ -5,34 +5,12 @@
                 <div
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
+                    @click="goToMain"
                 >
-                    <img src="https://dainyong-s-playground.github.io/imageServer/src/kkkLogo.png" />
+                    {{ userName }} 님
                 </div>
-                <div class="menu-container">
-                    <div class="menu-button">
-                        <img
-                            src="https://dainyong-s-playground.github.io/imageServer/src/fairytaleBook.png"
-                            class="menu-img"
-                            @click="goToFairytale"
-                        />
-                        <span>동화놀이터</span>
-                    </div>
-                    <div class="menu-button">
-                        <img
-                            src="https://dainyong-s-playground.github.io/imageServer/src/parentDashboard.png"
-                            class="menu-img"
-                            @click="goToDashboard"
-                        />
-                        <span>가정통신문</span>
-                    </div>
-                    <div class="menu-button">
-                        <img
-                            src="https://dainyong-s-playground.github.io/imageServer/src/resister.png"
-                            class="menu-img"
-                            @click="goToResister"
-                        />
-                        <span>도전! 동화</span>
-                    </div>
+                <div :class="['center-logo', { 'logo-invert': isScrolled }]" @click="goToMain">
+                    <img src="https://dainyong-s-playground.github.io/imageServer/src/kkkLogo_none.png" />
                 </div>
                 <div class="search-container">
                     <input
@@ -134,6 +112,7 @@ const lastScrollPosition = ref(0);
 const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
+const userName = computed(() => profileStore.getUserName);
 
 const emit = defineEmits(['toggle-search']);
 
@@ -186,15 +165,7 @@ const logout = async () => {
         alert('로그아웃 실패: ' + error.message);
     }
 };
-const goToFairytale = () => {
-    router.push('/fairyTaleList');
-};
-const goToDashboard = () => {
-    router.push('/dashboard');
-};
-const goToResister = () => {
-    alert('도전! 만화 페이지 이동');
-};
+
 const toggleDropdown = () => {
     showDropdown.value = !showDropdown.value;
 };
@@ -202,6 +173,10 @@ const toggleDropdown = () => {
 const goToMyPage = () => {
     router.push('/mypage');
     showDropdown.value = false;
+};
+
+const goToMain = () => {
+    router.push('/');
 };
 
 const changeProfile = () => {
@@ -254,22 +229,35 @@ onUnmounted(() => {
 }
 
 .logo {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    padding: 10px 0;
+    color: rgb(155, 190, 78);
+    transition: all 0.5s ease;
     width: 15%;
 }
-.logo img {
-    width: 90%;
-    height: 90px;
-    object-fit: contain;
-}
+
 .logo-move-down {
     animation: logoMoveDown 0.5s ease forwards;
 }
 
 .logo-move-up {
     animation: logoMoveUp 0.5s ease forwards;
+}
+
+.center-logo {
+    width: 70%;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+}
+.center-logo img {
+    width: 450px;
+    object-fit: contain;
+}
+
+.center-logo.logo-invert img {
+    filter: invert(1); /* 이미지 색 반전 효과 */
 }
 
 nav {
@@ -416,22 +404,6 @@ nav.nav-hidden {
 
 .dropdown-menu button:hover {
     background-color: #f0f0f0;
-}
-
-.menu-container {
-    display: flex;
-    width: 70%;
-    justify-content: left;
-    align-items: center;
-}
-.menu-button {
-    display: flex;
-    flex-direction: column;
-    margin-right: 40px;
-}
-.menu-img {
-    width: 60px;
-    object-fit: contain;
 }
 
 .search-container {

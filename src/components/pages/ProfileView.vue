@@ -6,7 +6,10 @@
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
                     <button @click="openModal">
-                        <img src="https://ifh.cc/g/RXF45B.png" alt="프로필 생성" />
+                        <img
+                            src="https://dainyong-s-playground.github.io/imageServer/profile/AddProfile.png"
+                            alt="프로필 생성"
+                        />
                     </button>
                 </div>
             </div>
@@ -21,7 +24,10 @@
                 <div v-if="profiles.length < 3">
                     <div class="card">
                         <button @click="openModal">
-                            <img src="https://ifh.cc/g/RXF45B.png" alt="프로필 생성" />
+                            <img
+                                src="https://dainyong-s-playground.github.io/imageServer/profile/AddProfile.png"
+                                alt="프로필 생성"
+                            />
                             <p>프로필 생성</p>
                         </button>
                     </div>
@@ -91,7 +97,7 @@ export default {
             },
             selectedImage: null, // 사용자가 선택한 이미지
             imageList: [
-                'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1', // 미리 정의된 이미지 경로
+                // 미리 정의된 이미지 경로
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01.jpeg',
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02.png',
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03.png',
