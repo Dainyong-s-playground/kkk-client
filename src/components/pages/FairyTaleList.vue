@@ -30,6 +30,9 @@
                         <div class="progress-bar">
                             <div class="progress" :style="{ width: `${item.progress}%` }"></div>
                         </div>
+                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
+                            {{ item.price > 0 ? '유료' : '무료' }}
+                        </div>
                     </div>
                     <div class="content-info recently-watched-info">
                         <span class="title">{{ item.title }}</span>
@@ -49,6 +52,9 @@
                     <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
                         <div class="play-overlay">▶</div>
+                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
+                            {{ item.price > 0 ? '유료' : '무료' }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -67,6 +73,10 @@
                     <div class="thumbnail-container">
                         <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
                         <div class="play-overlay">▶</div>
+                        <!-- 유료/무료 아이콘 추가 -->
+                        <div class="content-type-icon" :class="{ paid: item.price > 0 }">
+                            {{ item.price > 0 ? '유료' : '무료' }}
+                        </div>
                     </div>
                     <div class="content-info">
                         <span class="title">{{ item.title }}</span>
@@ -97,155 +107,195 @@ export default {
                     thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
                     episode: '자음모음편: 50%',
                     progress: 90,
+                    price: 0,
+                    viewCount: 1234, // 조회수 추가
                 },
                 {
                     title: '소미의 소리 가득 하루',
                     thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
                     episode: '의성어로 만나는 신나는 세상',
                     progress: 45,
+                    price: 3000,
+                    viewCount: 5678, // 조회수 추가
                 },
                 {
                     title: '쓱쓱 싹싹',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 꿈나무 그림책 111',
                     progress: 72,
+                    price: 2500,
+                    viewCount: 9012, // 조회수 추가
                 },
                 {
                     title: '토네이똥',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
                     episode: '똥똥똥',
                     progress: 41,
+                    price: 0,
+                    viewCount: 3456, // 조회수 추가
                 },
                 {
                     title: '달은 어떻게 달이 될까?',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 궁금해 시리즈 25',
                     progress: 10,
+                    price: 1500,
+                    viewCount: 7890, // 조회수 추가
                 },
                 {
                     title: '아빠의 토마토스튜',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
                     episode: '오늘 아침은 뭘 먹을까?',
                     progress: 50,
+                    price: 0,
+                    viewCount: 2345, // 조회수 추가
                 },
                 {
                     title: '고양이 산책',
                     thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
                     episode: '물구나무 세상보기',
                     progress: 80,
+                    price: 2000,
+                    viewCount: 6789, // 조회수 추가
                 },
                 {
                     title: '엄마에게 비밀이!',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
                     episode: '6년 만에 엄마에게 비밀이 생겼다!',
                     progress: 20,
+                    price: 0,
+                    viewCount: 4567, // 조회수 추가
                 },
                 {
                     title: '큼이네집 한글놀이 자음모음편',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
                     episode: '자음모음편: 50%',
                     progress: 30,
+                    price: 0,
+                    viewCount: 8901, // 조회수 추가
                 },
                 {
                     title: '소미의 소리 가득 하루',
                     thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
                     episode: '의성어로 만나는 신나는 세상',
                     progress: 20,
+                    price: 3000,
+                    viewCount: 2345, // 조회수 추가
                 },
                 {
                     title: '쓱쓱 싹싹',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 꿈나무 그림책 111',
                     progress: 70,
+                    price: 2500,
+                    viewCount: 6789, // 조회수 추가
                 },
                 {
                     title: '토네이똥',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
                     episode: '똥똥똥',
                     progress: 40,
+                    price: 0,
+                    viewCount: 1234, // 조회수 추가
                 },
                 {
                     title: '달은 어떻게 달이 될까?',
                     thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
                     episode: '북극곰 궁금해 시리즈 25',
                     progress: 50,
+                    price: 1500,
+                    viewCount: 5678, // 조회수 추가
                 },
                 {
                     title: '아빠의 토마토스튜',
                     thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
                     episode: '오늘 아침은 뭘 먹을까?',
                     progress: 50,
+                    price: 0,
+                    viewCount: 9012, // 조회수 추가
                 },
                 {
                     title: '고양이 산책',
                     thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
                     episode: '물구나무 세상보기',
                     progress: 50,
+                    price: 2000,
+                    viewCount: 3456, // 조회수 추가
                 },
                 {
                     title: '엄마에게 비밀이!',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
                     episode: '6년 만에 엄마에게 비밀이 생겼다!',
                     progress: 50,
+                    price: 0,
+                    viewCount: 7890, // 조회수 추가
                 },
-                // Add more items...
             ],
             top5Series: [
-                { title: '감각 통합 놀이', thumbnail: 'https://img.ridicdn.net/cover/3397000176/xxlarge?dpi=xxhdpi#1' },
+                {
+                    title: '감각 통합 놀이',
+                    thumbnail: 'https://img.ridicdn.net/cover/3397000176/xxlarge?dpi=xxhdpi#1',
+                    price: 2500,
+                },
                 {
                     title: '조용한 빵 가게',
                     thumbnail: 'https://img.ridicdn.net/cover/1351000111/xxlarge?dpi=xxhdpi#1',
+                    price: 0,
                 },
                 {
                     title: '소나기',
                     thumbnail: 'https://img.ridicdn.net/cover/852001701/xxlarge?dpi=xxhdpi#1',
+                    price: 1800,
                 },
                 {
                     title: '우리아이 괜찮아요 1권',
                     thumbnail: 'https://img.ridicdn.net/cover/887000033/xxlarge?dpi=xxhdpi#1',
+                    price: 2200,
                 },
                 {
                     title: '우리아이 괜찮아요 2권',
                     thumbnail: 'https://img.ridicdn.net/cover/734001025/xxlarge?dpi=xxhdpi#1',
+                    price: 0,
                 },
-                // Add more items...
             ],
             categoryContent: [
                 {
                     title: 'The story of 붉은 여우 루비',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    price: 3000,
+                    isOwned: true, // 소장한 동화
+                    viewCount: 1500,
                 },
                 {
                     title: '알렉스 미아와 장난감 공장의 비밀',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    price: 0,
+                    viewCount: 2000,
                 },
                 {
                     title: '우리 바다 친구들',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
+                    price: 2500,
+                    isRented: true, // 대여한 동화
+                    viewCount: 1800,
                 },
                 {
-                    title: 'The story of 붉은 여우 루비',
+                    title: '꼬마 마법사의 모험',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
+                    price: 3500,
+                    viewCount: 2200,
                 },
                 {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
+                    title: '숲속 동물들의 파티',
                     thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
+                    price: 0,
+                    viewCount: 1700,
                 },
                 {
-                    title: '우리 바다 친구들',
+                    title: '용감한 기사의 여행',
                     thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리 바다 친구들',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
+                    price: 4000,
+                    viewCount: 2500,
                 },
                 // 추가 아이템...
             ],
@@ -433,16 +483,22 @@ export default {
 /* 나님이 시청 중인 콘텐츠 스타일 */
 .recently-watched .content-item {
     width: 200px;
+    overflow: hidden;
 }
 
 .recently-watched .thumbnail-container {
-    padding-top: 120%; /* 2:3 비율로 수정 */
+    padding-top: 120%; /* 2:3 비율 유지 */
+    border-radius: 6px 6px 0 0; /* 상단만 둥글게 */
+    overflow: hidden;
+}
+
+.recently-watched .thumbnail {
+    border-radius: 6px 6px 0 0; /* 상단만 둥글게 */
 }
 
 .recently-watched .content-info.recently-watched-info {
     padding: 10px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
+    border-radius: 0 0 6px 6px; /* 하단만 둥글게 */
     height: 90px;
     background-color: #333333;
     margin-top: -2px;
@@ -539,10 +595,37 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+}
+
+.content-type-icon {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    background-color: #4caf50;
+    z-index: 2;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+}
+
+.content-type-icon.paid {
+    background-color: #ffa500;
+}
+
+/* TOP 5 동화에 대한 특별한 스타일 */
+.top-5 .content-type-icon {
+    top: 8px;
+    left: 9px;
+    font-size: 16px;
+    box-shadow: 0 1px px rgba(0, 0, 0, 0.2); /* 그림자 약간 더 강하게 */
 }
 </style>
