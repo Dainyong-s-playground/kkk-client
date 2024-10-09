@@ -23,6 +23,7 @@ const routes = [
                 path: '/fairyPlayer/:id',
                 name: 'FairyPlayer',
                 component: FairyPlayer,
+                props: true,
             },
         ],
     },

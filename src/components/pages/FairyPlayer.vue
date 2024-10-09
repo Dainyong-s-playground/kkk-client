@@ -48,8 +48,26 @@
 </template>
 
 <script>
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+
 export default {
     name: 'FairyPlayer',
+    setup() {
+        const route = useRoute();
+        const fairyTaleId = ref(route.params.id);
+        const storyTitle = ref(route.query.title || '제목 없음');
+
+        onMounted(() => {
+            // 여기서 fairyTaleId를 사용하여 서버에서 동화 데이터를 가져올 수 있습니다.
+            console.log('동화 ID:', fairyTaleId.value);
+        });
+
+        return {
+            fairyTaleId,
+            storyTitle,
+        };
+    },
     data() {
         return {
             isPlaying: false,
@@ -70,7 +88,6 @@ export default {
             skipIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png',
             fullscreenIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png',
             previousIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png',
-            storyTitle: '호랑이와 떡 할머니', // 동화 제목 추가
         };
     },
     computed: {
