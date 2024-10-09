@@ -6,7 +6,7 @@
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
                 >
-                    나 님
+                    {{ userName }} 님
                 </div>
                 <div class="blank"></div>
                 <div class="search-container">
@@ -64,12 +64,14 @@
                         </div>
                     </div>
 
-                    <div v-else>
-                        <button @click="onNaverLogin" class="profile-image">로그인</button>
+                    <div v-else class="login-container">
+                        <div class="login-profile">
+                            <button @click="onNaverLogin" class="profile-image">로그인</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <nav :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
+            <nav v-if="showNav" :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
                 <a href="#" class="nav-item">최근 시청 동화</a>
                 <a href="#" class="nav-item">동화</a>
                 <a href="#" class="nav-item">카테고리 ▽</a>
@@ -79,14 +81,26 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
+import { useLayoutStore } from '@/stores/layout';
 import { storeToRefs } from 'pinia';
+
+// ESLint 오류를 방지하기 위한 주석
+// eslint-disable-next-line no-undef
+defineProps({
+    showNav: {
+        type: Boolean,
+        default: false,
+    },
+});
 
 const router = useRouter();
 const profileStore = useProfileStore();
+const layoutStore = useLayoutStore();
 const { isLoggedIn, selectedProfile: loginUser } = storeToRefs(profileStore);
+const { showNav } = storeToRefs(layoutStore);
 
 const isScrolled = ref(false);
 const isNavHidden = ref(false);
@@ -95,6 +109,9 @@ const lastScrollPosition = ref(0);
 const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
+
+// 사용자 이름을 가져오는 computed 속성 추가
+const userName = computed(() => profileStore.getUserName);
 
 const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
@@ -136,7 +153,7 @@ const logout = async () => {
     try {
         await profileStore.logout();
         router.push('/');
-        alert('로그아웃 성공!');
+        window.location.reload(); // 로그아웃 후 페이지 새로고침
     } catch (error) {
         alert('로그아웃 실패: ' + error.message);
     }
@@ -163,14 +180,6 @@ const toggleSearch = () => {
         searchQuery.value = '';
     }
 };
-// 상태 변화 감지
-watch(
-    loginUser,
-    (newValue, oldValue) => {
-        console.log('selectedProfile 변경됨:', newValue, oldValue);
-    },
-    { deep: true },
-);
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
@@ -212,7 +221,7 @@ onUnmounted(() => {
     font-size: 2rem;
     font-weight: bold;
     padding: 10px 0;
-    color: #e50914;
+    color: rgb(155, 190, 78);
     transition: all 0.5s ease;
     width: 15%;
 }
@@ -335,8 +344,8 @@ nav.nav-hidden {
 }
 
 .profile-image {
-    width: 75px;
-    height: 75px;
+    width: 85px;
+    height: 85px;
     border-radius: 50%;
     object-fit: cover;
     text-align: center;
@@ -347,7 +356,7 @@ nav.nav-hidden {
 /* 드롭다운 메뉴 스타일 */
 .dropdown-menu {
     position: absolute;
-    /* top: 50px; */
+    top: 90px;
     right: 0;
     background-color: white;
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
