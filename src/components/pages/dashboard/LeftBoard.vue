@@ -63,7 +63,7 @@
                         <input
                             type="checkbox"
                             class="reservation-checkbox"
-                            :checked="isReserved(event.readsDay, event.title)"
+                            :checked="isReserved(event.readsDay, event.fairyTaleTitle)"
                             disabled
                         />
                     </div>
@@ -77,9 +77,9 @@
                         :key="index"
                         class="list-data"
                     >
-                        <img v-if="event.image" :src="event.image" class="dropdown-data-img" />
-                        <p>{{ event.title }}</p>
-                        <button @click="cancleReservation()">x</button>
+                        <img v-if="event.fairyTaleImage" :src="event.fairyTaleImage" class="dropdown-data-img" />
+                        <p>{{ event.fairyTaleTitle }}</p>
+                        <button @click="cancleReservation(event.reservationId)">x</button>
                     </div>
 
                     <button @click="makeReservation()" class="event-list-button">예약하기</button>
@@ -286,9 +286,11 @@ export default {
         },
         async updateFutureEvents() {
             try {
-                const response = await axios.get('/futureData.json');
+                const response = await axios.get(
+                    `http://localhost:7772/api/reservation/load/${this.profileStore.selectedProfile.id}`,
+                );
                 this.futureEvents = response.data.reduce((acc, event) => {
-                    acc[event.readsDay] = event;
+                    acc[event.reservationDate] = event;
                     return acc;
                 }, {});
             } catch (error) {
@@ -347,7 +349,7 @@ export default {
             if (!events) {
                 return false;
             } else {
-                if (events.title === title) {
+                if (events.fairyTaleTitle === title) {
                     return true;
                 } else {
                     return false;
@@ -360,9 +362,19 @@ export default {
             const searchUrl = `/search?selectedDate=${this.selectedDate}`;
             window.open(searchUrl, 'searchWindow', 'width=800,height=600');
         },
-        cancleReservation() {
-            // async axios.post('https://',{예약번호});
-            alert('예약취소!');
+        async cancleReservation(reservationId) {
+            try {
+                // 예약 취소 요청
+                const response = await axios.delete(`http://localhost:7772/api/reservation/cancle/${reservationId}`);
+                if (response.status == 200) {
+                    alert(response.data);
+                    this.updateFutureEvents;
+                }
+            } catch (error) {
+                console.error('예약 취소 중 오류 발생:', error);
+                alert(`예약 취소 중 오류가 발생했습니다: ${error.message}`);
+            }
+            this.$router.go(0);
         },
         closeDropdown() {
             this.showDropdown = false;
@@ -372,15 +384,22 @@ export default {
                 this.closeDropdown();
             }
         },
-        handleMessage(event) {
+        async handleMessage(event) {
             if (event.origin !== window.location.origin) return; // 동일 출처 확인
             const { story, selectedDate } = event.data;
             if (story && selectedDate) {
-                this.futureEvents = {
-                    ...this.futureEvents,
-                    [selectedDate]: story,
-                };
-                alert(`날짜: ${selectedDate}에 '${story.title}' 동화가 추가되었습니다.`);
+                const reservationData = {
+                    profileId: this.selectedProfile.id, // 현재 선택된 프로필의 ID
+                    fairyTaleId: story.id, // 동화 제목
+                    reservationDate: selectedDate,
+                }; // 예약 날짜
+                try {
+                    await axios.post(`http://localhost:7772/api/reservation/add`, reservationData);
+                    this.updateFutureEvents;
+                } catch (error) {
+                    console.error('예약 추가 중 오류 발생:', error);
+                    alert(`예약 추가 중 오류가 발생했습니다: ${error.message}`);
+                }
             }
         },
         isFutureDay(dateString) {

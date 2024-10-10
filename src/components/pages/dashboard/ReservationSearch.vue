@@ -94,7 +94,8 @@ export default {
             });
         },
         handleStoryClick(story) {
-            const clonedStory = JSON.parse(JSON.stringify(story)); // 객체를 문자열로 변환 후 다시 객체로 변환하여 전달
+            const clonedStory = JSON.parse(JSON.stringify(story));
+            console.log(clonedStory); // 객체를 문자열로 변환 후 다시 객체로 변환하여 전달
             window.opener.postMessage(
                 { story: clonedStory, selectedDate: this.selectedDate },
                 window.location.origin, // 동일 출처 보안 확인
