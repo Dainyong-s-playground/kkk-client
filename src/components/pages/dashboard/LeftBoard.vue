@@ -103,8 +103,29 @@
                     </p>
                 </div>
 
-                <!-- 댓글 작성 필드 (오늘 이전 날짜일 때만 표시) -->
-                <div class="comment-section" v-else-if="isPastDate(selectedDate)">
+                <!-- 댓글만 존재할 경우 별도 commentEvents에서 데이터 출력 -->
+                <div
+                    v-else-if="commentEvents[selectedDate] && commentEvents[selectedDate][0]?.dailyComment"
+                    class="comment-display"
+                >
+                    <h4>엄마의 한말씀</h4>
+                    <p class="comment-text">
+                        {{ commentEvents[selectedDate][0].dailyComment }}
+                        <span v-if="commentEvents[selectedDate][0]?.useComplimentBadge" class="compliment-badge">
+                            👍
+                        </span>
+                    </p>
+                </div>
+
+                <!-- 댓글 작성 필드 (오늘 이전 날짜이고 댓글이 없는 경우에만 표시) -->
+                <div
+                    class="comment-section"
+                    v-else-if="
+                        isPastDate(selectedDate) &&
+                        !(pastEvents[selectedDate] && pastEvents[selectedDate][0]?.dailyComment) &&
+                        !(commentEvents[selectedDate] && commentEvents[selectedDate][0]?.dailyComment)
+                    "
+                >
                     <h4>내아이 칭찬타임</h4>
                     <input
                         type="text"
@@ -159,11 +180,24 @@ export default {
         month() {
             this.updateDaysInMonth();
         },
+        selectedProfile: {
+            handler(newProfile) {
+                if (newProfile && newProfile.id) {
+                    this.updatePastEvents();
+                    this.updateFutureEvents();
+                }
+            },
+            immediate: true,
+        },
     },
     mounted() {
         this.updateDaysInMonth();
-        this.updatePastEvents();
-        this.updateFutureEvents();
+        if (this.selectedProfile && this.selectedProfile.id) {
+            this.updatePastEvents();
+            this.updateFutureEvents();
+        } else {
+            console.error('선택된 프로필이 없습니다. 데이터 요청이 중단됩니다.');
+        }
         // this.loadComments(); // 댓글 데이터 로드
         document.addEventListener('keydown', this.handleKeydown);
         window.addEventListener('message', this.handleMessage, false);
@@ -203,7 +237,7 @@ export default {
         async updatePastEvents() {
             try {
                 const historyResponse = await axios.get(
-                    `http://localhost:7772/api/dashboard/pastData/${this.profileStore.selectedProfile.id}`,
+                    `http://localhost:7772/api/history/pastData/${this.profileStore.selectedProfile.id}`,
                 );
                 // 날짜를 키로 가지는 객체로 변환
                 this.pastEvents = historyResponse.data.reduce((acc, event) => {
@@ -212,11 +246,25 @@ export default {
                     return acc;
                 }, {});
                 const commentResponse = await axios.get(
-                    `http://localhost:7772/api/dashboard/comment/${this.profileStore.selectedProfile.id}`,
+                    `http://localhost:7772/api/comment/${this.profileStore.selectedProfile.id}`,
                 );
                 const commentData = commentResponse.data;
 
-                // 날짜별로 댓글을 히스토리에 병합
+                // 댓글 데이터를 별도의 commentEvents 객체에 저장
+                this.commentEvents = commentData.reduce((acc, comment) => {
+                    // 이력 데이터가 없는 경우에만 commentEvents에 추가
+                    if (!this.pastEvents[comment.readsDay]) {
+                        acc[comment.readsDay] = [
+                            {
+                                dailyComment: comment.dailyComment,
+                                useComplimentBadge: comment.useComplimentBadge,
+                            },
+                        ];
+                    }
+                    return acc;
+                }, {});
+
+                // 이력 데이터가 존재하는 경우에는 이력 데이터에 댓글 병합
                 commentData.forEach((comment) => {
                     if (this.pastEvents[comment.readsDay]) {
                         this.pastEvents[comment.readsDay].forEach((event) => {
@@ -346,23 +394,20 @@ export default {
         async submitDailyComment(date) {
             try {
                 const commentData = {
-                    date: date,
-                    comment: this.dailyComment,
-                    useComplimentBadge: this.useComplimentBadge,
+                    readsDay: date, // 날짜 데이터
+                    dailyComment: this.dailyComment, // 댓글 내용
+                    useComplimentBadge: this.useComplimentBadge, // 칭찬 도장 여부
+                    profileId: this.profileStore.selectedProfile.id, // 프로필 ID
                 };
 
                 // 백엔드로 POST 요청 전송
-                await axios.post('/api/comments', commentData);
+                await axios.post(`http://localhost:7772/api/comment/saveComment`, commentData);
 
-                // UI에 반영
-                this.$set(this.pastEvents, date, {
-                    ...this.pastEvents[date],
-                    dailyComment: this.dailyComment,
-                    useComplimentBadge: this.useComplimentBadge,
-                });
+                this.updatePastEvents();
 
                 this.dailyComment = '';
                 this.useComplimentBadge = false;
+                this.closeDropdown();
             } catch (error) {
                 console.error('댓글 저장 중 오류 발생:', error);
             }
