@@ -14,31 +14,31 @@
             </div>
         </section>
         <!-- 나님이 시청 중인 콘텐츠 -->
-        <section class="category recently-watched">
-            <h2 class="category-title">나님이 시청 중인 콘텐츠</h2>
+        <section v-if="profileStore.selectedProfile" class="category recently-watched">
+            <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
             <div class="content-slider">
                 <div
                     v-for="(item, index) in recentlyWatched"
                     :key="index"
                     class="content-item"
-                    @click="showDetail(item)"
+                    @click="showDetail(item.fairyTale)"
                 >
                     <div class="thumbnail-container">
-                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
+                        <img :src="item.fairyTale.imageUrl" :alt="item.fairyTale.title" class="thumbnail" />
                         <div class="gradient-overlay"></div>
                         <div class="play-overlay">▶</div>
                         <div class="progress-bar">
-                            <div class="progress" :style="{ width: `${item.progress}%` }"></div>
+                            <div class="progress" :style="{ width: `${calculateProgress(item.progress)}%` }"></div>
                         </div>
-                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
-                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+                        <div class="content-type-icon" :class="{ paid: item.fairyTale.rentalPrice > 0 }">
+                            {{ item.fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                     </div>
                     <div class="content-info recently-watched-info">
-                        <span class="title">{{ item.title }}</span>
-                        <span class="episode">{{ item.description }}</span>
+                        <span class="title">{{ item.fairyTale.title }}</span>
+                        <span class="episode">{{ item.fairyTale.description }}</span>
                     </div>
-                    <button class="more-info">ⓘ</button>
+                    <button class="more-info" @click.stop="showDetail(item.fairyTale)">ⓘ</button>
                 </div>
             </div>
         </section>
@@ -94,127 +94,21 @@
 <script>
 import FairyTaleDetail from './FairyTaleDetail.vue';
 import axios from 'axios';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
 
 export default {
     components: {
         FairyTaleDetail,
     },
+    setup() {
+        const profileStore = useProfileStore();
+        const { selectedProfile } = storeToRefs(profileStore);
+        return { profileStore, selectedProfile };
+    },
     data() {
         return {
-            recentlyWatched: [
-                {
-                    title: '큼이네집 한글놀이 자음모음편',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    description: '자음모음편: 50%',
-                    progress: 90,
-                    rentalPrice: 0,
-                    views: 1234,
-                },
-                {
-                    title: '소미의 소리 가득 하루',
-                    imageUrl: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    description: '의성어로 만나는 신나는 세상',
-                    progress: 45,
-                    rentalPrice: 3000,
-                    views: 5678,
-                    isOwned: true,
-                },
-                {
-                    title: '쓱쓱 싹싹',
-                    imageUrl: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                    description: '북극곰 꿈나무 그림책 111',
-                    progress: 72,
-                    rentalPrice: 2500,
-                    views: 9012,
-                    isOwned: true,
-                },
-                {
-                    title: '토네이똥',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    description: '똥똥똥',
-                    progress: 41,
-                    rentalPrice: 0,
-                    views: 3456,
-                },
-                {
-                    title: '달은 어떻게 달이 될까?',
-                    imageUrl: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
-                    description: '북극곰 궁금해 시리즈 25',
-                    progress: 10,
-                    rentalPrice: 1500,
-                    isRented: true,
-                    views: 7890,
-                },
-                {
-                    title: '아빠의 토마토스튜',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    description: '오늘 아침은 뭘 먹을까?',
-                    progress: 50,
-                    rentalPrice: 0,
-                    views: 2345,
-                },
-                {
-                    title: '고양이 산책',
-                    imageUrl: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
-                    description: '물구나무 세상보기',
-                    progress: 80,
-                    rentalPrice: 2000,
-                    isRented: true,
-                    views: 6789,
-                },
-                {
-                    title: '엄마에게 비밀이!',
-                    imageUrl: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    description: '6년 만에 엄마에게 비밀이 생겼다!',
-                    progress: 20,
-                    rentalPrice: 0,
-                    views: 4567,
-                },
-                {
-                    title: '큼이네집 한글놀이 자음모음편',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    description: '자음모음편: 50%',
-                    progress: 30,
-                    rentalPrice: 0,
-                    views: 8901,
-                },
-                {
-                    title: '소미의 소리 가득 하루',
-                    imageUrl: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    description: '의성어로 만나는 신나는 세상',
-                    progress: 20,
-                    isRented: true,
-                    rentalPrice: 3000,
-                    views: 2345,
-                },
-
-                {
-                    title: '토네이똥',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    description: '똥똥똥',
-                    progress: 40,
-                    rentalPrice: 0,
-                    views: 1234,
-                },
-
-                {
-                    title: '아빠의 토마토스튜',
-                    imageUrl: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    description: '오늘 아침은 뭘 먹을까?',
-                    progress: 50,
-                    rentalPrice: 0,
-                    views: 9012,
-                },
-
-                {
-                    title: '엄마에게 비밀이!',
-                    imageUrl: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    description: '6년 만에 엄마에게 비밀이 생겼다!',
-                    progress: 50,
-                    rentalPrice: 0,
-                    views: 7890,
-                },
-            ],
+            recentlyWatched: [],
             top5Series: [],
             categoryContent: [
                 {
@@ -298,34 +192,72 @@ export default {
         };
     },
     methods: {
-        async showDetail(item) {
-            if (!this.fairyTales[item.id]) {
-                try {
-                    const response = await axios.get(`http://localhost:7772/api/fairytales/${item.id}`);
-                    this.fairyTales[item.id] = response.data;
-                } catch (error) {
-                    console.error('동화 데이터를 가져오는 데 실패했습니다:', error);
-                    this.fairyTales[item.id] = item;
-                }
+        async fetchRecentlyWatched() {
+            if (!this.profileStore.selectedProfile) {
+                console.error('선택된 프로필 정보가 없습니다.');
+                return;
             }
-            this.selectedFairyTale = this.fairyTales[item.id];
+            try {
+                const response = await axios.get(
+                    `http://localhost:7772/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                        },
+                    },
+                );
+                console.log('서버에서 받은 데이터:', response.data); // 추가된 로그
+                this.recentlyWatched = response.data.map((item) => {
+                    console.log('각 아이템의 progress:', item.progress); // 추가된 로그
+                    return {
+                        ...item,
+                        progress: item.progress || 0,
+                    };
+                });
+            } catch (error) {
+                console.error('최근 시청 목록을 가져오는데 실패했습니다:', error);
+            }
+        },
+        showDetail(fairyTale) {
+            // 동화 상세 정보를 표시하기 전에 조회수 증가
+            const updatedViews = (fairyTale.views || 0) + 1;
+            this.updateFairyTaleViews(fairyTale.id, updatedViews);
+
+            // 업데이트된 동화 정보로 선택
+            this.selectedFairyTale = { ...fairyTale, views: updatedViews };
         },
         closeDetail() {
             this.selectedFairyTale = null;
         },
         updateFairyTaleViews(id, newViews) {
+            // fairyTales 객체 업데이트
             if (this.fairyTales[id]) {
                 this.fairyTales[id].views = newViews;
             }
-            this.updateArrayItemViews(this.recentlyWatched, id, newViews);
-            this.updateArrayItemViews(this.top5Series, id, newViews);
-            this.updateArrayItemViews(this.categoryContent, id, newViews);
-        },
-        updateArrayItemViews(array, id, newViews) {
-            const item = array.find((item) => item.id === id);
-            if (item) {
-                item.views = newViews;
-            }
+
+            // recentlyWatched 배열 업데이트
+            this.recentlyWatched = this.recentlyWatched.map((item) => {
+                if (item.fairyTale.id === id) {
+                    return { ...item, fairyTale: { ...item.fairyTale, views: newViews } };
+                }
+                return item;
+            });
+
+            // top5Series 배열 업데이트
+            this.top5Series = this.top5Series.map((item) => {
+                if (item.id === id) {
+                    return { ...item, views: newViews };
+                }
+                return item;
+            });
+
+            // categoryContent 배열 업데이트
+            this.categoryContent = this.categoryContent.map((item) => {
+                if (item.id === id) {
+                    return { ...item, views: newViews };
+                }
+                return item;
+            });
         },
         async fetchTop5FairyTales() {
             try {
@@ -344,8 +276,42 @@ export default {
                 console.error('TOP 5 동화를 가져오는 데 실패했습니다:', error);
             }
         },
+        calculateProgress(progress) {
+            console.log('원본 progress:', progress);
+            let numericProgress;
+            if (typeof progress === 'string') {
+                // 문자열인 경우 숫자로 변환
+                numericProgress = parseFloat(progress);
+            } else if (typeof progress === 'number') {
+                numericProgress = progress;
+            } else {
+                console.error('잘못된 progress 형식:', progress);
+                return 0;
+            }
+
+            // NaN 체크
+            if (isNaN(numericProgress)) {
+                console.error('progress를 숫자로 변환할 수 없습니다:', progress);
+                return 0;
+            }
+
+            // 0-1 사이의 값으로 가정
+            if (numericProgress <= 1) {
+                numericProgress *= 100;
+            }
+
+            const result = Math.min(Math.max(numericProgress, 0), 100);
+            console.log('계산된 progress:', result);
+            return result;
+        },
     },
-    mounted() {
+    async mounted() {
+        await this.profileStore.checkLoginStatus();
+        if (this.profileStore.selectedProfile) {
+            await this.fetchRecentlyWatched();
+        } else {
+            console.error('선택된 프로필이 없습니다.');
+        }
         this.fetchTop5FairyTales();
     },
 };
@@ -426,7 +392,6 @@ export default {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
-    justify-content: space-around;
 }
 
 .content-slider::-webkit-scrollbar {
