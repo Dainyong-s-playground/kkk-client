@@ -81,7 +81,7 @@
                     <p class="description">{{ fairyTale.description }}</p>
                     <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
                     <div class="recommendations">
-                        <h3 class="recommendations-title">다른 동화 추천</h3>
+                        <h3 class="recommendations-category-title">다른 동화 추천</h3>
                         <div class="recommendations-list">
                             <div v-for="tale in recommendedTales" :key="tale.id" class="recommendation-item">
                                 <img :src="tale.thumbnail" :alt="tale.title" class="recommendation-image" />
@@ -316,7 +316,7 @@ const fairyTale = ref(props.fairyTale);
     justify-content: center;
     align-items: center;
     z-index: 9999; /* z-index 값을 높임 */
-    background-color: rgba(0, 0, 0, 0.5); /* 배경에 반투명한 오버레이 추가 */
+    /* background-color: rgba(0, 0, 0, 0.5); 배경에 반투명한 오버레이 추가 */
     overflow: hidden; /* 외부 스크롤 완전히 차단 */
 }
 
@@ -349,7 +349,7 @@ const fairyTale = ref(props.fairyTale);
     position: absolute;
     bottom: 30px;
     left: 20px;
-    font-size: 36px;
+    font-size: 40px;
     font-weight: bold;
     color: white;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
@@ -382,10 +382,11 @@ const fairyTale = ref(props.fairyTale);
 
 .detail-body {
     display: flex;
-    height: 900px;
+    height: 100%;
     flex-direction: column;
     border-radius: 10px;
-    border: 1.5px solid rgb(68, 68, 68);
+    border: 2px solid rgb(68, 68, 68);
+    overflow-y: hidden;
 }
 
 .detail-image {
@@ -405,14 +406,14 @@ const fairyTale = ref(props.fairyTale);
 }
 
 .description {
-    font-size: 16px;
+    font-size: 23px;
     line-height: 1.5;
     margin-bottom: 20px;
-    color: white;
+    color: #d8d8d8;
 }
 
 .episode {
-    font-size: 14px;
+    font-size: 16px;
     color: #aaa;
     margin-bottom: 20px;
     line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
@@ -428,7 +429,7 @@ const fairyTale = ref(props.fairyTale);
 .download-button {
     width: 48%;
     padding: 10px 20px;
-    font-size: 20px;
+    font-size: 22px;
     border: none;
     border-radius: 5px;
     cursor: pointer;
@@ -495,12 +496,20 @@ const fairyTale = ref(props.fairyTale);
     background: linear-gradient(to top, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0));
 }
 
-.recommendations-title {
-    font-size: 18px;
+.recommendations-category-title {
+    font-size: 30px;
     font-weight: bold;
     margin-bottom: 10px;
     color: white;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1; /* 약간의 여유를 둔 줄 간격 */
+}
+
+.recommendations-title {
+    font-size: 23px;
+    font-weight: bolder;
+    margin-bottom: 10px;
+    color: white;
+    line-height: 1; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .recommendations-list {
@@ -535,7 +544,7 @@ const fairyTale = ref(props.fairyTale);
 }
 
 .recommendation-title {
-    font-size: 14px;
+    font-size: 25px;
     margin-top: 5px;
     text-align: center;
     color: white;
@@ -554,7 +563,7 @@ const fairyTale = ref(props.fairyTale);
 .content-type-icon {
     padding: 5px 14px;
     border-radius: 15px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: bold;
     color: white;
     background-color: #4caf50;
@@ -572,7 +581,7 @@ const fairyTale = ref(props.fairyTale);
     background-color: rgba(103, 103, 103, 0.796);
     padding: 5px 10px;
     border-radius: 15px;
-    font-size: 12px;
+    font-size: 14px;
     color: white;
     line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
 }
@@ -587,7 +596,7 @@ const fairyTale = ref(props.fairyTale);
 .rent-buy-button {
     width: 48%;
     padding: 10px 20px;
-    font-size: 20px;
+    font-size: 22px;
     border: none;
     border-radius: 5px;
     cursor: pointer;

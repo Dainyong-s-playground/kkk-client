@@ -201,7 +201,7 @@ onUnmounted(() => {
     align-items: center;
     height: 10%;
     padding: 0 20px;
-    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     color: #fff;
     margin-top: 0;
 }
@@ -307,7 +307,7 @@ onUnmounted(() => {
 
 .fairy-player.fullscreen .player-container {
     height: 86vh;
-    background-color: #252525;
+    background-color: #4a4949;
 }
 
 .fairy-player.fullscreen .story-info {
@@ -315,7 +315,7 @@ onUnmounted(() => {
 }
 
 .fairy-player.fullscreen .guide-character {
-    height: 85px;
+    height: 80px;
 }
 
 .progress-bar {
@@ -361,7 +361,7 @@ onUnmounted(() => {
 .fullscreen-header {
     width: 100%;
     height: 7vh;
-    background-color: rgba(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     padding-left: 20px;

@@ -372,6 +372,7 @@ export default {
     margin-bottom: 3vw;
     align-items: center;
     justify-content: center;
+    margin-top: 7vh;
 }
 
 .hero-image {
@@ -441,7 +442,7 @@ export default {
 
 .content-item {
     flex: 0 0 auto;
-    width: 200px;
+    width: 250px;
     margin-right: 20px;
     position: relative;
     cursor: pointer;
@@ -501,7 +502,7 @@ export default {
 .episode,
 .status {
     font-size: 0.8vw;
-    color: #999;
+    color: #cbcbcbed !important;
 }
 
 .more-info {
@@ -518,28 +519,29 @@ export default {
     justify-content: center;
     align-items: center;
     font-size: 1vw;
+    line-height: 0;
     cursor: pointer;
 }
 
 /* 나님이 시청 중인 콘텐츠 스타일 */
 .recently-watched .content-item {
-    width: 200px;
+    width: 250px;
     overflow: hidden;
 }
 
 .recently-watched .thumbnail-container {
     padding-top: 120%; /* 2:3 비율 유지 */
-    border-radius: 6px 6px 0 0; /* 상단만 둥글게 */
+    border-radius: 12px 12px 0 0; /* 상단만 둥글게 */
     overflow: hidden;
 }
 
 .recently-watched .thumbnail {
-    border-radius: 6px 6px 0 0; /* 상단만 둥글게 */
+    border-radius: 12px 12px 0 0; /* 상단만 둥글게 */
 }
 
 .recently-watched .content-info.recently-watched-info {
     padding: 10px;
-    border-radius: 0 0 6px 6px; /* 하단만 둥글게 */
+    border-radius: 0 0 12px 12px; /* 하단만 둥글게 */
     height: 90px;
     background-color: #333333;
     margin-top: -2px;
@@ -598,8 +600,8 @@ export default {
 }
 
 .top-5 .content-item {
-    width: 200px;
-    height: 300px; /* 높이 증가 */
+    width: 250px;
+    height: 320px; /* 높이 증가 */
     margin-right: 100px;
 }
 
@@ -611,22 +613,17 @@ export default {
 .top-5 .rank {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     position: absolute;
-    right: 78%;
-    bottom: 8px;
-    font-size: 230px;
+    right: 84%;
+    bottom: 2px;
+    font-size: 240px;
     font-weight: bold;
-    color: black;
-    -webkit-text-stroke: 4px white;
+    color: #000000;
+    -webkit-text-stroke: 4px #000000;
     line-height: 0.8;
 }
 
-/* 추천 동화 스타일 */
-.recommended .content-item {
-    width: 200px;
-}
-
 .recommended .thumbnail-container {
-    padding-top: 140%; /* 2:3 비율로 수정 */
+    padding-top: 150%; /* 2:3 비율로 수정 */
 }
 
 /* 동화 상세 페이지 오버레이 스타일 */
@@ -636,8 +633,8 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(10px);
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
