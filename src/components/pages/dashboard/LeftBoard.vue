@@ -57,8 +57,8 @@
 
                 <div v-if="pastEvents[selectedDate]" class="dropdown-list">
                     <div v-for="(event, index) in pastEvents[selectedDate]" :key="index" class="list-data">
-                        <img :src="event.image" class="dropdown-data-img" />
-                        <p>{{ event.title }}</p>
+                        <img :src="event.fairyTaleImage" class="dropdown-data-img" />
+                        <p>{{ event.fairyTaleTitle }}</p>
                         <!-- 예약 여부 체크박스 (읽기 전용) -->
                         <input
                             type="checkbox"
@@ -92,16 +92,19 @@
                 </div>
 
                 <!-- 댓글 출력 필드 -->
-                <div v-if="pastEvents[selectedDate]?.dailyComment" class="comment-display">
+                <div
+                    v-if="pastEvents[selectedDate] && pastEvents[selectedDate][0]?.dailyComment"
+                    class="comment-display"
+                >
                     <h4>엄마의 한말씀</h4>
                     <p class="comment-text">
-                        {{ pastEvents[selectedDate].dailyComment }}
-                        <span v-if="pastEvents[selectedDate].useComplimentBadge" class="compliment-badge"> 👍 </span>
+                        {{ pastEvents[selectedDate][0].dailyComment }}
+                        <span v-if="pastEvents[selectedDate][0].useComplimentBadge" class="compliment-badge"> 👍 </span>
                     </p>
                 </div>
 
                 <!-- 댓글 작성 필드 (오늘 이전 날짜일 때만 표시) -->
-                <div class="comment-section" v-if="isPastDate(selectedDate)">
+                <div class="comment-section" v-else-if="isPastDate(selectedDate)">
                     <h4>내아이 칭찬타임</h4>
                     <input
                         type="text"
@@ -122,8 +125,15 @@
 
 <script>
 import axios from 'axios';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
 
 export default {
+    setup() {
+        const profileStore = useProfileStore();
+        const { selectedProfile } = storeToRefs(profileStore);
+        return { profileStore, selectedProfile };
+    },
     data() {
         return {
             year: new Date().getFullYear(),
@@ -192,20 +202,27 @@ export default {
         },
         async updatePastEvents() {
             try {
-                const response = await axios.get('/history.json');
+                const historyResponse = await axios.get(
+                    `http://localhost:7772/api/dashboard/pastData/${this.profileStore.selectedProfile.id}`,
+                );
                 // 날짜를 키로 가지는 객체로 변환
-                this.pastEvents = response.data.reduce((acc, event) => {
+                this.pastEvents = historyResponse.data.reduce((acc, event) => {
                     if (!acc[event.readsDay]) acc[event.readsDay] = [];
                     acc[event.readsDay].push(event);
                     return acc;
                 }, {});
+                const commentResponse = await axios.get(
+                    `http://localhost:7772/api/dashboard/comment/${this.profileStore.selectedProfile.id}`,
+                );
+                const commentData = commentResponse.data;
 
-                const response2 = await axios.get('/comments.json');
-                this.commentData = response2.data;
-
-                Object.keys(this.commentData).forEach((date) => {
-                    if (this.pastEvents[date]) {
-                        Object.assign(this.pastEvents[date], this.commentData[date]);
+                // 날짜별로 댓글을 히스토리에 병합
+                commentData.forEach((comment) => {
+                    if (this.pastEvents[comment.readsDay]) {
+                        this.pastEvents[comment.readsDay].forEach((event) => {
+                            event.dailyComment = comment.dailyComment;
+                            event.useComplimentBadge = comment.useComplimentBadge;
+                        });
                     }
                 });
             } catch (error) {
@@ -238,6 +255,7 @@ export default {
         },
         isToday(dateString) {
             const today = new Date().toISOString().slice(0, 10);
+            console.log(dateString);
             return today === dateString;
         },
         prevMonth() {
@@ -324,16 +342,6 @@ export default {
             // 오늘 날짜보다 이후인 경우에만 true 반환
             return selectedDate >= today.setHours(0, 0, 0, 0);
         },
-
-        // 댓글 데이터 로드
-        // async loadComments() {
-        //     try {
-
-        //         // 각 날짜에 댓글 데이터를 매핑
-        //     } catch (error) {
-        //         console.error('댓글 데이터를 로드하는 중 오류가 발생했습니다:', error);
-        //     }
-        // },
 
         async submitDailyComment(date) {
             try {
