@@ -4,7 +4,7 @@
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
-                    <!-- 프로그레스 바 추가 -->
+                    <!-- 프로그레스 바 수정 -->
                     <div v-if="fairyTale.progress > 0" class="progress-bar-container">
                         <div class="progress-bar" :style="{ width: `${fairyTale.progress}%` }"></div>
                     </div>
@@ -124,7 +124,8 @@ const props = defineProps({
                 value &&
                 typeof value.title !== 'undefined' &&
                 typeof value.rentalPrice !== 'undefined' &&
-                typeof value.views !== 'undefined'
+                typeof value.views !== 'undefined' &&
+                typeof value.progress !== 'undefined' // progress 속성 추가
             );
         },
     },
@@ -182,10 +183,13 @@ onMounted(async () => {
     fetchAndIncrementViews();
 });
 
-// localViews가 변경될 때마다 부모 컴포넌트에 알립니다
-watch(localViews, (newViews) => {
-    emit('update:views', props.fairyTale.id, newViews);
-});
+// props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
+watch(
+    () => props.fairyTale.views,
+    (newViews) => {
+        localViews.value = newViews;
+    },
+);
 
 onUnmounted(() => {
     document.body.style.overflow = '';
