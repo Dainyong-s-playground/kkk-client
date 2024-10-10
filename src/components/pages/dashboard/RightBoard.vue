@@ -134,13 +134,10 @@ export default {
                     ],
                 };
 
-                const participateResponse = await axios.get('/participateData.json');
+                const participateResponse = await axios.get(
+                    `http://localhost:7772/api/graph/report/${this.selectedProfile.id}`,
+                );
                 const participateData = participateResponse.data;
-
-                this.totalFairyTales = participateData.reduce((sum, item) => sum + item.totalReads, 0);
-                const totalRecordCount = participateData.reduce((sum, item) => sum + item.recordParticipation, 0);
-                const totalMotionCount = participateData.reduce((sum, item) => sum + item.motionParticipation, 0);
-                const totalGameCount = participateData.reduce((sum, item) => sum + item.gameParticipation, 0);
 
                 this.recordChartData = {
                     labels: ['수행', '스킵'],
@@ -148,7 +145,7 @@ export default {
                         {
                             label: '녹음 참여율',
                             backgroundColor: ['#4caf50', '#e0e0e0'],
-                            data: [totalRecordCount, this.totalFairyTales - totalRecordCount],
+                            data: [participateData.recordCount, participateData.count - participateData.recordCount],
                         },
                     ],
                 };
@@ -158,7 +155,7 @@ export default {
                         {
                             label: '모션 인식 참여율',
                             backgroundColor: ['#03a9f4', '#e0e0e0'],
-                            data: [totalMotionCount, this.totalFairyTales - totalMotionCount],
+                            data: [participateData.motionCount, participateData.count - participateData.motionCount],
                         },
                     ],
                 };
@@ -168,7 +165,7 @@ export default {
                         {
                             label: '게임 참여율',
                             backgroundColor: ['#ff9800', '#e0e0e0'],
-                            data: [totalGameCount, this.totalFairyTales - totalGameCount],
+                            data: [participateData.gameCount, participateData.count - participateData.gameCount],
                         },
                     ],
                 };
