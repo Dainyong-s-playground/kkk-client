@@ -118,11 +118,13 @@ export default {
         },
         async loadChartData() {
             try {
-                const favorResponse = await axios.get('/favorData.json');
+                const favorResponse = await axios.get(
+                    `http://localhost:7772/api/graph/prefer/${this.selectedProfile.id}`,
+                );
                 const favorTags = favorResponse.data;
 
                 this.favorChartData = {
-                    labels: favorTags.map((item) => item.tag),
+                    labels: favorTags.map((item) => item.content),
                     datasets: [
                         {
                             label: '태그별 수치',
@@ -138,7 +140,7 @@ export default {
                     `http://localhost:7772/api/graph/report/${this.selectedProfile.id}`,
                 );
                 const participateData = participateResponse.data;
-
+                this.totalFairyTales = participateData.count;
                 this.recordChartData = {
                     labels: ['수행', '스킵'],
                     datasets: [
