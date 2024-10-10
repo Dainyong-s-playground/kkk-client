@@ -8,7 +8,12 @@
                 <div></div>
             </div>
         </div>
-        <div v-else class="detail-content" @click.stop :class="{ 'fade-in': !isLoading }">
+        <div
+            v-if="!isRemoving"
+            class="detail-content"
+            @click.stop
+            :class="{ 'fade-in': !isLoading, 'fade-out': isClosing }"
+        >
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
@@ -128,6 +133,8 @@ const showRentBuyModal = ref(false);
 const isOwned = ref(false);
 const isRented = ref(false);
 const isLoading = ref(true);
+const isClosing = ref(false);
+const isRemoving = ref(false);
 
 const props = defineProps({
     fairyTale: {
@@ -156,7 +163,7 @@ const recommendedTales = ref([
 ]);
 
 const playFairyTale = () => {
-    // fairyTale 객체에 id가 없는 경우를 대비해 임시 ID를 생성합니다.
+    // fairyTale 객체에 id가 없는 경우를 ��비해 임시 ID를 생성합니다.
     const fairyTaleId = fairyTale.value.id || `temp_${Math.floor(Math.random() * 1000)}`;
 
     // 새 탭에 열 URL을 생성합니다.
@@ -177,7 +184,12 @@ const playFairyTale = () => {
 const emit = defineEmits(['close', 'update:views']);
 
 const closeDetail = () => {
-    emit('close');
+    if (isClosing.value) return; // 이미 닫히는 중이면 무시
+    isClosing.value = true;
+    setTimeout(() => {
+        isRemoving.value = true;
+        emit('close');
+    }, 300); // 애니메이션 지속 시간과 일치
 };
 
 const disableScroll = (e) => {
@@ -343,6 +355,7 @@ const fairyTale = ref(props.fairyTale);
     max-height: 90vh; /* 뷰포트 높이의 90%로 제한 */
     overflow-y: auto; /* 내용이 넘칠 경우 스크롤 허용 */
     -webkit-overflow-scrolling: touch; /* iOS 스크롤 개선 */
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
 .detail-title {
@@ -561,14 +574,14 @@ const fairyTale = ref(props.fairyTale);
 }
 
 .content-type-icon {
-    padding: 5px 14px;
-    border-radius: 15px;
-    font-size: 16px;
+    padding: 5px 18px;
+    border-radius: 20px;
+    font-size: 18px;
     font-weight: bold;
     color: white;
     background-color: #4caf50;
     margin-right: 9px;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1.2;
 }
 
 .content-type-icon.paid {
@@ -580,15 +593,15 @@ const fairyTale = ref(props.fairyTale);
     align-items: center;
     background-color: rgba(103, 103, 103, 0.796);
     padding: 5px 10px;
-    border-radius: 15px;
-    font-size: 14px;
+    border-radius: 20px;
+    font-size: 18px;
     color: white;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1.2;
 }
 
 .eye-icon {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     margin-right: 5px;
     filter: brightness(0) invert(1);
 }
@@ -823,14 +836,29 @@ const fairyTale = ref(props.fairyTale);
     animation: fadeIn 0.3s ease-in-out;
 }
 
+.fade-out {
+    animation: fadeOut 0.3s ease-in-out;
+}
+
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(5px);
+        transform: scale(0.95) translateY(10px);
     }
     to {
         opacity: 1;
-        transform: translateY(0);
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
     }
 }
 </style>
