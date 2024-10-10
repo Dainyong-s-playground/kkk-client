@@ -208,7 +208,6 @@ export default {
                 );
                 console.log('서버에서 받은 데이터:', response.data); // 추가된 로그
                 this.recentlyWatched = response.data.map((item) => {
-                    console.log('각 아이템의 progress:', item.progress); // 추가된 로그
                     return {
                         ...item,
                         progress: item.progress || 0,
@@ -277,7 +276,6 @@ export default {
             }
         },
         calculateProgress(progress) {
-            console.log('원본 progress:', progress);
             let numericProgress;
             if (typeof progress === 'string') {
                 // 문자열인 경우 숫자로 변환
@@ -301,7 +299,6 @@ export default {
             }
 
             const result = Math.min(Math.max(numericProgress, 0), 100);
-            console.log('계산된 progress:', result);
             return result;
         },
     },
