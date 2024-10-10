@@ -1,92 +1,111 @@
 <template>
-    <div class="main-container">
-        <section class="hero-section">
-            <img
-                src="https://dainyong-s-playground.github.io/imageServer/Tumb1.png"
-                alt="Hero Image"
-                class="hero-image"
-            />
-            <div class="hero-content">
-                <h1>잭과 콩나물</h1>
-                <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
-                <button class="play-button">▶ 재생</button>
-                <button class="info-button">ⓘ 상세 정보</button>
+    <div>
+        <div v-if="isLoading" class="loading-overlay">
+            <div class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
             </div>
-        </section>
-        <!-- 나님이 시청 중인 콘텐츠 -->
-        <section v-if="profileStore.selectedProfile" class="category recently-watched">
-            <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
-            <div class="content-slider">
-                <div
-                    v-for="(item, index) in recentlyWatched"
-                    :key="index"
-                    class="content-item"
-                    @click="showDetail(item.fairyTale)"
-                >
-                    <div class="thumbnail-container">
-                        <img :src="item.fairyTale.imageUrl" :alt="item.fairyTale.title" class="thumbnail" />
-                        <div class="gradient-overlay"></div>
-                        <div class="play-overlay">▶</div>
-                        <div class="progress-bar">
-                            <div class="progress" :style="{ width: `${calculateProgress(item.progress)}%` }"></div>
-                        </div>
-                        <div class="content-type-icon" :class="{ paid: item.fairyTale.rentalPrice > 0 }">
-                            {{ item.fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
-                        </div>
-                    </div>
-                    <div class="content-info recently-watched-info">
-                        <span class="title">{{ item.fairyTale.title }}</span>
-                        <span class="episode">{{ item.fairyTale.description }}</span>
-                    </div>
-                    <button class="more-info" @click.stop="showDetail(item.fairyTale)">ⓘ</button>
+        </div>
+        <div class="main-container" :class="{ 'fade-in': !isLoading }">
+            <section class="hero-section">
+                <img
+                    src="https://dainyong-s-playground.github.io/imageServer/Tumb1.png"
+                    alt="Hero Image"
+                    class="hero-image"
+                />
+                <div class="hero-content">
+                    <h1>잭과 콩나물</h1>
+                    <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
+                    <button class="play-button">▶ 재생</button>
+                    <button class="info-button">ⓘ 상세 정보</button>
                 </div>
-            </div>
-        </section>
-
-        <!-- 오늘 TOP 5 동화 -->
-        <section class="category top-5">
-            <h2 class="category-title">오늘 TOP 5 동화</h2>
-            <div class="content-slider">
-                <div v-for="(item, index) in top5Series" :key="index" class="content-item" @click="showDetail(item)">
-                    <div class="rank">{{ index + 1 }}</div>
-                    <div class="thumbnail-container">
-                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
-                        <div class="play-overlay">▶</div>
-                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
-                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+            </section>
+            <!-- 나님이 시청 중인 콘텐츠 -->
+            <section v-if="profileStore.selectedProfile" class="category recently-watched">
+                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="(item, index) in recentlyWatched"
+                        :key="index"
+                        class="content-item"
+                        @click="showDetail(item.fairyTale)"
+                    >
+                        <div class="thumbnail-container">
+                            <img :src="item.fairyTale.imageUrl" :alt="item.fairyTale.title" class="thumbnail" />
+                            <div class="gradient-overlay"></div>
+                            <div class="play-overlay">▶</div>
+                            <div class="progress-bar">
+                                <div class="progress" :style="{ width: `${calculateProgress(item.progress)}%` }"></div>
+                            </div>
+                            <div class="content-type-icon" :class="{ paid: item.fairyTale.rentalPrice > 0 }">
+                                {{ item.fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
                         </div>
+                        <div class="content-info recently-watched-info">
+                            <span class="title">{{ item.fairyTale.title }}</span>
+                            <span class="episode">{{ item.fairyTale.description }}</span>
+                        </div>
+                        <button class="more-info" @click.stop="showDetail(item.fairyTale)">ⓘ</button>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 추천 동화 -->
-        <section class="category recommended">
-            <h2 class="category-title">추천 동화</h2>
-            <div class="content-slider">
-                <div
-                    v-for="(item, index) in categoryContent"
-                    :key="index"
-                    class="content-item"
-                    @click="showDetail(item)"
-                >
-                    <div class="thumbnail-container">
-                        <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
-                        <div class="play-overlay">▶</div>
-                        <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
-                            {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+            <!-- 오늘 TOP 5 동화 -->
+            <section class="category top-5">
+                <h2 class="category-title">오늘 TOP 5 동화</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="(item, index) in top5Series"
+                        :key="index"
+                        class="content-item"
+                        @click="showDetail(item)"
+                    >
+                        <div class="rank">{{ index + 1 }}</div>
+                        <div class="thumbnail-container">
+                            <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
+                            <div class="play-overlay">▶</div>
+                            <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                                {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
                         </div>
                     </div>
-                    <div class="content-info">
-                        <span class="title">{{ item.title }}</span>
+                </div>
+            </section>
+
+            <!-- 추천 동화 -->
+            <section class="category recommended">
+                <h2 class="category-title">추천 동화</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="(item, index) in categoryContent"
+                        :key="index"
+                        class="content-item"
+                        @click="showDetail(item)"
+                    >
+                        <div class="thumbnail-container">
+                            <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
+                            <div class="play-overlay">▶</div>
+                            <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                                {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
+                        </div>
+                        <div class="content-info">
+                            <span class="title">{{ item.title }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 동화 상세 정보 오버레이 -->
-        <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
-            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" @update:views="updateFairyTaleViews" />
+            <!-- 동화 상세 정보 오버레이 -->
+            <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
+                <FairyTaleDetail
+                    :fairyTale="selectedFairyTale"
+                    @close="closeDetail"
+                    @update:views="updateFairyTaleViews"
+                />
+            </div>
         </div>
     </div>
 </template>
@@ -108,6 +127,8 @@ export default {
     },
     data() {
         return {
+            isLoading: true,
+            showContent: false,
             recentlyWatched: [],
             top5Series: [],
             categoryContent: [
@@ -301,15 +322,32 @@ export default {
             const result = Math.min(Math.max(numericProgress, 0), 100);
             return result;
         },
+        async loadAllData() {
+            try {
+                this.isLoading = true;
+                this.showContent = false;
+                await Promise.all([
+                    this.fetchRecentlyWatched(),
+                    this.fetchTop5FairyTales(),
+                    // 추가적인 데이터 로딩 메서드가 있다면 여기에 추가
+                ]);
+            } catch (error) {
+                console.error('데이터 로딩 중 오류 발생:', error);
+            } finally {
+                this.isLoading = false;
+                // 로딩이 끝난 후 바로 컨텐츠를 표시합니다.
+                this.showContent = true;
+            }
+        },
     },
     async mounted() {
         await this.profileStore.checkLoginStatus();
         if (this.profileStore.selectedProfile) {
-            await this.fetchRecentlyWatched();
+            await this.loadAllData();
         } else {
             console.error('선택된 프로필이 없습니다.');
+            this.isLoading = false;
         }
-        this.fetchTop5FairyTales();
     },
 };
 </script>
@@ -318,6 +356,12 @@ export default {
 .main-container {
     color: black;
     padding: 0 4%;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.main-container.fade-in {
+    opacity: 1;
 }
 
 .hero-section {
@@ -624,5 +668,59 @@ export default {
     left: 9px;
     font-size: 16px;
     box-shadow: 0 1px px rgba(0, 0, 0, 0.2); /* 그림자 약간 더 강하게 */
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.loading-spinner div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border: 8px solid #fff;
+    border-radius: 50%;
+    animation: loading-spinner 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: #fff transparent transparent transparent;
+}
+
+.loading-spinner div:nth-child(1) {
+    animation-delay: -0.3s;
+}
+
+.loading-spinner div:nth-child(2) {
+    animation-delay: -0.25s;
+}
+
+.loading-spinner div:nth-child(3) {
+    animation-delay: -0.1s;
+}
+
+@keyframes loading-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 </style>

@@ -8,7 +8,7 @@
                 <div></div>
             </div>
         </div>
-        <div v-else class="detail-content" @click.stop>
+        <div v-else class="detail-content" @click.stop :class="{ 'fade-in': !isLoading }">
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
@@ -200,7 +200,9 @@ onMounted(async () => {
     isLoading.value = true;
     await checkOwnership();
     await fetchAndIncrementViews();
-    isLoading.value = false;
+    setTimeout(() => {
+        isLoading.value = false;
+    }, 300); // 0.3초 후에 로딩 상태를 false로 변경
 });
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
@@ -760,7 +762,7 @@ const fairyTale = ref(props.fairyTale);
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.5); /* 반투명한 배경으로 변경 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -805,6 +807,21 @@ const fairyTale = ref(props.fairyTale);
     }
     100% {
         transform: rotate(360deg);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 </style>
