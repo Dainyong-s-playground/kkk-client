@@ -60,6 +60,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
 import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
