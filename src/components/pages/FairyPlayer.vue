@@ -8,8 +8,10 @@
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
         <div class="player-container">
+        <div v-if="currentComponent === 'FairyPlayer'" class="player-container">
             <img :src="currentStoryImage" alt="Story Image" class="story-image" />
         </div>
+        <component v-else :is="currentComponent"></component>
 
         <div class="progress-bar">
             <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
@@ -55,6 +57,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import axios from 'axios';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -62,15 +65,19 @@ const fairyTaleId = ref(route.params.id);
 const storyTitle = ref(route.query.title || '제목 없음');
 const progress = ref(Number(route.query.progress) || 0);
 const imageUrl = ref(route.query.imageUrl || '기본 이미지 URL');
+const storyImages = ref([]); // 이미지 URL 리스트를 저장할 ref
+const currentImageIndex = ref(0); // 현재 표시 중인 이미지의 인덱스
 
 const storyLines = ref([]);
 const currentLineIndex = ref(0);
+const sceneNumbers = ref([]);
 const isFullscreen = ref(false);
 const isPlaying = ref(false);
 const playerRef = ref(null);
 
 const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
 const currentStoryImage = computed(() => imageUrl.value);
+const currentStoryImage = computed(() => storyImages.value[currentImageIndex.value] || '');
 const progressPercentage = computed(() => {
     return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
 });
@@ -88,19 +95,113 @@ const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyP
 const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
 
 const playPause = () => {
+const currentComponent = shallowRef('FairyPlayer');
+const BASE_URL = 'http://localhost:7772';
+
+const checkSpecialContent = (content) => {
+    if (content === "게임") {
+        currentComponent.value = RopeCut;
+        return true;
+    } else if (content === "모션인식") {
+        currentComponent.value = HandLandmark;
+        return true;
+    }
+    currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
+    return false;
+};
+
+// 동화 플레이어 데이터 가져오기
+const FairyTaleData = async () => {
+    try {
+        const response = await axios.get(`${BASE_URL}/fairyTales/${fairyTaleId.value}`);
+        const data = response.data;
+
+        storyTitle.value = data.title || '제목 없음';
+        
+        if (data.script) {
+            storyLines.value = data.script.split('\\n');
+        } else {
+            storyLines.value = ['스크립트가 없습니다.'];
+            console.error('스크립트 데이터가 없습니다.');
+        }
+
+        if (data.sceneNumber) {
+            sceneNumbers.value = data.sceneNumber.split('\\n').map(Number);
+        } else {
+            sceneNumbers.value = [0];
+            console.error('장면 번호 데이터가 없습니다.');
+        }
+        
+        if (data.url && Array.isArray(data.url)) {
+            storyImages.value = data.url;
+        } else if (data.image) {
+            storyImages.value = [data.image];
+        } else {
+            storyImages.value = ['기본 이미지 URL'];
+            console.error('이미지 데이터가 없습니다.');
+        }
+        
+        // 첫 번째 이미지로 초기화
+        currentImageIndex.value = 0;
+
+        console.log('처리된 데이터:', {
+            storyTitle: storyTitle.value,
+            storyLines: storyLines.value,
+            sceneNumbers: sceneNumbers.value,
+            storyImages: storyImages.value
+        });
+    } catch (error) {
+        console.error('동화 데이터를 가져오는 중 오류 발생:', error);
+    }
+};
+
+watch(currentLineIndex, (newIndex) => {
+    updateCurrentImage(newIndex);
+});
+
+const updateCurrentImage = (index) => {
+    if (storyImages.value.length === 0) return; // 이미지가 없으면 함수 종료
+
+    const nextSceneIndex = sceneNumbers.value.findIndex(sceneNumber => sceneNumber > index);
+    if (nextSceneIndex === -1) {
+        currentImageIndex.value = storyImages.value.length - 1;
+    } else {
+        currentImageIndex.value = Math.min(nextSceneIndex, storyImages.value.length - 1);
+    }
+};
+
     isPlaying.value = !isPlaying.value;
     // 여기에 실제 재생/일시정지 로직을 추가해야 합니다.
+    if (currentAudio.value) {
+    const currentContent = storyLines.value[currentLineIndex.value];
+    if (checkSpecialContent(currentContent)) {
+        isPlaying.value = false;
+        return; // 특별한 내용이면 함수 종료
+    }
+
+    currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
+
 };
 
 const previousLine = () => {
     if (currentLineIndex.value > 0) {
         currentLineIndex.value--;
+        if (isPlaying.value) {
+            playCurrentLine();
+        }
     }
 };
 
 const nextLine = () => {
     if (currentLineIndex.value < storyLines.value.length - 1) {
         currentLineIndex.value++;
+        checkSpecialContent(nextContent);
+        updateCurrentImage(currentLineIndex.value);
+        if (!checkSpecialContent(nextContent) && isPlaying.value) {
+            playCurrentLine();
+        }
+    } else {
+        isPlaying.value = false;
     }
 };
 
@@ -162,6 +263,8 @@ onMounted(() => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    updateCurrentImage(0);
+    audioElement.value = new Audio();
 });
 
 onUnmounted(() => {
