@@ -595,12 +595,12 @@ export default {
 }
 
 .top-5 .content-slider {
-    padding-left: 5%;
+    padding-left: 7%;
     overflow-y: hidden; /* 세로 스크롤 비활성화 */
 }
 
 .top-5 .content-item {
-    width: 250px;
+    width: 240px;
     height: 320px; /* 높이 증가 */
     margin-right: 100px;
 }
@@ -617,7 +617,7 @@ export default {
     bottom: 2px;
     font-size: 240px;
     font-weight: bold;
-    color: #000000;
+    color: #90b4e2;
     -webkit-text-stroke: 4px #000000;
     line-height: 0.8;
 }
