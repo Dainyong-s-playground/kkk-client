@@ -7,7 +7,6 @@
         <div v-if="isFullscreen" class="fullscreen-header">
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
-        <div class="player-container">
         <div v-if="currentComponent === 'FairyPlayer'" class="player-container">
             <img :src="currentStoryImage" alt="Story Image" class="story-image" />
         </div>
@@ -56,7 +55,6 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
 import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import axios from 'axios';
@@ -79,7 +77,6 @@ const isPlaying = ref(false);
 const playerRef = ref(null);
 
 const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
-const currentStoryImage = computed(() => imageUrl.value);
 const currentStoryImage = computed(() => storyImages.value[currentImageIndex.value] || '');
 const progressPercentage = computed(() => {
     return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
@@ -97,7 +94,6 @@ const stopIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyP
 const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png');
 const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
 
-const playPause = () => {
 const currentComponent = shallowRef('FairyPlayer');
 const BASE_URL = 'http://localhost:7772';
 
@@ -173,9 +169,25 @@ const updateCurrentImage = (index) => {
     }
 };
 
+const audioElement = ref(null);
+const currentAudio = ref(null);
+
+const playPause = async () => {
     isPlaying.value = !isPlaying.value;
-    // 여기에 실제 재생/일시정지 로직을 추가해야 합니다.
+    if (isPlaying.value) {
+        await playCurrentLine();
+    } else {
+        currentAudio.value?.pause();
+    }
+};
+
+// playCurrentLine 함수 수정
+const playCurrentLine = async () => {
     if (currentAudio.value) {
+        currentAudio.value.pause();
+    }
+
+    // 현재 라인의 내용 확인
     const currentContent = storyLines.value[currentLineIndex.value];
     if (checkSpecialContent(currentContent)) {
         isPlaying.value = false;
@@ -184,11 +196,38 @@ const updateCurrentImage = (index) => {
 
     currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
 
+    try {
+        const response = await axios.post(`${BASE_URL}/fairyTales/tts`, {
+            sentence: currentContent,
+            speaker: 'Daisy Studious',
+            language: 'ko'
+        }, {
+            responseType: 'arraybuffer'
+        });
+
+        const audioBlob = new Blob([response.data], { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        currentAudio.value = new Audio(audioUrl);
+        currentAudio.value.onended = () => {
+            if (currentLineIndex.value < storyLines.value.length - 1) {
+                nextLine();
+                playCurrentLine();
+            } else {
+                isPlaying.value = false;
+            }
+        };
+        currentAudio.value.play();
+    } catch (error) {
+        console.error('TTS 생성 중 오류 발생:', error);
+        isPlaying.value = false;
+    }
 };
 
 const previousLine = () => {
     if (currentLineIndex.value > 0) {
         currentLineIndex.value--;
+        updateCurrentImage(currentLineIndex.value);
         if (isPlaying.value) {
             playCurrentLine();
         }
@@ -198,6 +237,7 @@ const previousLine = () => {
 const nextLine = () => {
     if (currentLineIndex.value < storyLines.value.length - 1) {
         currentLineIndex.value++;
+        const nextContent = storyLines.value[currentLineIndex.value];
         checkSpecialContent(nextContent);
         updateCurrentImage(currentLineIndex.value);
         if (!checkSpecialContent(nextContent) && isPlaying.value) {
@@ -266,6 +306,7 @@ onMounted(() => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    FairyTaleData();
     updateCurrentImage(0);
     audioElement.value = new Audio();
 });
@@ -276,6 +317,10 @@ onUnmounted(() => {
     document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    if (currentAudio.value) {
+        currentAudio.value.pause();
+        currentAudio.value = null;
+    }
 });
 </script>
 
