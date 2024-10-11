@@ -57,6 +57,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
+import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
+import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import axios from 'axios';
 import { useRoute } from 'vue-router';
 
