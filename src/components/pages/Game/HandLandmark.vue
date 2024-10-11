@@ -8,12 +8,12 @@
             <transition name="fade" mode="out-in">
                 <img
                     v-if="!isSuccess"
-                    src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png"
+                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/cover_motion_sun.png"
                     class="before-hand-image"
                 />
                 <img
                     v-else
-                    src="https://Dainyong-s-playground.github.io/imageServer/src/after_motion_sun_remove.png"
+                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/after_motion_sun_remove.png"
                     class="after-hand-image"
                 />
             </transition>
@@ -195,7 +195,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: url('https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png');
+    background-image: url('https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/bg_motion_sun.png');
     background-size: 100% 100%;
     width: 100%;
     height: 600px;
