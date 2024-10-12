@@ -360,7 +360,9 @@ export default {
         },
         makeReservation() {
             const searchUrl = `/search?selectedDate=${this.selectedDate}`;
-            window.open(searchUrl, 'searchWindow', 'width=800,height=600');
+            window.open(searchUrl, 'searchWindow', 'width=1280,height=800');
+            // 자식 창에서 postMessage로 전달받은 데이터를 처리할 리스너 추가
+            window.addEventListener('message', this.handleMessage);
         },
         async cancleReservation(reservationId) {
             try {
@@ -368,7 +370,7 @@ export default {
                 const response = await axios.delete(`http://localhost:7772/api/reservation/cancle/${reservationId}`);
                 if (response.status == 200) {
                     alert(response.data);
-                    this.updateFutureEvents;
+                    await this.updateFutureEvents(); // 예약 데이터 최신화
                 }
             } catch (error) {
                 console.error('예약 취소 중 오류 발생:', error);
@@ -378,6 +380,7 @@ export default {
         },
         closeDropdown() {
             this.showDropdown = false;
+            this.selectedDate = null;
         },
         handleKeydown(event) {
             if (event.key === 'Escape' || event.key === 'Esc') {
@@ -386,16 +389,19 @@ export default {
         },
         async handleMessage(event) {
             if (event.origin !== window.location.origin) return; // 동일 출처 확인
-            const { story, selectedDate } = event.data;
-            if (story && selectedDate) {
+            const { storyId, selectedDate } = event.data;
+            if (storyId && selectedDate) {
                 const reservationData = {
                     profileId: this.selectedProfile.id, // 현재 선택된 프로필의 ID
-                    fairyTaleId: story.id, // 동화 제목
+                    fairyTaleId: storyId, // 동화 제목
                     reservationDate: selectedDate,
                 }; // 예약 날짜
+                console.log(reservationData);
                 try {
                     await axios.post(`http://localhost:7772/api/reservation/add`, reservationData);
-                    this.updateFutureEvents;
+                    alert('동화 등록 완료했습니다.');
+                    await this.updateFutureEvents(); // 예약 데이터 최신화
+                    this.closeDropdown(); // 드롭다운 닫기
                 } catch (error) {
                     console.error('예약 추가 중 오류 발생:', error);
                     alert(`예약 추가 중 오류가 발생했습니다: ${error.message}`);
@@ -422,7 +428,7 @@ export default {
                 // 백엔드로 POST 요청 전송
                 await axios.post(`http://localhost:7772/api/comment/saveComment`, commentData);
 
-                this.updatePastEvents();
+                await this.updatePastEvents();
 
                 this.dailyComment = '';
                 this.useComplimentBadge = false;
