@@ -1,6 +1,16 @@
 <template>
     <div class="calendar-container" @click="closeDropdown">
-        <div class="calendar" @click.stop>
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <!-- 로딩 중 표시 -->
+
+        <div v-else class="calendar" @click.stop>
             <div class="calendar-header">
                 <button @click="prevMonth">◀</button>
                 <span>{{ year }}년 {{ month + 1 }}월</span>
@@ -28,16 +38,22 @@
                         {{ day?.day || '' }}
                     </div>
                     <img
-                        v-if="day?.date && pastEvents[day.date]"
+                        v-if="day?.date && pastEvents?.[day.date]"
                         src="https://dainyong-s-playground.github.io/imageServer/src/stamp.png"
                         class="has-data"
                         @click.stop
                     />
                     <img
-                        v-if="day?.date && futureEvents[day.date] && isFutureDay(day.date)"
+                        v-if="day?.date && futureEvents?.[day.date] && isFutureDay(day.date)"
                         class="has-data"
                         @click.stop
                         src="https://dainyong-s-playground.github.io/imageServer/src/reservation.png"
+                    />
+                    <img
+                        v-if="day?.date && commentEvents?.[day.date] && commentEvents[day.date].length > 0"
+                        class="has-data"
+                        @click.stop
+                        src="https://dainyong-s-playground.github.io/imageServer/src/comment.png"
                     />
                 </div>
                 <!-- 미래 예약 이벤트가 존재할 경우 -->
@@ -145,6 +161,7 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
@@ -153,7 +170,8 @@ export default {
     setup() {
         const profileStore = useProfileStore();
         const { selectedProfile } = storeToRefs(profileStore);
-        return { profileStore, selectedProfile };
+        const loading = ref(true);
+        return { profileStore, selectedProfile, loading };
     },
     data() {
         return {
@@ -165,11 +183,11 @@ export default {
             pastEvents: {}, // 과거 데이터 저장 객체 (날짜를 키로)
             futureEvents: {}, // 예약 데이터 저장 객체
             daysInMonth: [],
-            loading: true,
             showDropdown: false,
             dropdownPosition: { top: '0px', left: '0px' },
             dailyComment: '', // 댓글 입력 필드 상태
             commentData: {},
+            commentEvents: {},
             useComplimentBadge: false, // 칭찬도장 여부
         };
     },
@@ -190,11 +208,12 @@ export default {
             immediate: true,
         },
     },
-    mounted() {
+    async mounted() {
         this.updateDaysInMonth();
         if (this.selectedProfile && this.selectedProfile.id) {
-            this.updatePastEvents();
-            this.updateFutureEvents();
+            await this.fetchAllEvents();
+            await this.updatePastEvents();
+            await this.updateFutureEvents();
         } else {
             console.error('선택된 프로필이 없습니다. 데이터 요청이 중단됩니다.');
         }
@@ -207,6 +226,16 @@ export default {
         window.removeEventListener('message', this.handleMessage, false);
     },
     methods: {
+        async fetchAllEvents() {
+            try {
+                await Promise.all([this.updatePastEvents(), this.updateFutureEvents()]);
+                this.$nextTick(() => {
+                    this.loading = false; // 모든 데이터가 로드된 후 로딩 종료
+                });
+            } catch (error) {
+                console.error('이벤트 로드 중 오류 발생:', error);
+            }
+        },
         async updateDaysInMonth() {
             this.loading = true;
 
@@ -229,10 +258,7 @@ export default {
             }
 
             this.daysInMonth = days;
-
-            this.$nextTick(() => {
-                this.loading = false;
-            });
+            this.loading = false;
         },
         async updatePastEvents() {
             try {
@@ -280,9 +306,9 @@ export default {
         saveComment(event, date) {
             if (!event.comment || event.comment.trim() === '') return;
             // 새로운 댓글 추가
+            console.log(date);
             event.comments.push(event.comment);
             event.comment = ''; // 입력 필드 초기화
-            console.log(`날짜: ${date}의 이벤트에 댓글이 추가되었습니다.`);
         },
         async updateFutureEvents() {
             try {
@@ -296,7 +322,6 @@ export default {
             } catch (error) {
                 console.error('미래 예약 정보를 가져오는 중 오류 발생:', error);
             }
-            console.log('예약데이터:' + this.futureEvents);
         },
         isWeekend(dateString) {
             const date = new Date(dateString);
@@ -305,7 +330,7 @@ export default {
         },
         isToday(dateString) {
             const today = new Date().toISOString().slice(0, 10);
-            console.log(dateString);
+
             return today === dateString;
         },
         prevMonth() {
@@ -336,7 +361,6 @@ export default {
             };
 
             this.showDropdown = true;
-            console.log('드롭다운활성화');
         },
         isFutureDate(dateString) {
             const today = new Date();
@@ -344,7 +368,6 @@ export default {
             return selected > today;
         },
         isReserved(readsDay, title) {
-            console.log(readsDay, title);
             const events = this.futureEvents[readsDay];
             if (!events) {
                 return false;
@@ -396,7 +419,7 @@ export default {
                     fairyTaleId: storyId, // 동화 제목
                     reservationDate: selectedDate,
                 }; // 예약 날짜
-                console.log(reservationData);
+
                 try {
                     await axios.post(`http://localhost:7772/api/reservation/add`, reservationData);
                     alert('동화 등록 완료했습니다.');
@@ -452,7 +475,25 @@ export default {
     font-size: 1.5rem;
     margin-top: 200px;
 }
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
 
+.loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
 .calendar-container {
     margin-top: 20px;
     padding-top: 20px;
