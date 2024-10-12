@@ -35,8 +35,8 @@ export const useProfileStore = defineStore('profile', {
                     const decodedToken = jwtDecode(jwt);
                     const profileId = decodedToken.profileId;
                     if (profileId) {
-                        const response = await axios.get('http://localhost:7771/api/me', {
-                            headers: { Authorization: `Bearer ${jwt}` },
+                        const response = await axios.get('http://login.dainyongplayground.site:7771/api/me', {
+                            headers: { Authorization: `${jwt}` },
                             withCredentials: true,
                         });
                         this.setSelectedProfile(response.data);
@@ -57,9 +57,9 @@ export const useProfileStore = defineStore('profile', {
             const jwt = this.getCookie('Authorization');
             try {
                 await axios.post(
-                    'http://localhost:7771/auth/logout',
+                    'http://login.dainyongplayground.site:7771/auth/logout',
                     {},
-                    { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
+                    { headers: { Authorization: `${jwt}` }, withCredentials: true },
                 );
                 this.clearUserData();
                 this.deleteCookie('Authorization');
@@ -76,10 +76,10 @@ export const useProfileStore = defineStore('profile', {
                 }
 
                 const response = await axios.post(
-                    'http://localhost:7771/api/selectProfile',
+                    'http://login.dainyongplayground.site:7771/api/selectProfile',
                     { profileId },
                     {
-                        headers: { Authorization: `Bearer ${jwt}` },
+                        headers: { Authorization: `${jwt}` },
                         withCredentials: true,
                     },
                 );
@@ -123,9 +123,10 @@ export const useProfileStore = defineStore('profile', {
             document.cookie = updatedCookie;
         },
         deleteCookie(name) {
-            this.setCookie(name, '', {
-                'max-age': -1,
-            });
+            // this.setCookie(name, '', {
+            //     'max-age': -1,
+            // });
+            document.cookie = `${name}=; Path=/; Domain=.dainyongplayground.site; Max-Age=0;`;
         },
     },
 

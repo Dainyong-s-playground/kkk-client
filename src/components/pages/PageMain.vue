@@ -57,7 +57,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const onNaverLogin = () => {
-    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+    window.location.href = 'http://login.dainyongplayground.site:7771/oauth2/authorization/naver';
 };
 
 const goToFairyList = () => {

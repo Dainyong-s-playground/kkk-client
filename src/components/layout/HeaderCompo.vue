@@ -153,7 +153,7 @@ const handleOutsideClick = (event) => {
 };
 
 const onNaverLogin = () => {
-    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+    window.location.href = 'http://login.dainyongplayground.site:7771/oauth2/authorization/naver';
 };
 
 const logout = async () => {

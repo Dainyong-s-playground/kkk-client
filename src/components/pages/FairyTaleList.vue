@@ -220,7 +220,7 @@ export default {
             }
             try {
                 const response = await axios.get(
-                    `http://localhost:7772/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
+                    `http://content.dainyongplayground.site:7772/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${this.profileStore.jwtToken}`,
@@ -281,7 +281,7 @@ export default {
         },
         async fetchTop5FairyTales() {
             try {
-                const response = await axios.get('http://localhost:7772/api/fairytales/top5');
+                const response = await axios.get('http://content.dainyongplayground.site:7772/api/fairytales/top5');
                 this.top5Series = response.data.map((item) => ({
                     title: item.title,
                     imageUrl: item.imageUrl,

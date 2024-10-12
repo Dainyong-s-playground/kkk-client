@@ -114,12 +114,15 @@ export default {
                 const userId = decodedToken.id; // 토큰에서 userId 추출
 
                 // 프로필 조회 API 호출
-                const response = await axios.get(`http://localhost:7771/api/checkProfiles/${userId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                const response = await axios.get(
+                    `http://login.dainyongplayground.site:7771/api/checkProfiles/${userId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                        },
+                        withCredentials: true, // 인증 정보를 포함하여 요청
                     },
-                    withCredentials: true, // 인증 정보를 포함하여 요청
-                });
+                );
                 this.profiles = response.data;
             } catch (error) {
                 console.error('JWT 토큰을 디코딩하는 중 오류가 발생했습니다.', error);
@@ -157,7 +160,7 @@ export default {
 
                 // 프로필 선택 API 호출
                 const response = await axios.post(
-                    'http://localhost:7771/api/selectProfile',
+                    'http://login.dainyongplayground.site:7771/api/selectProfile',
                     { profileId },
                     {
                         headers: {
@@ -198,12 +201,16 @@ export default {
                 }
 
                 // 새 프로필 데이터를 백엔드로 POST 요청
-                const response = await axios.post('http://localhost:7771/api/createProfile', this.newProfile, {
-                    headers: {
-                        Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                const response = await axios.post(
+                    'http://login.dainyongplayground.site:7771/api/createProfile',
+                    this.newProfile,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                        },
+                        withCredentials: true, // 인증 정보를 포함하여 요청
                     },
-                    withCredentials: true, // 인증 정보를 포함하여 요청
-                });
+                );
 
                 // 프로필 생성이 성공하면 profiles 리스트를 업데이트
                 this.profiles.push(response.data);
