@@ -1,6 +1,16 @@
 <template>
     <div class="calendar-container" @click="closeDropdown">
-        <div class="calendar" @click.stop>
+        <div v-if="loading" class="loading-overlay">
+            <div class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+        <!-- 로딩 중 표시 -->
+
+        <div v-else class="calendar" @click.stop>
             <div class="calendar-header">
                 <button @click="prevMonth">◀</button>
                 <span>{{ year }}년 {{ month + 1 }}월</span>
@@ -28,16 +38,22 @@
                         {{ day?.day || '' }}
                     </div>
                     <img
-                        v-if="day?.date && pastEvents[day.date]"
+                        v-if="day?.date && pastEvents?.[day.date]"
                         src="https://dainyong-s-playground.github.io/imageServer/src/stamp.png"
                         class="has-data"
                         @click.stop
                     />
                     <img
-                        v-if="day?.date && futureEvents[day.date] && isFutureDay(day.date)"
+                        v-if="day?.date && futureEvents?.[day.date] && isFutureDay(day.date)"
                         class="has-data"
                         @click.stop
                         src="https://dainyong-s-playground.github.io/imageServer/src/reservation.png"
+                    />
+                    <img
+                        v-if="day?.date && commentEvents?.[day.date] && commentEvents[day.date].length > 0"
+                        class="has-data"
+                        @click.stop
+                        src="https://dainyong-s-playground.github.io/imageServer/src/comment.png"
                     />
                 </div>
                 <!-- 미래 예약 이벤트가 존재할 경우 -->
@@ -57,13 +73,13 @@
 
                 <div v-if="pastEvents[selectedDate]" class="dropdown-list">
                     <div v-for="(event, index) in pastEvents[selectedDate]" :key="index" class="list-data">
-                        <img :src="event.image" class="dropdown-data-img" />
-                        <p>{{ event.title }}</p>
+                        <img :src="event.fairyTaleImage" class="dropdown-data-img" />
+                        <p>{{ event.fairyTaleTitle }}</p>
                         <!-- 예약 여부 체크박스 (읽기 전용) -->
                         <input
                             type="checkbox"
                             class="reservation-checkbox"
-                            :checked="isReserved(event.readsDay, event.title)"
+                            :checked="isReserved(event.readsDay, event.fairyTaleTitle)"
                             disabled
                         />
                     </div>
@@ -77,9 +93,9 @@
                         :key="index"
                         class="list-data"
                     >
-                        <img v-if="event.image" :src="event.image" class="dropdown-data-img" />
-                        <p>{{ event.title }}</p>
-                        <button @click="cancleReservation()">x</button>
+                        <img v-if="event.fairyTaleImage" :src="event.fairyTaleImage" class="dropdown-data-img" />
+                        <p>{{ event.fairyTaleTitle }}</p>
+                        <button @click="cancleReservation(event.reservationId)">x</button>
                     </div>
 
                     <button @click="makeReservation()" class="event-list-button">예약하기</button>
@@ -92,16 +108,40 @@
                 </div>
 
                 <!-- 댓글 출력 필드 -->
-                <div v-if="pastEvents[selectedDate]?.dailyComment" class="comment-display">
+                <div
+                    v-if="pastEvents[selectedDate] && pastEvents[selectedDate][0]?.dailyComment"
+                    class="comment-display"
+                >
                     <h4>엄마의 한말씀</h4>
                     <p class="comment-text">
-                        {{ pastEvents[selectedDate].dailyComment }}
-                        <span v-if="pastEvents[selectedDate].useComplimentBadge" class="compliment-badge"> 👍 </span>
+                        {{ pastEvents[selectedDate][0].dailyComment }}
+                        <span v-if="pastEvents[selectedDate][0].useComplimentBadge" class="compliment-badge"> 👍 </span>
                     </p>
                 </div>
 
-                <!-- 댓글 작성 필드 (오늘 이전 날짜일 때만 표시) -->
-                <div class="comment-section" v-if="isPastDate(selectedDate)">
+                <!-- 댓글만 존재할 경우 별도 commentEvents에서 데이터 출력 -->
+                <div
+                    v-else-if="commentEvents[selectedDate] && commentEvents[selectedDate][0]?.dailyComment"
+                    class="comment-display"
+                >
+                    <h4>엄마의 한말씀</h4>
+                    <p class="comment-text">
+                        {{ commentEvents[selectedDate][0].dailyComment }}
+                        <span v-if="commentEvents[selectedDate][0]?.useComplimentBadge" class="compliment-badge">
+                            👍
+                        </span>
+                    </p>
+                </div>
+
+                <!-- 댓글 작성 필드 (오늘 이전 날짜이고 댓글이 없는 경우에만 표시) -->
+                <div
+                    class="comment-section"
+                    v-else-if="
+                        isPastDate(selectedDate) &&
+                        !(pastEvents[selectedDate] && pastEvents[selectedDate][0]?.dailyComment) &&
+                        !(commentEvents[selectedDate] && commentEvents[selectedDate][0]?.dailyComment)
+                    "
+                >
                     <h4>내아이 칭찬타임</h4>
                     <input
                         type="text"
@@ -121,9 +161,18 @@
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
 
 export default {
+    setup() {
+        const profileStore = useProfileStore();
+        const { selectedProfile } = storeToRefs(profileStore);
+        const loading = ref(true);
+        return { profileStore, selectedProfile, loading };
+    },
     data() {
         return {
             year: new Date().getFullYear(),
@@ -134,11 +183,11 @@ export default {
             pastEvents: {}, // 과거 데이터 저장 객체 (날짜를 키로)
             futureEvents: {}, // 예약 데이터 저장 객체
             daysInMonth: [],
-            loading: true,
             showDropdown: false,
             dropdownPosition: { top: '0px', left: '0px' },
             dailyComment: '', // 댓글 입력 필드 상태
             commentData: {},
+            commentEvents: {},
             useComplimentBadge: false, // 칭찬도장 여부
         };
     },
@@ -149,11 +198,25 @@ export default {
         month() {
             this.updateDaysInMonth();
         },
+        selectedProfile: {
+            handler(newProfile) {
+                if (newProfile && newProfile.id) {
+                    this.updatePastEvents();
+                    this.updateFutureEvents();
+                }
+            },
+            immediate: true,
+        },
     },
-    mounted() {
+    async mounted() {
         this.updateDaysInMonth();
-        this.updatePastEvents();
-        this.updateFutureEvents();
+        if (this.selectedProfile && this.selectedProfile.id) {
+            await this.fetchAllEvents();
+            await this.updatePastEvents();
+            await this.updateFutureEvents();
+        } else {
+            console.error('선택된 프로필이 없습니다. 데이터 요청이 중단됩니다.');
+        }
         // this.loadComments(); // 댓글 데이터 로드
         document.addEventListener('keydown', this.handleKeydown);
         window.addEventListener('message', this.handleMessage, false);
@@ -163,6 +226,16 @@ export default {
         window.removeEventListener('message', this.handleMessage, false);
     },
     methods: {
+        async fetchAllEvents() {
+            try {
+                await Promise.all([this.updatePastEvents(), this.updateFutureEvents()]);
+                this.$nextTick(() => {
+                    this.loading = false; // 모든 데이터가 로드된 후 로딩 종료
+                });
+            } catch (error) {
+                console.error('이벤트 로드 중 오류 발생:', error);
+            }
+        },
         async updateDaysInMonth() {
             this.loading = true;
 
@@ -185,27 +258,45 @@ export default {
             }
 
             this.daysInMonth = days;
-
-            this.$nextTick(() => {
-                this.loading = false;
-            });
+            this.loading = false;
         },
         async updatePastEvents() {
             try {
-                const response = await axios.get('/history.json');
+                const historyResponse = await axios.get(
+                    `http://localhost:7772/api/history/pastData/${this.profileStore.selectedProfile.id}`,
+                );
                 // 날짜를 키로 가지는 객체로 변환
-                this.pastEvents = response.data.reduce((acc, event) => {
+                this.pastEvents = historyResponse.data.reduce((acc, event) => {
                     if (!acc[event.readsDay]) acc[event.readsDay] = [];
                     acc[event.readsDay].push(event);
                     return acc;
                 }, {});
+                const commentResponse = await axios.get(
+                    `http://localhost:7772/api/comment/${this.profileStore.selectedProfile.id}`,
+                );
+                const commentData = commentResponse.data;
 
-                const response2 = await axios.get('/comments.json');
-                this.commentData = response2.data;
+                // 댓글 데이터를 별도의 commentEvents 객체에 저장
+                this.commentEvents = commentData.reduce((acc, comment) => {
+                    // 이력 데이터가 없는 경우에만 commentEvents에 추가
+                    if (!this.pastEvents[comment.readsDay]) {
+                        acc[comment.readsDay] = [
+                            {
+                                dailyComment: comment.dailyComment,
+                                useComplimentBadge: comment.useComplimentBadge,
+                            },
+                        ];
+                    }
+                    return acc;
+                }, {});
 
-                Object.keys(this.commentData).forEach((date) => {
-                    if (this.pastEvents[date]) {
-                        Object.assign(this.pastEvents[date], this.commentData[date]);
+                // 이력 데이터가 존재하는 경우에는 이력 데이터에 댓글 병합
+                commentData.forEach((comment) => {
+                    if (this.pastEvents[comment.readsDay]) {
+                        this.pastEvents[comment.readsDay].forEach((event) => {
+                            event.dailyComment = comment.dailyComment;
+                            event.useComplimentBadge = comment.useComplimentBadge;
+                        });
                     }
                 });
             } catch (error) {
@@ -215,21 +306,22 @@ export default {
         saveComment(event, date) {
             if (!event.comment || event.comment.trim() === '') return;
             // 새로운 댓글 추가
+            console.log(date);
             event.comments.push(event.comment);
             event.comment = ''; // 입력 필드 초기화
-            console.log(`날짜: ${date}의 이벤트에 댓글이 추가되었습니다.`);
         },
         async updateFutureEvents() {
             try {
-                const response = await axios.get('/futureData.json');
+                const response = await axios.get(
+                    `http://localhost:7772/api/reservation/load/${this.profileStore.selectedProfile.id}`,
+                );
                 this.futureEvents = response.data.reduce((acc, event) => {
-                    acc[event.readsDay] = event;
+                    acc[event.reservationDate] = event;
                     return acc;
                 }, {});
             } catch (error) {
                 console.error('미래 예약 정보를 가져오는 중 오류 발생:', error);
             }
-            console.log('예약데이터:' + this.futureEvents);
         },
         isWeekend(dateString) {
             const date = new Date(dateString);
@@ -238,6 +330,7 @@ export default {
         },
         isToday(dateString) {
             const today = new Date().toISOString().slice(0, 10);
+
             return today === dateString;
         },
         prevMonth() {
@@ -268,7 +361,6 @@ export default {
             };
 
             this.showDropdown = true;
-            console.log('드롭다운활성화');
         },
         isFutureDate(dateString) {
             const today = new Date();
@@ -276,12 +368,11 @@ export default {
             return selected > today;
         },
         isReserved(readsDay, title) {
-            console.log(readsDay, title);
             const events = this.futureEvents[readsDay];
             if (!events) {
                 return false;
             } else {
-                if (events.title === title) {
+                if (events.fairyTaleTitle === title) {
                     return true;
                 } else {
                     return false;
@@ -292,29 +383,52 @@ export default {
         },
         makeReservation() {
             const searchUrl = `/search?selectedDate=${this.selectedDate}`;
-            window.open(searchUrl, 'searchWindow', 'width=800,height=600');
+            window.open(searchUrl, 'searchWindow', 'width=1280,height=800');
+            // 자식 창에서 postMessage로 전달받은 데이터를 처리할 리스너 추가
+            window.addEventListener('message', this.handleMessage);
         },
-        cancleReservation() {
-            // async axios.post('https://',{예약번호});
-            alert('예약취소!');
+        async cancleReservation(reservationId) {
+            try {
+                // 예약 취소 요청
+                const response = await axios.delete(`http://localhost:7772/api/reservation/cancle/${reservationId}`);
+                if (response.status == 200) {
+                    alert(response.data);
+                    await this.updateFutureEvents(); // 예약 데이터 최신화
+                }
+            } catch (error) {
+                console.error('예약 취소 중 오류 발생:', error);
+                alert(`예약 취소 중 오류가 발생했습니다: ${error.message}`);
+            }
+            this.$router.go(0);
         },
         closeDropdown() {
             this.showDropdown = false;
+            this.selectedDate = null;
         },
         handleKeydown(event) {
             if (event.key === 'Escape' || event.key === 'Esc') {
                 this.closeDropdown();
             }
         },
-        handleMessage(event) {
+        async handleMessage(event) {
             if (event.origin !== window.location.origin) return; // 동일 출처 확인
-            const { story, selectedDate } = event.data;
-            if (story && selectedDate) {
-                this.futureEvents = {
-                    ...this.futureEvents,
-                    [selectedDate]: story,
-                };
-                alert(`날짜: ${selectedDate}에 '${story.title}' 동화가 추가되었습니다.`);
+            const { storyId, selectedDate } = event.data;
+            if (storyId && selectedDate) {
+                const reservationData = {
+                    profileId: this.selectedProfile.id, // 현재 선택된 프로필의 ID
+                    fairyTaleId: storyId, // 동화 제목
+                    reservationDate: selectedDate,
+                }; // 예약 날짜
+
+                try {
+                    await axios.post(`http://localhost:7772/api/reservation/add`, reservationData);
+                    alert('동화 등록 완료했습니다.');
+                    await this.updateFutureEvents(); // 예약 데이터 최신화
+                    this.closeDropdown(); // 드롭다운 닫기
+                } catch (error) {
+                    console.error('예약 추가 중 오류 발생:', error);
+                    alert(`예약 추가 중 오류가 발생했습니다: ${error.message}`);
+                }
             }
         },
         isFutureDay(dateString) {
@@ -325,36 +439,23 @@ export default {
             return selectedDate >= today.setHours(0, 0, 0, 0);
         },
 
-        // 댓글 데이터 로드
-        // async loadComments() {
-        //     try {
-
-        //         // 각 날짜에 댓글 데이터를 매핑
-        //     } catch (error) {
-        //         console.error('댓글 데이터를 로드하는 중 오류가 발생했습니다:', error);
-        //     }
-        // },
-
         async submitDailyComment(date) {
             try {
                 const commentData = {
-                    date: date,
-                    comment: this.dailyComment,
-                    useComplimentBadge: this.useComplimentBadge,
+                    readsDay: date, // 날짜 데이터
+                    dailyComment: this.dailyComment, // 댓글 내용
+                    useComplimentBadge: this.useComplimentBadge, // 칭찬 도장 여부
+                    profileId: this.profileStore.selectedProfile.id, // 프로필 ID
                 };
 
                 // 백엔드로 POST 요청 전송
-                await axios.post('/api/comments', commentData);
+                await axios.post(`http://localhost:7772/api/comment/saveComment`, commentData);
 
-                // UI에 반영
-                this.$set(this.pastEvents, date, {
-                    ...this.pastEvents[date],
-                    dailyComment: this.dailyComment,
-                    useComplimentBadge: this.useComplimentBadge,
-                });
+                await this.updatePastEvents();
 
                 this.dailyComment = '';
                 this.useComplimentBadge = false;
+                this.closeDropdown();
             } catch (error) {
                 console.error('댓글 저장 중 오류 발생:', error);
             }
@@ -374,7 +475,25 @@ export default {
     font-size: 1.5rem;
     margin-top: 200px;
 }
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
 
+.loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
 .calendar-container {
     margin-top: 20px;
     padding-top: 20px;
