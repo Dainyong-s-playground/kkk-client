@@ -32,7 +32,7 @@
                     class="story-item"
                     @click="handleStoryClick(story)"
                 >
-                    <img :src="story.thumbnail" alt="썸네일" class="thumbnail" />
+                    <img :src="story.fairyTaleImage" alt="썸네일" class="thumbnail" />
                 </div>
             </div>
         </div>
@@ -65,7 +65,7 @@ const closeSearch = () => {
 // 태그 목록 가져오기
 const fetchTags = async () => {
     try {
-        const response = await axios.get('/tagsData.json');
+        const response = await axios.get('http://localhost:7772/api/search/tags');
         availableTags.value = response.data;
     } catch (error) {
         console.error('태그 데이터를 가져오는 중 오류 발생:', error);
@@ -75,8 +75,9 @@ const fetchTags = async () => {
 // 스토리 데이터 가져오기
 const fetchStories = async () => {
     try {
-        const response = await axios.get('/storiesData.json');
+        const response = await axios.get('http://localhost:7772/api/search/fairytale');
         allStories.value = response.data;
+        console.log(allStories.value);
         filteredStories.value = allStories.value; // 초기에는 전체 스토리 목록을 표시
     } catch (error) {
         console.error('동화 데이터를 가져오는 중 오류 발생:', error);
@@ -85,11 +86,13 @@ const fetchStories = async () => {
 
 // 스토리 필터링
 const filterStories = () => {
-    const keyword = searchKeyword.value.toLowerCase(); // 검색어를 소문자로 변환
+    const keyword = searchKeyword.value.toLowerCase().split(' ').join(''); // 공백 제거
     filteredStories.value = allStories.value.filter((story) => {
-        const matchesKeyword = story.title.toLowerCase().includes(keyword);
+        const normalizedTitle = story.fairyTaleTitle.toLowerCase().split(' ').join(''); // 동화 제목에서 공백 제거
+
+        const matchesKeyword = normalizedTitle.includes(keyword);
         const matchesTags =
-            selectedTags.value.length === 0 || selectedTags.value.every((tag) => story.tags.includes(tag));
+            selectedTags.value.length === 0 || selectedTags.value.every((tag) => story.tag.includes(tag.content));
         return matchesKeyword && matchesTags; // 검색어와 태그 조건에 맞는 스토리 필터링
     });
 };
@@ -107,12 +110,17 @@ onMounted(() => {
 });
 
 const displayTitle = computed(() => {
-    if (selectedTags.value.length === 0) {
-        return '추천 컨텐츠';
-    } else if (selectedTags.value.length <= 5) {
-        return `${selectedTags.value.join(', ')} 컨텐츠`;
+    const keyword = searchKeyword.value.toLowerCase();
+    if (!keyword) {
+        if (selectedTags.value.length === 0) {
+            return '추천 컨텐츠';
+        } else if (selectedTags.value.length <= 5) {
+            return `${selectedTags.value.join(', ')} 컨텐츠`;
+        } else {
+            return '검색결과 컨텐츠';
+        }
     } else {
-        return '검색결과 컨텐츠';
+        return `${keyword} 검색결과`;
     }
 });
 
