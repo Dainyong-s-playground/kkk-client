@@ -1,5 +1,9 @@
 <template>
     <div class="fairy-player" :class="{ fullscreen: isFullscreen }" ref="playerRef">
+        <div class="mac-window-controls" v-if="!isFullscreen">
+            <span class="mac-btn close" @click="closeWindow"></span>
+            <span class="mac-btn maximize" @click="toggleFullscreen"></span>
+        </div>
         <div v-if="isFullscreen" class="fullscreen-header">
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
@@ -137,9 +141,14 @@ const handleFullscreenChange = () => {
 };
 
 const handleKeyDown = (event) => {
+    // Escape 키 처리
     if (event.key === 'Escape' && isFullscreen.value) {
         toggleFullscreen();
     }
+};
+
+const closeWindow = () => {
+    window.close();
 };
 
 onMounted(() => {
@@ -201,7 +210,7 @@ onUnmounted(() => {
     align-items: center;
     height: 10%;
     padding: 0 20px;
-    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     color: #fff;
     margin-top: 0;
 }
@@ -307,7 +316,7 @@ onUnmounted(() => {
 
 .fairy-player.fullscreen .player-container {
     height: 86vh;
-    background-color: #252525;
+    background-color: #4a4949;
 }
 
 .fairy-player.fullscreen .story-info {
@@ -315,7 +324,7 @@ onUnmounted(() => {
 }
 
 .fairy-player.fullscreen .guide-character {
-    height: 85px;
+    height: 80px;
 }
 
 .progress-bar {
@@ -361,7 +370,7 @@ onUnmounted(() => {
 .fullscreen-header {
     width: 100%;
     height: 7vh;
-    background-color: rgba(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     padding-left: 20px;
@@ -374,7 +383,7 @@ onUnmounted(() => {
     margin: 0;
 }
 
-/* 전체 화면일 때만 #fullScreenTooltip의 너비를 늘립니다 */
+/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니다 */
 .fairy-player.fullscreen #fullScreenTooltip {
     width: 120px;
     left: 0;
@@ -438,5 +447,102 @@ onUnmounted(() => {
         height: 20px;
         margin: 0 4px;
     }
+}
+
+.fairy-player:not(.fullscreen) {
+    max-width: 1280px;
+    aspect-ratio: 16 / 10;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #d8d8d8; /* 테두리 추가 */
+}
+
+.fairy-player:not(.fullscreen)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, #d8d8d8, #f0f0f0);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.fairy-player:not(.fullscreen) .player-container {
+    height: calc(100% - 130px);
+    width: calc(100% - 40px);
+    margin: 30px 20px 20px;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d8d8d8; /* 테두리 추가 */
+}
+
+.fairy-player:not(.fullscreen) .story-info {
+    background-color: #f0f0f0;
+    border-top: 1px solid #d8d8d8;
+    height: 100px;
+}
+
+.fairy-player:not(.fullscreen) .control-icon {
+    filter: none;
+}
+
+.fairy-player:not(.fullscreen) .story-text {
+    color: #333;
+}
+
+.fairy-player:not(.fullscreen) .line-counter {
+    color: #666;
+}
+
+.fairy-player:not(.fullscreen)::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background-image: url('https://dainyong-s-playground.github.io/imageServer/macCloseButton');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.mac-window-controls {
+    position: absolute;
+    top: 39px;
+    left: 35px;
+    z-index: 10;
+}
+
+.mac-btn {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.mac-btn.close {
+    background-color: #ff5f56;
+}
+
+.mac-btn.maximize {
+    background-color: #27c93f;
+}
+
+/* 호버 효과 */
+.mac-btn:hover {
+    filter: brightness(0.9);
+}
+
+.fairy-player.fullscreen .mac-window-controls {
+    display: none;
 }
 </style>
