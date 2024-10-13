@@ -91,7 +91,7 @@ const mainPageStyle = computed(() => ({
     backgroundImage: `url(${IMAGE_SERVER_URL}/mainBackground.PNG)`,
     backgroundSize: '100% 100%',
     backgroundPosition: 'center',
-    backgroundAttachment: 'fixed',
+    backgroundAttachment: 'scroll',
 }));
 </script>
 
