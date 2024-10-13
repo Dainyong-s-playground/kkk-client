@@ -10,11 +10,7 @@
         </div>
         <div class="main-container" :class="{ 'fade-in': !isLoading }">
             <section class="hero-section">
-                <img
-                    src="https://dainyong-s-playground.github.io/imageServer/Tumb1.png"
-                    alt="Hero Image"
-                    class="hero-image"
-                />
+                <img :src="`${IMAGE_SERVER_URL}/Tumb1.png`" alt="Hero Image" class="hero-image" />
                 <div class="hero-content">
                     <h1>잭과 콩나물</h1>
                     <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
@@ -116,6 +112,7 @@ import FairyTaleDetail from './FairyTaleDetail.vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 export default {
     components: {
@@ -212,6 +209,7 @@ export default {
             selectedFairyTale: null,
             fairyTales: {}, // 동화 데이터를 저장할 객체
             isDetailLoading: false,
+            IMAGE_SERVER_URL,
         };
     },
     methods: {
@@ -222,14 +220,14 @@ export default {
             }
             try {
                 const response = await axios.get(
-                    `http://localhost:7772/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${this.profileStore.jwtToken}`,
                         },
                     },
                 );
-                console.log('서버에서 받은 데이터:', response.data); // 추가된 로그
+                console.log('서버에서 받은 데이터:', response.data);
                 this.recentlyWatched = response.data.map((item) => {
                     return {
                         ...item,
@@ -248,7 +246,7 @@ export default {
             this.isDetailLoading = true;
 
             try {
-                const response = await axios.get(`http://localhost:7772/api/fairytales/${fairyTale.id}`, {
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
                     headers: {
                         Authorization: `Bearer ${this.profileStore.jwtToken}`,
                     },
@@ -269,7 +267,7 @@ export default {
         },
         async fetchTop5FairyTales() {
             try {
-                const response = await axios.get('http://localhost:7772/api/fairytales/top5');
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/top5`);
                 this.top5Series = response.data.map((item) => ({
                     title: item.title,
                     imageUrl: item.imageUrl,
@@ -312,7 +310,7 @@ export default {
         },
         async loadAllData() {
             if (!this.profileStore.selectedProfile) {
-                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 ���도합니다.');
+                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 도합니다.');
                 return;
             }
 

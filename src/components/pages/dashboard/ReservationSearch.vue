@@ -1,7 +1,7 @@
 <template>
     <div class="search-container">
         <div class="search-input-container">
-            <img src="https://dainyong-s-playground.github.io/imageServer/src/search.png" class="search-img" />
+            <img :src="`${IMAGE_SERVER_URL}/src/search.png`" class="search-img" />
             <input type="text" v-model="searchKeyword" @input="filterStories" placeholder="검색어를 입력하세요..." />
         </div>
         <div class="tag-filter-container">
@@ -85,6 +85,7 @@
 
 <script>
 import axios from 'axios';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 export default {
     data() {
@@ -96,6 +97,7 @@ export default {
             filteredStories: [],
             top5Series: [],
             selectedDate: '', // URL에서 전달된 날짜를 저장할 변수
+            IMAGE_SERVER_URL, // IMAGE_SERVER_URL을 data에 추가
         };
     },
     async mounted() {
@@ -126,7 +128,7 @@ export default {
     methods: {
         async fetchTags() {
             try {
-                const response = await axios.get('http://localhost:7772/api/search/tags');
+                const response = await axios.get(`${TALE_API_URL}/api/search/tags`);
                 this.availableTags = response.data;
             } catch (error) {
                 console.error('태그 데이터를 가져오는 중 오류 발생:', error);
@@ -134,7 +136,7 @@ export default {
         },
         async fetchStories() {
             try {
-                const response = await axios.get('http://localhost:7772/api/search/fairytale');
+                const response = await axios.get(`${TALE_API_URL}/api/search/fairytale`);
                 this.allStories = response.data;
                 this.filteredStories = this.allStories;
             } catch (error) {
@@ -144,7 +146,7 @@ export default {
 
         async fetchTop5() {
             try {
-                const response = await axios.get('http://localhost:7772/api/fairytales/top5');
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/top5`);
                 this.top5Series = response.data;
             } catch (error) {
                 console.error('동화 데이터를 가져오는 중 오류 발생:', error);
@@ -283,7 +285,7 @@ export default {
 
 .search-content-item {
     flex: 0 1 calc(20% - 20px); /* 5개씩 배치되도록 고정 너비 설정 */
-    margin: 5px; /* 아이템 간의 여백 */
+    margin: 5px; /* 아이템 간��� 여백 */
     box-sizing: border-box; /* 패딩과 마진이 너비 계산에 포함되도록 설정 */
 }
 

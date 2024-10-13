@@ -39,7 +39,7 @@
                     </div>
                     <img
                         v-if="day?.date && pastEvents?.[day.date]"
-                        src="https://dainyong-s-playground.github.io/imageServer/src/stamp.png"
+                        :src="imageUrls.STAMP"
                         class="has-data"
                         @click.stop
                     />
@@ -47,13 +47,13 @@
                         v-if="day?.date && futureEvents?.[day.date] && isFutureDay(day.date)"
                         class="has-data"
                         @click.stop
-                        src="https://dainyong-s-playground.github.io/imageServer/src/reservation.png"
+                        :src="getFutureEventImage(day.date)"
                     />
                     <img
                         v-if="day?.date && commentEvents?.[day.date] && commentEvents[day.date].length > 0"
                         class="has-data"
                         @click.stop
-                        src="https://dainyong-s-playground.github.io/imageServer/src/comment.png"
+                        :src="imageUrls.COMMENT"
                     />
                 </div>
                 <!-- 미래 예약 이벤트가 존재할 경우 -->
@@ -165,6 +165,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 export default {
     setup() {
@@ -189,6 +190,11 @@ export default {
             commentData: {},
             commentEvents: {},
             useComplimentBadge: false, // 칭찬도장 여부
+            imageUrls: {
+                STAMP: `${IMAGE_SERVER_URL}/src/stamp.png`,
+                COMMENT: `${IMAGE_SERVER_URL}/src/comment.png`,
+                RESERVATION: `${IMAGE_SERVER_URL}/src/reservation.png`,
+            },
         };
     },
     watch: {
@@ -263,7 +269,7 @@ export default {
         async updatePastEvents() {
             try {
                 const historyResponse = await axios.get(
-                    `http://localhost:7772/api/history/pastData/${this.profileStore.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/history/pastData/${this.profileStore.selectedProfile.id}`,
                 );
                 // 날짜를 키로 가지는 객체로 변환
                 this.pastEvents = historyResponse.data.reduce((acc, event) => {
@@ -272,7 +278,7 @@ export default {
                     return acc;
                 }, {});
                 const commentResponse = await axios.get(
-                    `http://localhost:7772/api/comment/${this.profileStore.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/comment/${this.profileStore.selectedProfile.id}`,
                 );
                 const commentData = commentResponse.data;
 
@@ -313,7 +319,7 @@ export default {
         async updateFutureEvents() {
             try {
                 const response = await axios.get(
-                    `http://localhost:7772/api/reservation/load/${this.profileStore.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/reservation/load/${this.profileStore.selectedProfile.id}`,
                 );
                 this.futureEvents = response.data.reduce((acc, event) => {
                     acc[event.reservationDate] = event;
@@ -378,8 +384,6 @@ export default {
                     return false;
                 }
             }
-
-            // return !!this.futureEvents[readsDay] && !!this.futureEvents[title];
         },
         makeReservation() {
             const searchUrl = `/search?selectedDate=${this.selectedDate}`;
@@ -390,7 +394,7 @@ export default {
         async cancleReservation(reservationId) {
             try {
                 // 예약 취소 요청
-                const response = await axios.delete(`http://localhost:7772/api/reservation/cancle/${reservationId}`);
+                const response = await axios.delete(`${TALE_API_URL}/api/reservation/cancle/${reservationId}`);
                 if (response.status == 200) {
                     alert(response.data);
                     await this.updateFutureEvents(); // 예약 데이터 최신화
@@ -421,7 +425,7 @@ export default {
                 }; // 예약 날짜
 
                 try {
-                    await axios.post(`http://localhost:7772/api/reservation/add`, reservationData);
+                    await axios.post(`${TALE_API_URL}/api/reservation/add`, reservationData);
                     alert('동화 등록 완료했습니다.');
                     await this.updateFutureEvents(); // 예약 데이터 최신화
                     this.closeDropdown(); // 드롭다운 닫기
@@ -449,7 +453,7 @@ export default {
                 };
 
                 // 백엔드로 POST 요청 전송
-                await axios.post(`http://localhost:7772/api/comment/saveComment`, commentData);
+                await axios.post(`${TALE_API_URL}/api/comment/saveComment`, commentData);
 
                 await this.updatePastEvents();
 
@@ -465,6 +469,10 @@ export default {
         isPastDate(dateString) {
             const today = new Date().toISOString().slice(0, 10);
             return dateString < today;
+        },
+        getFutureEventImage(date) {
+            const event = this.futureEvents[date];
+            return event && event.imageUrl ? event.imageUrl : this.imageUrls.RESERVATION;
         },
     },
 };
