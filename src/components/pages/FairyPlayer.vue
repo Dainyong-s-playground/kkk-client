@@ -181,20 +181,18 @@ const playPause = async () => {
     }
 };
 
-// playCurrentLine 함수 수정
 const playCurrentLine = async () => {
     if (currentAudio.value) {
         currentAudio.value.pause();
     }
 
-    // 현재 라인의 내용 확인
     const currentContent = storyLines.value[currentLineIndex.value];
     if (checkSpecialContent(currentContent)) {
         isPlaying.value = false;
-        return; // 특별한 내용이면 함수 종료
+        return;
     }
 
-    currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
+    currentComponent.value = 'FairyPlayer';
 
     try {
         const response = await axios.post(`${BASE_URL}/fairyTales/tts`, {

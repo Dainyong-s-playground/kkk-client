@@ -7,7 +7,7 @@
                 <img
                     :style="{ left: handPosition + 'px' }"
                     class="hand-image"
-                    src="https://ifh.cc/g/LSaFT9.png"
+                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/handPointer.png"
                     alt="Hand"
                 />
             </div>
@@ -22,7 +22,7 @@
         <div class="drag-area" ref="dragArea"></div>
 
         <!-- 로프 이미지 -->
-        <img src="https://ifh.cc/g/4Pc4SW.jpg" alt="Rope" class="rope-image" />
+        <img src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/Rope.png" alt="Rope" class="rope-image" />
 
         <!-- 드래그 가이드 (선 그리기) -->
         <canvas ref="ropeCanvas" @mousedown="startDragging" @mousemove="onDragging" @mouseup="endDragging"></canvas>
