@@ -199,7 +199,10 @@ const playCurrentLine = async () => {
             sentence: currentContent,
             language: 'ko'
         }, {
-            responseType: 'arraybuffer'
+            responseType: 'arraybuffer',
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
 
         const audioBlob = new Blob([response.data], { type: 'audio/wav' });
