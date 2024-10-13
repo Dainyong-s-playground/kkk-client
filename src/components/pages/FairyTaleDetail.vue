@@ -52,7 +52,9 @@
                                     alt="재생"
                                     class="play-icon"
                                 />
-                                {{ fairyTale.progress > 0 ? `이어보기 (${fairyTale.progress}%)` : '재생하기' }}
+                                <span :class="{ 'fade-in': isDataLoaded }">
+                                    {{ playButtonText }}
+                                </span>
                             </button>
                             <button v-else class="rent-buy-button" @click="openRentBuyModal">
                                 <img
@@ -70,6 +72,9 @@
                                 />
                                 저장
                             </button>
+                        </template>
+                        <template v-else>
+                            <div class="loading-placeholder">로딩 중...</div>
                         </template>
                     </div>
                     <p class="description">{{ fairyTale.description }}</p>
@@ -123,6 +128,8 @@ const isOwned = ref(false);
 const isRented = ref(false);
 const isClosing = ref(false);
 const isRemoving = ref(false);
+const isLoading = ref(true);
+const isDataLoaded = ref(false);
 
 const props = defineProps({
     fairyTale: {
@@ -202,6 +209,7 @@ const localViews = ref(props.fairyTale.views);
 // };
 
 const checkOwnership = async () => {
+    isLoading.value = true;
     try {
         const response = await axios.get(
             `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
@@ -213,6 +221,11 @@ const checkOwnership = async () => {
         console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
     } catch (error) {
         console.error('소유권 확인 실패:', error);
+    } finally {
+        isLoading.value = false;
+        setTimeout(() => {
+            isDataLoaded.value = true;
+        }, 100);
     }
 };
 
@@ -301,6 +314,13 @@ const showProgressBar = computed(() => {
 
 // fairyTale 객체를 반응형으로 만듭니다
 const fairyTale = ref(props.fairyTale);
+
+const playButtonText = computed(() => {
+    if (fairyTale.value.progress > 0) {
+        return `이어보기 (${fairyTale.value.progress}%)`;
+    }
+    return '재생하기';
+});
 </script>
 
 <style scoped>
@@ -782,6 +802,31 @@ const fairyTale = ref(props.fairyTale);
     to {
         opacity: 0;
         transform: scale(0.9) translateY(20px);
+    }
+}
+
+.loading-placeholder {
+    width: 100%;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.fade-in {
+    animation: textFadeIn 0.3s ease-in-out;
+}
+
+@keyframes textFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 </style>
