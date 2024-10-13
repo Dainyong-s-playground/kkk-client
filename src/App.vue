@@ -17,8 +17,8 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, onUnmounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { computed, onMounted, ref, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProfileStore } from './stores/profile';
 import { useLayoutStore } from './stores/layout';
@@ -29,7 +29,7 @@ import MiddleCompo from './components/layout/MiddleCompo.vue';
 import FairyPlayer from './components/pages/FairyPlayer.vue';
 import PageMain from './components/pages/PageMain.vue';
 import SearchCompo from './components/layout/SearchCompo.vue';
-const route = useRoute();
+const router = useRouter();
 const profileStore = useProfileStore();
 const layoutStore = useLayoutStore();
 const { isLoggedIn } = storeToRefs(profileStore);
@@ -46,38 +46,51 @@ const toggleSearchMode = () => {
     searchMode.value = !searchMode.value;
 };
 
+// 로그인 상태 확인 함수
+const checkAuth = async () => {
+    await profileStore.checkLoginStatus();
+
+    // 로그인이 필요한 페이지 목록
+    const authRequiredPages = ['/fairyTaleList', '/dashboard'];
+
+    if (!isLoggedIn.value && authRequiredPages.includes(router.currentRoute.value.path)) {
+        router.push('/');
+    }
+};
+
+// 라우트 변경 시마다 로그인 상태 확인
+watch(() => router.currentRoute.value.path, checkAuth);
+
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
-    profileStore.checkLoginStatus();
-});
-
-onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
+    checkAuth();
 });
 
 const showHeader = computed(() => {
     const hiddenHeaderRoutes = ['/profiles', '/search', '/fairyplayer'];
-    const isMainPage = route.path === '/';
+    const isMainPage = router.currentRoute.value.path === '/';
 
     if (isMainPage && !isLoggedIn.value) {
         return false;
     }
 
-    return !hiddenHeaderRoutes.some((hiddenRoute) => route.path.toLowerCase().startsWith(hiddenRoute.toLowerCase()));
+    return !hiddenHeaderRoutes.some((hiddenRoute) =>
+        router.currentRoute.value.path.toLowerCase().startsWith(hiddenRoute.toLowerCase()),
+    );
 });
 
 const showMiddleCompo = computed(() => {
-    return !/^\/fairyplayer\/\d+$/.test(route.path.toLowerCase());
+    return !/^\/fairyplayer\/\d+$/.test(router.currentRoute.value.path.toLowerCase());
 });
 
-const isHomePage = computed(() => route.path === '/');
+const isHomePage = computed(() => router.currentRoute.value.path === '/');
 
 const showNav = computed(() => {
-    return route.name === 'FairyTaleList';
+    return router.currentRoute.value.name === 'FairyTaleList';
 });
 
 watch(
-    () => route.name,
+    () => router.currentRoute.value.name,
     (newRouteName) => {
         layoutStore.setShowNav(newRouteName === 'FairyTaleList');
     },
