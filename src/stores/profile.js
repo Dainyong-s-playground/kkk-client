@@ -33,6 +33,7 @@ export const useProfileStore = defineStore('profile', {
             if (jwt) {
                 try {
                     const decodedToken = jwtDecode(jwt);
+                    this.setLoginId(decodedToken.id);
                     const profileId = decodedToken.profileId;
                     if (profileId) {
                         const response = await axios.get('http://localhost:7771/api/me', {
