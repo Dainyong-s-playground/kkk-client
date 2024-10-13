@@ -1,32 +1,57 @@
 <template>
     <div class="profile-info">
-        <img :src="user.image" alt="프로필 이미지" class="profile-img" />
-        <h2>{{ user.nickname }}</h2>
-        <p>{{ user.birth }}</p>
-        <p>{{ user.gender }}</p>
+        <img :src="profileStore.selectedProfile.image" alt="프로필 이미지" class="profile-img" />
+        <h2>{{ profileStore.selectedProfile.nickname }}</h2>
+        <p>{{ profileStore.selectedProfile.birth }}</p>
+        <p>{{ profileStore.selectedProfile.gender }}</p>
     </div>
 
     <div class="stats">
         <div>
             <p>총 구매 권수</p>
-            <p>{{ user.totalPurchases }}</p>
+            <p>{{ totalPurchases }}</p>
         </div>
         <div>
             <p>총 대여 횟수</p>
-            <p>{{ user.totalRentals }}</p>
+            <p>{{ totalRentals }}</p>
         </div>
     </div>
 </template>
 
 <script setup>
-const user = {
-    nickname: '짠니뇽',
-    gender: '여자',
-    birth: '1999.09.26',
-    image: 'https://img.danawa.com/prod_img/500000/253/439/img/18439253_1.jpg?shrink=500:*&_v=20221207094826',
-    totalPurchases: 13,
-    totalRentals: 5,
+import { useProfileStore } from '@/stores/profile'; // 프로필 스토어 가져오기
+import { onMounted, ref } from 'vue';
+import axios from 'axios';
+
+const profileStore = useProfileStore();
+
+// 총 구매 권수와 대여 횟수를 저장할 상태 변수
+const totalPurchases = ref(0);
+const totalRentals = ref(0);
+
+// 백엔드에서 총 구매 권수와 대여 횟수를 받아오는 함수
+const fetchProfileStats = async () => {
+    if (!profileStore.selectedProfile) {
+        console.error('선택된 프로필 정보가 없습니다.');
+        return;
+    }
+    try {
+        const response = await axios.get(
+            `http://localhost:7772/api/mypage/buyingStats/${profileStore.selectedProfile.id}`,
+        );
+
+        // 서버에서 받아온 데이터로 상태 업데이트
+        totalPurchases.value = response.data.totalPurchaseCount;
+        totalRentals.value = response.data.totalRentalCount;
+    } catch (error) {
+        console.error('Failed to fetch profile stats:', error);
+    }
 };
+
+// 컴포넌트가 마운트될 때 데이터 가져오기
+onMounted(async () => {
+    await fetchProfileStats();
+});
 </script>
 
 <style scope>
@@ -64,13 +89,15 @@ const user = {
     text-align: center;
 }
 
-.stats p:first-child { /* 총 구매권수, 총 대여 횟수 */
+.stats p:first-child {
+    /* 총 구매권수, 총 대여 횟수 */
     font-size: 26px;
 }
 
-.stats p:last-child { /* user.totalPurchases와 user.totalRentals */
+.stats p:last-child {
+    /* user.totalPurchases와 user.totalRentals */
     font-weight: bold;
     font-size: 26px;
-    color:darkblue;
+    color: darkblue;
 }
 </style>
