@@ -7,9 +7,10 @@
         <div v-if="isFullscreen" class="fullscreen-header">
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
-        <div class="player-container">
+        <div v-if="currentComponent === 'FairyPlayer'" class="player-container">
             <img :src="currentStoryImage" alt="Story Image" class="story-image" />
         </div>
+        <component v-else :is="currentComponent"></component>
 
         <div class="progress-bar">
             <div class="progress" :style="{ width: progressPercentage + '%' }"></div>
@@ -50,11 +51,16 @@
                 <span id="fullScreenTooltip" class="tooltip">{{ isFullscreen ? '전체화면 종료' : '전체화면' }}</span>
             </div>
         </div>
+        <div class="mac-close-button" v-if="!isFullscreen"></div>
     </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
+import RopeCut from '@/components/pages/Game/RopeCut.vue';
+import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
+import axios from 'axios';
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -62,45 +68,184 @@ const fairyTaleId = ref(route.params.id);
 const storyTitle = ref(route.query.title || '제목 없음');
 const progress = ref(Number(route.query.progress) || 0);
 const imageUrl = ref(route.query.imageUrl || '기본 이미지 URL');
+const storyImages = ref([]); // 이미지 URL 리스트를 저장할 ref
+const currentImageIndex = ref(0); // 현재 표시 중인 이미지의 인덱스
 
 const storyLines = ref([]);
 const currentLineIndex = ref(0);
+const sceneNumbers = ref([]);
 const isFullscreen = ref(false);
 const isPlaying = ref(false);
 const playerRef = ref(null);
 
 const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
-const currentStoryImage = computed(() => imageUrl.value);
+const currentStoryImage = computed(() => storyImages.value[currentImageIndex.value] || '');
 const progressPercentage = computed(() => {
     return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
 });
 
 // 가이드 캐릭터 이미지 URL
 const guideCharacterImage = ref(
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+    `${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`,
 );
 
 // 컨트롤 아이콘 URL
-const previousIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png');
-const playIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png');
-const stopIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png');
-const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png');
-const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
+const previousIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/previousIcon.png`);
+const playIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/playIcon.png`);
+const stopIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/stopIcon.png`);
+const skipIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/skipIcon.png`);
+const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 
-const playPause = () => {
+const currentComponent = shallowRef('FairyPlayer');
+const BASE_URL = TALE_API_URL;
+
+const checkSpecialContent = (content) => {
+    if (content === "게임") {
+        currentComponent.value = RopeCut;
+        return true;
+    } else if (content === "모션인식") {
+        currentComponent.value = HandLandmark;
+        return true;
+    }
+    currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
+    return false;
+};
+
+// 동화 플레이어 데이터 가져오기
+const FairyTaleData = async () => {
+    try {
+        const response = await axios.get(`${BASE_URL}/fairyTales/${fairyTaleId.value}`);
+        const data = response.data;
+
+        storyTitle.value = data.title || '제목 없음';
+        
+        if (data.script) {
+            storyLines.value = data.script.split('\\n');
+        } else {
+            storyLines.value = ['스크립트가 없습니다.'];
+            console.error('스크립트 데이터가 없습니다.');
+        }
+
+        if (data.sceneNumber) {
+            sceneNumbers.value = data.sceneNumber.split('\\n').map(Number);
+        } else {
+            sceneNumbers.value = [0];
+            console.error('장면 번호 데이터가 없습니다.');
+        }
+        
+        if (data.url && Array.isArray(data.url)) {
+            storyImages.value = data.url;
+        } else if (data.image) {
+            storyImages.value = [data.image];
+        } else {
+            storyImages.value = ['기본 이미지 URL'];
+            console.error('이미지 데이터가 없습니다.');
+        }
+        
+        // 첫 번째 이미지로 초기화
+        currentImageIndex.value = 0;
+
+        console.log('처리된 데이터:', {
+            storyTitle: storyTitle.value,
+            storyLines: storyLines.value,
+            sceneNumbers: sceneNumbers.value,
+            storyImages: storyImages.value
+        });
+    } catch (error) {
+        console.error('동화 데이터를 가져오는 중 오류 발생:', error);
+    }
+};
+
+watch(currentLineIndex, (newIndex) => {
+    updateCurrentImage(newIndex);
+});
+
+const updateCurrentImage = (index) => {
+    if (storyImages.value.length === 0) return; // 이미지가 없으면 함수 종료
+
+    const nextSceneIndex = sceneNumbers.value.findIndex(sceneNumber => sceneNumber > index);
+    if (nextSceneIndex === -1) {
+        currentImageIndex.value = storyImages.value.length - 1;
+    } else {
+        currentImageIndex.value = Math.min(nextSceneIndex, storyImages.value.length - 1);
+    }
+};
+
+const audioElement = ref(null);
+const currentAudio = ref(null);
+
+const playPause = async () => {
     isPlaying.value = !isPlaying.value;
-    // 여기에 실제 재생/일시정지 로직을 추가해야 합니다.
+    if (isPlaying.value) {
+        await playCurrentLine();
+    } else {
+        currentAudio.value?.pause();
+    }
+};
+
+const playCurrentLine = async () => {
+    if (currentAudio.value) {
+        currentAudio.value.pause();
+    }
+
+    const currentContent = storyLines.value[currentLineIndex.value];
+    if (checkSpecialContent(currentContent)) {
+        isPlaying.value = false;
+        return;
+    }
+
+    currentComponent.value = 'FairyPlayer';
+
+    try {
+        const response = await axios.post(`${BASE_URL}/fairyTales/tts`, {
+            sentence: currentContent,
+            language: 'ko'
+        }, {
+            responseType: 'arraybuffer',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const audioBlob = new Blob([response.data], { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+
+        currentAudio.value = new Audio(audioUrl);
+        currentAudio.value.onended = () => {
+            if (currentLineIndex.value < storyLines.value.length - 1 && isPlaying.value) {
+                nextLine();
+            } else {
+                isPlaying.value = false;
+            }
+        };
+        await currentAudio.value.play();
+    } catch (error) {
+        console.error('TTS 생성 중 오류 발생:', error);
+        isPlaying.value = false;
+    }
 };
 
 const previousLine = () => {
     if (currentLineIndex.value > 0) {
         currentLineIndex.value--;
+        updateCurrentImage(currentLineIndex.value);
+        if (isPlaying.value) {
+            playCurrentLine();
+        }
     }
 };
 
 const nextLine = () => {
     if (currentLineIndex.value < storyLines.value.length - 1) {
         currentLineIndex.value++;
+        const nextContent = storyLines.value[currentLineIndex.value];
+        checkSpecialContent(nextContent);
+        updateCurrentImage(currentLineIndex.value);
+        if (!checkSpecialContent(nextContent) && isPlaying.value) {
+            playCurrentLine();
+        }
+    } else {
+        isPlaying.value = false;
     }
 };
 
@@ -162,6 +307,15 @@ onMounted(() => {
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    FairyTaleData();
+    updateCurrentImage(0);
+    audioElement.value = new Audio();
+    
+    // 동적으로 mac close 버튼 배경 이미지 설정
+    const macCloseButton = playerRef.value.querySelector('.mac-close-button');
+    if (macCloseButton) {
+        macCloseButton.style.backgroundImage = `url(${IMAGE_SERVER_URL}/macCloseButton)`;
+    }
 });
 
 onUnmounted(() => {
@@ -170,6 +324,10 @@ onUnmounted(() => {
     document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    if (currentAudio.value) {
+        currentAudio.value.pause();
+        currentAudio.value = null;
+    }
 });
 </script>
 
@@ -199,8 +357,8 @@ onUnmounted(() => {
 }
 
 .story-image {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
@@ -343,6 +501,7 @@ onUnmounted(() => {
 .fairy-player.fullscreen .progress-bar {
     position: absolute;
     bottom: 7vh;
+    z-index: 100;
 }
 
 .fullscreen-button {
@@ -450,8 +609,7 @@ onUnmounted(() => {
 }
 
 .fairy-player:not(.fullscreen) {
-    max-width: 1280px;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     border-radius: 10px;
     background-color: #f0f0f0;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -485,7 +643,7 @@ onUnmounted(() => {
 .fairy-player:not(.fullscreen) .story-info {
     background-color: #f0f0f0;
     border-top: 1px solid #d8d8d8;
-    height: 100px;
+    height: 10%;
 }
 
 .fairy-player:not(.fullscreen) .control-icon {
@@ -507,7 +665,6 @@ onUnmounted(() => {
     left: 10px;
     width: 20px;
     height: 20px;
-    background-image: url('https://dainyong-s-playground.github.io/imageServer/macCloseButton');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -544,5 +701,16 @@ onUnmounted(() => {
 
 .fairy-player.fullscreen .mac-window-controls {
     display: none;
+}
+
+.fairy-player:not(.fullscreen) .mac-close-button {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 </style>
