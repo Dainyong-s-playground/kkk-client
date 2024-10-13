@@ -192,37 +192,25 @@ onUnmounted(() => {
 
 <style scoped>
 .game-container {
+    position: relative;
+    height: -webkit-fill-available;
+    max-height: 86vh;
+    overflow: hidden;
+}
+
+.content-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 88dvh;
     display: flex;
     justify-content: center;
     align-items: center;
     background-image: url('https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/bg_motion_sun.png');
     background-size: 100% 100%;
-    width: 100%;
-    height: 600px;
-}
-
-.background-image {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 600px;
-    z-index: 1;
-}
-
-.svg-rect {
-    /* 이 부분 나중에 이미지로 대체 */
-    width: inherit;
-    height: 100%;
-    fill: blue;
-}
-
-.content-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .webcam-container {
@@ -265,7 +253,7 @@ onUnmounted(() => {
     position: absolute;
     z-index: 2;
     transform: scaleX(-1);
-    height: 90%;
+    height: 100%;
 }
 
 .webcam-canvas {
