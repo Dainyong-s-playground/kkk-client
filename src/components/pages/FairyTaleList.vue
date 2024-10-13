@@ -70,25 +70,25 @@
                 </div>
             </section>
 
-            <!-- 추천 동화 -->
-            <section class="category recommended">
-                <h2 class="category-title">추천 동화</h2>
+            <!-- 카테고리별 동화 리스트 -->
+            <section v-for="category in categories" :key="category.id" class="category recommended">
+                <h2 class="category-title">{{ category.name }}</h2>
                 <div class="content-slider">
                     <div
-                        v-for="(item, index) in categoryContent"
-                        :key="index"
+                        v-for="item in getCategoryContent(category.name)"
+                        :key="item.id"
                         class="content-item"
                         @click="showDetail(item)"
                     >
                         <div class="thumbnail-container">
-                            <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
+                            <img :src="item.fairyTaleImage" :alt="item.fairyTaleTitle" class="thumbnail" />
                             <div class="play-overlay">▶</div>
                             <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
                                 {{ item.rentalPrice > 0 ? '유료' : '무료' }}
                             </div>
                         </div>
                         <div class="content-info">
-                            <span class="title">{{ item.title }}</span>
+                            <span class="title">{{ item.fairyTaleTitle }}</span>
                         </div>
                     </div>
                 </div>
@@ -117,6 +117,7 @@ import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 import { watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { ref } from 'vue';
 
 export default {
     components: {
@@ -136,7 +137,38 @@ export default {
             },
         );
 
-        return { profileStore, selectedProfile, route };
+        const categories = ref([]);
+
+        const setupCategories = () => {
+            const fixedCategories = [
+                { id: 1, name: '전래동화' },
+                { id: 2, name: '외국동화' },
+            ];
+
+            const randomCategories = [
+                { id: 3, name: '권선징악' },
+                { id: 4, name: '공주' },
+                { id: 5, name: '노력' },
+                { id: 6, name: '지혜' },
+                { id: 7, name: '동물' },
+                { id: 8, name: '이별' },
+                { id: 9, name: '모험' },
+                { id: 10, name: '교육' },
+                { id: 11, name: '코미디' },
+            ];
+
+            // Fisher-Yates 셔플 알고리즘을 사용하여 랜덤 카테고리 섞기
+            for (let i = randomCategories.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [randomCategories[i], randomCategories[j]] = [randomCategories[j], randomCategories[i]];
+            }
+
+            categories.value = [...fixedCategories, ...randomCategories];
+        };
+
+        const allFairyTales = ref([]);
+
+        return { profileStore, selectedProfile, route, categories, allFairyTales, setupCategories };
     },
     data() {
         return {
@@ -144,88 +176,12 @@ export default {
             showContent: false,
             recentlyWatched: [],
             top5Series: [],
-            categoryContent: [
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 3000,
-                    purchasePrice: 6000,
-                    isOwned: true,
-                    views: 1500,
-                    progress: 60,
-                    description: '붉은 여우 루비의 모험 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 0,
-                    views: 2000,
-                    progress: 30,
-                    description: '알렉스 미아의 장난감 공장 비밀 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 3000,
-                    purchasePrice: 6000,
-                    isOwned: true,
-                    views: 1500,
-                    progress: 60,
-                    description: '붉은 여우 루비의 모험 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 0,
-                    views: 2000,
-                    progress: 30,
-                    description: '알렉스 미아의 장난감 공장 비밀 야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '우리 바다 친구들',
-                    imageUrl: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 2500,
-                    isRented: true,
-                    views: 1800,
-                    progress: 45,
-                    description: '바다 친구들의 모험 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '꼬마 마법사의 모험',
-                    imageUrl: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 3500,
-                    views: 2200,
-                    description: '꼬마 마법사의 모험 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '숲속 동물들의 파티',
-                    imageUrl: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 0,
-                    views: 1700,
-                    description: '숲속 동물들의 파티 이야기',
-                    author: '작가이름',
-                },
-                {
-                    title: '용감한 기사의 여행',
-                    imageUrl: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                    rentalPrice: 4000,
-                    views: 2500,
-                    description: '용감한 기사의 여행 이야기',
-                    author: '작가이름',
-                },
-                // 추가 아이템...
-            ],
             selectedFairyTale: null,
             fairyTales: {}, // 동화 데이터를 저장할 객체
             isDetailLoading: false,
             IMAGE_SERVER_URL,
             dataLoaded: false,
+            categoryContents: {},
         };
     },
     methods: {
@@ -251,7 +207,7 @@ export default {
                     };
                 });
             } catch (error) {
-                console.error('최근 시청 목록을 가져오는데 실패했습니다:', error);
+                console.error('최근 시청 목록을 가져오는데 실했습니다:', error);
             }
         },
         async showDetail(fairyTale) {
@@ -383,14 +339,6 @@ export default {
                 }
                 return item;
             });
-
-            // categoryContent 배열 업데이트
-            this.categoryContent = this.categoryContent.map((item) => {
-                if (item.id === updatedFairyTale.id) {
-                    return updatedFairyTale;
-                }
-                return item;
-            });
         },
         updateFairyTaleViews(id, newViews) {
             // 이 메서드는 더 이상 요하지 않으므로 제거하거나 다음과 같이 수정할 수 있습니다.
@@ -411,6 +359,21 @@ export default {
         updateSelectedFairyTale(newFairyTale) {
             this.showDetail(newFairyTale);
         },
+        async fetchAllFairyTales() {
+            try {
+                const response = await axios.get(`${TALE_API_URL}/api/search/fairytale`, {
+                    headers: {
+                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                    },
+                });
+                this.allFairyTales = response.data;
+            } catch (error) {
+                console.error('동화를 가져오는 데 실패했습니다:', error);
+            }
+        },
+        getCategoryContent(categoryName) {
+            return this.allFairyTales.filter((tale) => tale.tag.includes(categoryName));
+        },
     },
     watch: {
         'profileStore.selectedProfile': {
@@ -427,10 +390,13 @@ export default {
             return;
         }
 
+        this.setupCategories(); // 카테고리 설정 추가
+
         // 프로필 정보가 이미 로드되었다면 바로 데이터를 로드합니다.
         if (this.profileStore.selectedProfile && !this.dataLoaded) {
             await this.loadAllData();
         }
+        await this.fetchAllFairyTales();
     },
 };
 </script>
@@ -517,6 +483,7 @@ export default {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
+    gap: 10px;
 }
 
 .content-slider::-webkit-scrollbar {
@@ -535,6 +502,7 @@ export default {
     position: relative;
     width: 100%;
     overflow: hidden;
+    padding-top: 150%; /* 2:3 비율 유지 */
 }
 
 .thumbnail {
@@ -735,7 +703,7 @@ export default {
     color: white;
     background-color: #4caf50;
     z-index: 2;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* 그림자 추가 */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .content-type-icon.paid {
