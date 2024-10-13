@@ -66,7 +66,7 @@
                             </button>
                         </template>
                         <template v-else>
-                            <div class="loading-placeholder">로딩 중...</div>
+                            <div class="loading-placeholder">로딩 ...</div>
                         </template>
                     </div>
                     <p class="description">{{ fairyTale.description }}</p>
@@ -74,8 +74,13 @@
                     <div class="recommendations">
                         <h3 class="recommendations-category-title">다른 동화 추천</h3>
                         <div class="recommendations-list">
-                            <div v-for="tale in recommendedTales" :key="tale.id" class="recommendation-item">
-                                <img :src="tale.thumbnail" :alt="tale.title" class="recommendation-image" />
+                            <div
+                                v-for="tale in recommendedTales"
+                                :key="tale.id"
+                                class="recommendation-item"
+                                @click="selectRecommendedTale(tale.id)"
+                            >
+                                <img :src="tale.imageUrl" :alt="tale.title" class="recommendation-image" />
                                 <p class="recommendation-title">{{ tale.title }}</p>
                             </div>
                         </div>
@@ -109,12 +114,13 @@
 <script setup>
 import { defineProps, ref, defineEmits, computed, onMounted, watch } from 'vue';
 import { onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 const router = useRouter();
+const route = useRoute();
 const profileStore = useProfileStore();
 const showRentBuyModal = ref(false);
 const isOwned = ref(false);
@@ -144,14 +150,27 @@ const props = defineProps({
     },
 });
 
-const recommendedTales = ref([
-    { id: 1, title: '백설공주', thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1' },
-    { id: 2, title: '빨간 모자', thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1' },
-    { id: 3, title: '피키오', thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1' },
-]);
+const recommendedTales = ref([]);
+
+const emit = defineEmits(['update:fairyTale', 'close', 'update:views']);
+
+const fetchRecommendations = async () => {
+    try {
+        const response = await axios.get(`${TALE_API_URL}/api/fairytales/${props.fairyTale.id}/recommendations`);
+        recommendedTales.value = response.data;
+    } catch (error) {
+        console.error('추천 동화 가져오기 실패:', error);
+    }
+};
+
+const selectRecommendedTale = async (taleId) => {
+    if (route.params.id !== taleId.toString()) {
+        emit('update:fairyTale', { id: taleId });
+    }
+};
 
 const playFairyTale = () => {
-    // fairyTale 객체에 id가 없는 경우를 비해 임시 ID를 생성합니다.
+    // fairyTale 객체에 id 는 경우를 비해 임시 ID를 생성합니다.
     const fairyTaleId = fairyTale.value.id || `temp_${Math.floor(Math.random() * 1000)}`;
 
     // 새 탭에 열 URL을 생성합니다.
@@ -168,8 +187,6 @@ const playFairyTale = () => {
     // 새 탭에서 URL을 엽니다.
     window.open(url, '_blank');
 };
-
-const emit = defineEmits(['close', 'update:views']);
 
 const closeDetail = () => {
     if (isClosing.value) return;
@@ -209,6 +226,7 @@ const checkOwnership = async () => {
 
 onMounted(() => {
     checkOwnership();
+    fetchRecommendations();
 });
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
@@ -290,7 +308,7 @@ const showProgressBar = computed(() => {
     return fairyTale.value.progress > 0;
 });
 
-// fairyTale 객체를 반응형으로 만듭니다
+// fairyTale 객체를 반응형으로 만니다
 const fairyTale = ref(props.fairyTale);
 
 const playButtonText = computed(() => {
@@ -299,6 +317,14 @@ const playButtonText = computed(() => {
     }
     return '재생하기';
 });
+
+watch(
+    () => props.fairyTale,
+    () => {
+        fetchRecommendations();
+    },
+    { deep: true },
+);
 </script>
 
 <style scoped>
@@ -343,7 +369,7 @@ const playButtonText = computed(() => {
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
     margin: 0;
     z-index: 1;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1.2; /* 약간의 여를 둔 줄 간격 */
 }
 
 .close-button {
@@ -502,14 +528,19 @@ const playButtonText = computed(() => {
 
 .recommendations-list {
     display: flex;
-    justify-content: space-around;
+    justify-content: space-between;
     gap: 15px;
-    overflow-x: auto;
 }
 
 .recommendation-item {
-    flex: 0 0 auto;
-    width: 120px;
+    flex: 1;
+    max-width: 33%;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.recommendation-item:hover {
+    transform: scale(1.05);
 }
 
 .recommendation-image {
@@ -517,18 +548,6 @@ const playButtonText = computed(() => {
     height: 160px;
     object-fit: cover;
     border-radius: 5px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.recommendation-image:hover {
-    transform: scale(0.97); /* 호버 시 3% 축소 */
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35); /* 그림자 약간 약화 */
-}
-
-.recommendation-image:active {
-    transform: scale(0.95); /* 클릭 시 5% 축소 */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* 그림자 더 약화 */
 }
 
 .recommendation-title {
