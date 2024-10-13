@@ -23,20 +23,12 @@
                             {{ fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
                         </div>
                         <div class="view-count">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/eyeIcon.png"
-                                alt="조회수"
-                                class="eye-icon"
-                            />
+                            <img :src="`${IMAGE_SERVER_URL}/detailPage/eyeIcon.png`" alt="조회수" class="eye-icon" />
                             <span>{{ localViews }}</span>
                         </div>
                     </div>
                     <button @click="$emit('close')" class="close-button">
-                        <img
-                            src="https://dainyong-s-playground.github.io/imageServer/detailPage/closeButton.png"
-                            alt="닫기"
-                            class="close-icon"
-                        />
+                        <img :src="`${IMAGE_SERVER_URL}/detailPage/closeButton.png`" alt="닫기" class="close-icon" />
                     </button>
                 </div>
                 <div class="detail-info">
@@ -48,7 +40,7 @@
                                 @click="playFairyTale"
                             >
                                 <img
-                                    src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
+                                    :src="`${IMAGE_SERVER_URL}/fairyPlayer/playIcon.png`"
                                     alt="재생"
                                     class="play-icon"
                                 />
@@ -58,7 +50,7 @@
                             </button>
                             <button v-else class="rent-buy-button" @click="openRentBuyModal">
                                 <img
-                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
+                                    :src="`${IMAGE_SERVER_URL}/detailPage/cartIcon.png`"
                                     alt="구매"
                                     class="cart-icon"
                                 />
@@ -66,7 +58,7 @@
                             </button>
                             <button class="download-button">
                                 <img
-                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/underArrow.png"
+                                    :src="`${IMAGE_SERVER_URL}/detailPage/underArrow.png`"
                                     alt="저장"
                                     class="download-icon"
                                 />
@@ -120,6 +112,7 @@ import { onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 const router = useRouter();
 const profileStore = useProfileStore();
@@ -193,26 +186,11 @@ const disableScroll = (e) => {
 
 const localViews = ref(props.fairyTale.views);
 
-// const fetchAndIncrementViews = async () => {
-//     try {
-//         const response = await axios.get(`http://localhost:7772/api/fairytales/${fairyTale.value.id}`, {
-//             headers: {
-//                 Authorization: `Bearer ${profileStore.jwtToken}`,
-//             },
-//         });
-//         fairyTale.value = response.data;
-//         localViews.value = fairyTale.value.views;
-//         emit('update:views', fairyTale.value.id, localViews.value);
-//     } catch (error) {
-//         console.error('동화 정보 가져오기 중 오류 발생:', error);
-//     }
-// };
-
 const checkOwnership = async () => {
     isLoading.value = true;
     try {
         const response = await axios.get(
-            `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
+            `${TALE_API_URL}/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
         );
         console.log('소유권 확인 응답:', response.data);
         fairyTale.value = { ...fairyTale.value, ...response.data };
@@ -258,7 +236,7 @@ const closeRentBuyModal = () => {
 
 const rentFairyTale = async () => {
     try {
-        const response = await axios.post(`http://localhost:7772/api/fairy-tale-ownership/rent`, {
+        const response = await axios.post(`${TALE_API_URL}/api/fairy-tale-ownership/rent`, {
             profileId: profileStore.selectedProfile.id,
             fairyTaleId: fairyTale.value.id,
         });
@@ -272,7 +250,7 @@ const rentFairyTale = async () => {
 
 const buyFairyTale = async () => {
     try {
-        const response = await axios.post(`http://localhost:7772/api/fairy-tale-ownership/purchase`, {
+        const response = await axios.post(`${TALE_API_URL}/api/fairy-tale-ownership/purchase`, {
             profileId: profileStore.selectedProfile.id,
             fairyTaleId: fairyTale.value.id,
         });

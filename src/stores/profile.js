@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import cookies from 'js-cookie';
+import { USER_API_URL } from '@/constants/api';
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
@@ -36,7 +37,7 @@ export const useProfileStore = defineStore('profile', {
                     this.setLoginId(decodedToken.id);
                     const profileId = decodedToken.profileId;
                     if (profileId) {
-                        const response = await axios.get('http://localhost:7771/api/me', {
+                        const response = await axios.get(`${USER_API_URL}/api/me`, {
                             headers: { Authorization: `Bearer ${jwt}` },
                             withCredentials: true,
                         });
@@ -58,7 +59,7 @@ export const useProfileStore = defineStore('profile', {
             const jwt = this.getCookie('Authorization');
             try {
                 await axios.post(
-                    'http://localhost:7771/auth/logout',
+                    `${USER_API_URL}/auth/logout`,
                     {},
                     { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
                 );
@@ -77,7 +78,7 @@ export const useProfileStore = defineStore('profile', {
                 }
 
                 const response = await axios.post(
-                    'http://localhost:7771/api/selectProfile',
+                    `${USER_API_URL}/api/selectProfile`,
                     { profileId },
                     {
                         headers: { Authorization: `Bearer ${jwt}` },

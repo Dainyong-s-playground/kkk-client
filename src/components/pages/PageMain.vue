@@ -1,5 +1,5 @@
 <template>
-    <div class="main-page">
+    <div class="main-page" :style="mainPageStyle">
         <div class="background-overlay"></div>
         <div class="content-wrapper">
             <div class="content-container">
@@ -14,13 +14,13 @@
             <div class="middle-content-container">
                 <img
                     class="fairy-list"
-                    src="https://dainyong-s-playground.github.io/imageServer/fairyList.png"
+                    :src="`${IMAGE_SERVER_URL}/fairyList.png`"
                     alt="동화 목록"
                     @click="goToFairyList"
                 />
                 <img
                     class="parent-dashboard"
-                    src="https://dainyong-s-playground.github.io/imageServer/parentDashboard-removebg.png"
+                    :src="`${IMAGE_SERVER_URL}/parentDashboard-removebg.png`"
                     alt="부모 대시보드"
                     @click="goToDashboard"
                 />
@@ -52,26 +52,27 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
+import { USER_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 const router = useRouter();
 const profileStore = useProfileStore();
 const { isLoggedIn } = storeToRefs(profileStore);
 
 const characters = ref([
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+    `${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`,
     'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02-removebg.png',
+    `${IMAGE_SERVER_URL}/profile/profileFull02-removebg.png`,
     'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03-removebg.png',
+    `${IMAGE_SERVER_URL}/profile/profileFull03-removebg.png`,
     'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
 ]);
 
 const onNaverLogin = () => {
-    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+    window.location.href = `${USER_API_URL}/oauth2/authorization/naver`;
 };
 
 const goToFairyList = () => {
@@ -85,6 +86,13 @@ const goToDashboard = () => {
 const goToProfiles = () => {
     router.push('/profiles');
 };
+
+const mainPageStyle = computed(() => ({
+    backgroundImage: `url(${IMAGE_SERVER_URL}/mainBackground.PNG)`,
+    backgroundSize: '100% 100%',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed',
+}));
 </script>
 
 <style scoped>
@@ -96,10 +104,6 @@ const goToProfiles = () => {
     min-height: 100dvh;
     margin: 0;
     padding: 0;
-    background-image: url('https://dainyong-s-playground.github.io/imageServer/mainBackground.PNG');
-    background-size: 100% 100%;
-    background-position: center;
-    background-attachment: fixed;
     overflow-x: hidden;
 }
 
