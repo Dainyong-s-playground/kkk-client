@@ -65,12 +65,12 @@ export default {
 
 .footer-section {
     flex: 1;
-    min-width: 150px;
+    min-width: 220px;
     margin-bottom: 30px;
 }
 
 .footer-section h3 {
-    font-size: 1.4rem;
+    font-size: 2rem;
     margin-bottom: 20px;
     color: rgb(155, 190, 78);
     font-weight: 700;
@@ -113,6 +113,7 @@ export default {
 }
 
 .team-members strong {
+    font-size: 1.5rem;
     display: block;
     color: rgba(157, 157, 157, 0.759);
 }
@@ -134,6 +135,10 @@ export default {
 
 .footer-bottom a:hover {
     text-decoration: underline;
+}
+
+.footer-bottom p {
+    font-size: 1rem;
 }
 
 @media (max-width: 768px) {
