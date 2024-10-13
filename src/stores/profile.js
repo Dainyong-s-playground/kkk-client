@@ -127,6 +127,30 @@ export const useProfileStore = defineStore('profile', {
                 'max-age': -1,
             });
         },
+        async validateToken() {
+            const jwt = this.getCookie('Authorization');
+            if (!jwt) {
+                this.clearUserData();
+                return false;
+            }
+
+            try {
+                // JWT를 디코드하여 만료 시간을 확인합니다.
+                const decodedToken = jwtDecode(jwt);
+                const currentTime = Date.now() / 1000;
+                if (decodedToken.exp < currentTime) {
+                    // 토큰이 만료되었다면
+                    this.clearUserData();
+                    return false;
+                }
+                // 토큰이 유효하다면
+                return true;
+            } catch (error) {
+                console.error('토큰 검증 실패:', error);
+                this.clearUserData();
+                return false;
+            }
+        },
     },
 
     getters: {
