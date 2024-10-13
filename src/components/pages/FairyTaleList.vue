@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div v-if="isLoading" class="loading-overlay">
+        <div v-if="isLoading || isDetailLoading" class="loading-overlay">
             <div class="loading-spinner">
                 <div></div>
                 <div></div>
@@ -99,13 +99,14 @@
             </section>
 
             <!-- 동화 상세 정보 오버레이 -->
-            <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
+            <transition name="fade">
                 <FairyTaleDetail
+                    v-if="selectedFairyTale"
                     :fairyTale="selectedFairyTale"
                     @close="closeDetail"
                     @update:views="updateFairyTaleViews"
                 />
-            </div>
+            </transition>
         </div>
     </div>
 </template>
@@ -169,7 +170,7 @@ export default {
                     rentalPrice: 0,
                     views: 2000,
                     progress: 30,
-                    description: '알렉스 미아의 장난감 공장 비밀 이야기',
+                    description: '알렉스 미아의 장난감 공장 비밀 야기',
                     author: '작가이름',
                 },
                 {
@@ -210,6 +211,7 @@ export default {
             ],
             selectedFairyTale: null,
             fairyTales: {}, // 동화 데이터를 저장할 객체
+            isDetailLoading: false,
         };
     },
     methods: {
@@ -238,46 +240,32 @@ export default {
                 console.error('최근 시청 목록을 가져오는데 실패했습니다:', error);
             }
         },
-        showDetail(fairyTale) {
-            // 동화 상세 정보를 표시하기 전에 조회수 증가
-            const updatedViews = (fairyTale.views || 0) + 1;
-            this.updateFairyTaleViews(fairyTale.id, updatedViews);
+        async showDetail(fairyTale) {
+            if (!(await this.validateTokenAndRedirect())) {
+                return;
+            }
 
-            // 업데이트된 동화 정보로 선택
-            this.selectedFairyTale = { ...fairyTale, views: updatedViews };
+            this.isDetailLoading = true;
+
+            try {
+                const response = await axios.get(`http://localhost:7772/api/fairytales/${fairyTale.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                    },
+                });
+
+                const updatedFairyTale = response.data;
+                this.updateLocalFairyTaleData(updatedFairyTale);
+
+                this.selectedFairyTale = updatedFairyTale;
+            } catch (error) {
+                console.error('동화 정보를 가져오는 중 오류 발생:', error);
+            } finally {
+                this.isDetailLoading = false;
+            }
         },
         closeDetail() {
             this.selectedFairyTale = null;
-        },
-        updateFairyTaleViews(id, newViews) {
-            // fairyTales 객체 업데이트
-            if (this.fairyTales[id]) {
-                this.fairyTales[id].views = newViews;
-            }
-
-            // recentlyWatched 배열 업데이트
-            this.recentlyWatched = this.recentlyWatched.map((item) => {
-                if (item.fairyTale.id === id) {
-                    return { ...item, fairyTale: { ...item.fairyTale, views: newViews } };
-                }
-                return item;
-            });
-
-            // top5Series 배열 업데이트
-            this.top5Series = this.top5Series.map((item) => {
-                if (item.id === id) {
-                    return { ...item, views: newViews };
-                }
-                return item;
-            });
-
-            // categoryContent 배열 업데이트
-            this.categoryContent = this.categoryContent.map((item) => {
-                if (item.id === id) {
-                    return { ...item, views: newViews };
-                }
-                return item;
-            });
         },
         async fetchTop5FairyTales() {
             try {
@@ -339,15 +327,55 @@ export default {
                 this.showContent = true;
             }
         },
+        async validateTokenAndRedirect() {
+            const isValid = await this.profileStore.validateToken();
+            if (!isValid) {
+                console.error('인증 토큰이 유효하지 않습니다. 로그인이 필요합니다.');
+                this.$router.push('/');
+                return false;
+            }
+            return true;
+        },
+        updateLocalFairyTaleData(updatedFairyTale) {
+            // fairyTales 객체 업데이트
+            if (this.fairyTales[updatedFairyTale.id]) {
+                this.fairyTales[updatedFairyTale.id] = updatedFairyTale;
+            }
+
+            // recentlyWatched 배열 업데이트
+            this.recentlyWatched = this.recentlyWatched.map((item) => {
+                if (item.fairyTale.id === updatedFairyTale.id) {
+                    return { ...item, fairyTale: updatedFairyTale };
+                }
+                return item;
+            });
+
+            // top5Series 배열 업데이트
+            this.top5Series = this.top5Series.map((item) => {
+                if (item.id === updatedFairyTale.id) {
+                    return updatedFairyTale;
+                }
+                return item;
+            });
+
+            // categoryContent 배열 업데이트
+            this.categoryContent = this.categoryContent.map((item) => {
+                if (item.id === updatedFairyTale.id) {
+                    return updatedFairyTale;
+                }
+                return item;
+            });
+        },
+        updateFairyTaleViews(id, newViews) {
+            // 이 메서드는 더 이상 ���요하지 않으므로 제거하거나 다음과 같이 수정할 수 있습니다.
+            this.updateLocalFairyTaleData({ id, views: newViews });
+        },
     },
     async mounted() {
-        await this.profileStore.checkLoginStatus();
-        if (this.profileStore.selectedProfile) {
-            await this.loadAllData();
-        } else {
-            console.error('선택된 프로필이 없습니다.');
-            this.isLoading = false;
+        if (!(await this.validateTokenAndRedirect())) {
+            return;
         }
+        await this.loadAllData();
     },
 };
 </script>
@@ -677,7 +705,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 10000;
 }
 
 .loading-spinner {
@@ -719,5 +747,14 @@ export default {
     100% {
         transform: rotate(360deg);
     }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>
