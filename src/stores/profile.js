@@ -42,7 +42,6 @@ export const useProfileStore = defineStore('profile', {
                         this.setSelectedProfile(response.data);
                         this.setJwtToken(jwt);
                         this.isLoggedIn = true;
-                        console.log('프로필 정보:', response.data); // 디버깅용 로그
                     }
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);

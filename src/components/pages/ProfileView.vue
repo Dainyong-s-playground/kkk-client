@@ -6,7 +6,10 @@
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
                     <button @click="openModal">
-                        <img src="https://ifh.cc/g/RXF45B.png" alt="프로필 생성" />
+                        <img
+                            src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
+                            alt="프로필 생성"
+                        />
                     </button>
                 </div>
             </div>
@@ -14,14 +17,16 @@
                 <div class="card" v-for="profile in profiles" :key="profile.id">
                     <button @click="selectProfile(profile.id)">
                         <img :src="profile.image" />
-                        <!-- <img src="@/assets/images/addProfile.png" /> -->
                         <p>{{ profile.nickname }}</p>
                     </button>
                 </div>
                 <div v-if="profiles.length < 3">
                     <div class="card">
                         <button @click="openModal">
-                            <img src="https://ifh.cc/g/RXF45B.png" alt="프로필 생성" />
+                            <img
+                                src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
+                                alt="프로필 생성"
+                            />
                             <p>프로필 생성</p>
                         </button>
                     </div>
@@ -91,7 +96,7 @@ export default {
             },
             selectedImage: null, // 사용자가 선택한 이미지
             imageList: [
-                'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1', // 미리 정의된 이미지 경로
+                // 미리 정의된 이미지 경로
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01.jpeg',
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02.png',
                 'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03.png',
@@ -305,7 +310,6 @@ export default {
 .image-list {
     display: flex;
     justify-content: space-around;
-    margin-bottom: 20px;
 }
 
 .image-option {
@@ -385,6 +389,10 @@ p {
     display: flex;
     flex-direction: column;
     width: 100%;
+}
+
+.profile-dataform input[type='text']:focus {
+    outline: none; /* outline 제거 */
 }
 
 /* 모달 애니메이션 */

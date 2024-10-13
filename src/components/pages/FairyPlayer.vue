@@ -1,5 +1,9 @@
 <template>
-    <div class="fairy-player" :class="{ fullscreen: isFullscreen }">
+    <div class="fairy-player" :class="{ fullscreen: isFullscreen }" ref="playerRef">
+        <div class="mac-window-controls" v-if="!isFullscreen">
+            <span class="mac-btn close" @click="closeWindow"></span>
+            <span class="mac-btn maximize" @click="toggleFullscreen"></span>
+        </div>
         <div v-if="isFullscreen" class="fullscreen-header">
             <h1 class="story-title-fullscreen">{{ storyTitle }}</h1>
         </div>
@@ -31,7 +35,9 @@
                     </button>
                     <span class="tooltip">다음</span>
                 </div>
-                <span class="line-counter">{{ currentLineIndex + 1 }} / {{ storyLines.length }}</span>
+                <span class="line-counter" v-if="storyLines && storyLines.length">
+                    {{ currentLineIndex + 1 }} / {{ storyLines.length }}
+                </span>
             </div>
             <div class="story-title">
                 <img :src="guideCharacterImage" alt="Guide Character" class="guide-character" />
@@ -47,100 +53,124 @@
     </div>
 </template>
 
-<script>
-export default {
-    name: 'FairyPlayer',
-    data() {
-        return {
-            isPlaying: false,
-            currentStoryImage: 'https://dainyong-s-playground.github.io/imageServer/Tumb1.png',
-            guideCharacterImage:
-                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
-            storyLines: [
-                '옛날 옛날에 어미니와 사이좋은 오누이가 살았습니다.',
-                '어머니 시장에 떡을 팔러 나갔습니다.',
-                '집에 돌아오던 중, 호랑이 한 마리를 만났습니다.',
-                '어흥',
-            ],
-            currentLineIndex: 0,
-            playInterval: null,
-            isFullscreen: false,
-            playIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png',
-            stopIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png',
-            skipIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png',
-            fullscreenIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png',
-            previousIcon: 'https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png',
-            storyTitle: '호랑이와 떡 할머니', // 동화 제목 추가
-        };
-    },
-    computed: {
-        currentLine() {
-            return this.storyLines[this.currentLineIndex];
-        },
-        progressPercentage() {
-            return ((this.currentLineIndex + 1) / this.storyLines.length) * 100;
-        },
-    },
-    methods: {
-        playPause() {
-            this.isPlaying = !this.isPlaying;
-            if (this.isPlaying) {
-                this.playInterval = setInterval(this.nextLine, 3000);
-            } else {
-                clearInterval(this.playInterval);
-            }
-        },
-        nextLine() {
-            if (this.currentLineIndex < this.storyLines.length - 1) {
-                this.currentLineIndex++;
-            } else {
-                this.currentLineIndex = 0;
-                this.isPlaying = false;
-                clearInterval(this.playInterval);
-            }
-        },
-        previousLine() {
-            if (this.currentLineIndex > 0) {
-                this.currentLineIndex--;
-            } else {
-                this.currentLineIndex = this.storyLines.length - 1;
-            }
-            if (this.isPlaying) {
-                clearInterval(this.playInterval);
-                this.playInterval = setInterval(this.nextLine, 3000);
-            }
-        },
-        toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                if (document.documentElement.requestFullscreen) {
-                    document.documentElement.requestFullscreen();
-                }
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        },
-        updateFullscreenState() {
-            this.isFullscreen = !!document.fullscreenElement;
-        },
-        handleKeydown(event) {
-            if (event.key === 'ArrowRight') {
-                this.nextLine();
-            } else if (event.key === 'ArrowLeft') {
-                this.previousLine();
-            }
-        },
-    },
-    mounted() {
-        document.addEventListener('fullscreenchange', this.updateFullscreenState);
-        window.addEventListener('keydown', this.handleKeydown);
-    },
-    beforeUnmount() {
-        document.removeEventListener('fullscreenchange', this.updateFullscreenState);
-        window.removeEventListener('keydown', this.handleKeydown);
-    },
+<script setup>
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
+
+const route = useRoute();
+const fairyTaleId = ref(route.params.id);
+const storyTitle = ref(route.query.title || '제목 없음');
+const progress = ref(Number(route.query.progress) || 0);
+const imageUrl = ref(route.query.imageUrl || '기본 이미지 URL');
+
+const storyLines = ref([]);
+const currentLineIndex = ref(0);
+const isFullscreen = ref(false);
+const isPlaying = ref(false);
+const playerRef = ref(null);
+
+const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
+const currentStoryImage = computed(() => imageUrl.value);
+const progressPercentage = computed(() => {
+    return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
+});
+
+// 가이드 캐릭터 이미지 URL
+const guideCharacterImage = ref(
+    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+);
+
+// 컨트롤 아이콘 URL
+const previousIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png');
+const playIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png');
+const stopIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png');
+const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png');
+const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
+
+const playPause = () => {
+    isPlaying.value = !isPlaying.value;
+    // 여기에 실제 재생/일시정지 로직을 추가해야 합니다.
 };
+
+const previousLine = () => {
+    if (currentLineIndex.value > 0) {
+        currentLineIndex.value--;
+    }
+};
+
+const nextLine = () => {
+    if (currentLineIndex.value < storyLines.value.length - 1) {
+        currentLineIndex.value++;
+    }
+};
+
+const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        if (playerRef.value.requestFullscreen) {
+            playerRef.value.requestFullscreen();
+        } else if (playerRef.value.mozRequestFullScreen) {
+            // Firefox
+            playerRef.value.mozRequestFullScreen();
+        } else if (playerRef.value.webkitRequestFullscreen) {
+            // Chrome, Safari and Opera
+            playerRef.value.webkitRequestFullscreen();
+        } else if (playerRef.value.msRequestFullscreen) {
+            // IE/Edge
+            playerRef.value.msRequestFullscreen();
+        }
+        isFullscreen.value = true;
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+            // Firefox
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+            // Chrome, Safari and Opera
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            // IE/Edge
+            document.msExitFullscreen();
+        }
+        isFullscreen.value = false;
+    }
+};
+
+const handleFullscreenChange = () => {
+    isFullscreen.value = !!document.fullscreenElement;
+};
+
+const handleKeyDown = (event) => {
+    // Escape 키 처리
+    if (event.key === 'Escape' && isFullscreen.value) {
+        toggleFullscreen();
+    }
+};
+
+const closeWindow = () => {
+    window.close();
+};
+
+onMounted(() => {
+    // 여기에서 fairyTaleId를 사용하여 실제 스토리 데이터를 불러와야 합니다.
+    console.log('동화 ID:', fairyTaleId.value);
+    console.log('제목:', storyTitle.value);
+    console.log('진행률:', progress.value);
+    console.log('이미지 URL:', imageUrl.value);
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+});
 </script>
 
 <style scoped>
@@ -180,7 +210,7 @@ export default {
     align-items: center;
     height: 10%;
     padding: 0 20px;
-    background-color: rgb(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     color: #fff;
     margin-top: 0;
 }
@@ -242,8 +272,8 @@ export default {
 
 .guide-character {
     height: 80px;
+    width: 80px;
     object-fit: cover;
-    border-radius: 50%;
     margin-right: 10px;
 }
 
@@ -286,7 +316,7 @@ export default {
 
 .fairy-player.fullscreen .player-container {
     height: 86vh;
-    background-color: #252525;
+    background-color: #4a4949;
 }
 
 .fairy-player.fullscreen .story-info {
@@ -294,7 +324,7 @@ export default {
 }
 
 .fairy-player.fullscreen .guide-character {
-    height: 65px;
+    height: 80px;
 }
 
 .progress-bar {
@@ -340,7 +370,7 @@ export default {
 .fullscreen-header {
     width: 100%;
     height: 7vh;
-    background-color: rgba(0, 0, 0);
+    background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     align-items: center;
     padding-left: 20px;
@@ -353,11 +383,166 @@ export default {
     margin: 0;
 }
 
-/* 전체 화면일 때만 #fullScreenTooltip의 너비를 늘립니다 */
+/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니다 */
 .fairy-player.fullscreen #fullScreenTooltip {
     width: 120px;
     left: 0;
     right: 0;
     transform: translateX(-55%);
+}
+
+/* 반응형 스타일 추가 */
+@media (max-width: 768px) {
+    .story-info {
+        flex-wrap: wrap;
+        justify-content: center;
+        height: auto;
+        padding: 10px;
+    }
+
+    .controls {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .story-title {
+        position: static;
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 10px;
+    }
+
+    .guide-character {
+        height: 40px;
+        width: 40px;
+        min-width: 40px;
+    }
+
+    .story-text {
+        font-size: 16px;
+    }
+
+    .control-wrapper:last-child {
+        position: absolute;
+        right: 10px;
+        top: 10px;
+    }
+}
+
+/* 더 작은 화면에 대한 추가 조정 */
+@media (max-width: 480px) {
+    .guide-character {
+        height: 30px;
+        width: 30px;
+        min-width: 30px;
+    }
+
+    .story-text {
+        font-size: 14px;
+    }
+
+    .control-icon {
+        width: 20px;
+        height: 20px;
+        margin: 0 4px;
+    }
+}
+
+.fairy-player:not(.fullscreen) {
+    max-width: 1280px;
+    aspect-ratio: 16 / 10;
+    border-radius: 10px;
+    background-color: #f0f0f0;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #d8d8d8; /* 테두리 추가 */
+}
+
+.fairy-player:not(.fullscreen)::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to bottom, #d8d8d8, #f0f0f0);
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.fairy-player:not(.fullscreen) .player-container {
+    height: calc(100% - 130px);
+    width: calc(100% - 40px);
+    margin: 30px 20px 20px;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
+    border: 1px solid #d8d8d8; /* 테두리 추가 */
+}
+
+.fairy-player:not(.fullscreen) .story-info {
+    background-color: #f0f0f0;
+    border-top: 1px solid #d8d8d8;
+    height: 100px;
+}
+
+.fairy-player:not(.fullscreen) .control-icon {
+    filter: none;
+}
+
+.fairy-player:not(.fullscreen) .story-text {
+    color: #333;
+}
+
+.fairy-player:not(.fullscreen) .line-counter {
+    color: #666;
+}
+
+.fairy-player:not(.fullscreen)::after {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background-image: url('https://dainyong-s-playground.github.io/imageServer/macCloseButton');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.mac-window-controls {
+    position: absolute;
+    top: 39px;
+    left: 35px;
+    z-index: 10;
+}
+
+.mac-btn {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.mac-btn.close {
+    background-color: #ff5f56;
+}
+
+.mac-btn.maximize {
+    background-color: #27c93f;
+}
+
+/* 호버 효과 */
+.mac-btn:hover {
+    filter: brightness(0.9);
+}
+
+.fairy-player.fullscreen .mac-window-controls {
+    display: none;
 }
 </style>
