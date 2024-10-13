@@ -210,10 +210,8 @@ const playCurrentLine = async () => {
 
         currentAudio.value = new Audio(audioUrl);
         currentAudio.value.onended = () => {
-            if (currentLineIndex.value < storyLines.value.length - 1) {
             if (currentLineIndex.value < storyLines.value.length - 1 && isPlaying.value) {
                 nextLine();
-                playCurrentLine();
             } else {
                 isPlaying.value = false;
             }
