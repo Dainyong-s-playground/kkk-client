@@ -15,6 +15,13 @@ const publicRoutes = [{ path: '/', name: 'PageMain', component: () => import('@/
 const router = createRouter({
     history: createWebHistory(),
     routes: [...publicRoutes, ...authedRoutes, { path: '/:pathMatch(.*)*', name: 'NotFound', component: PageNotFound }],
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        } else {
+            return { top: 0 };
+        }
+    },
 });
 
 router.beforeEach((to, from, next) => {

@@ -210,6 +210,7 @@ export default {
             fairyTales: {}, // 동화 데이터를 저장할 객체
             isDetailLoading: false,
             IMAGE_SERVER_URL,
+            dataLoaded: false,
         };
     },
     methods: {
@@ -310,7 +311,12 @@ export default {
         },
         async loadAllData() {
             if (!this.profileStore.selectedProfile) {
-                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 도합니다.');
+                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 시도합니다.');
+                return;
+            }
+
+            if (this.dataLoaded) {
+                console.log('데이터가 이미 로드되었습니다.');
                 return;
             }
 
@@ -322,6 +328,7 @@ export default {
                     this.fetchTop5FairyTales(),
                     // 추가적인 데이터 로딩 메서드가 있다면 여기에 추가
                 ]);
+                this.dataLoaded = true;
             } catch (error) {
                 console.error('데이터 로딩 중 오류 발생:', error);
             } finally {
@@ -388,7 +395,7 @@ export default {
     watch: {
         'profileStore.selectedProfile': {
             handler(newProfile) {
-                if (newProfile) {
+                if (newProfile && !this.dataLoaded) {
                     this.loadAllData();
                 }
             },
@@ -400,9 +407,10 @@ export default {
             return;
         }
 
-        // 프로필 정보가 로드될 때까지 기다립니다.
-        await this.waitForProfile();
-        await this.loadAllData();
+        // 프로필 정보가 이미 로드되었다면 바로 데이터를 로드합니다.
+        if (this.profileStore.selectedProfile && !this.dataLoaded) {
+            await this.loadAllData();
+        }
     },
 };
 </script>

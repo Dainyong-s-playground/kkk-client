@@ -13,6 +13,8 @@
         </template>
         <!-- 검색 모드일 때 search.vue를 전체 화면으로 덮어쓰기 -->
         <search-compo v-if="searchMode" @close-search="toggleSearchMode"></search-compo>
+        <!-- 푸터 조건 수정 -->
+        <footer-compo v-if="!searchMode && showFooter"></footer-compo>
     </div>
 </template>
 
@@ -23,7 +25,7 @@ import { storeToRefs } from 'pinia';
 import { useProfileStore } from './stores/profile';
 import { useLayoutStore } from './stores/layout';
 
-// import FooterCompo from './components/layout/FooterCompo.vue';
+import FooterCompo from './components/layout/FooterCompo.vue';
 import HeaderCompo from './components/layout/HeaderCompo.vue';
 import MiddleCompo from './components/layout/MiddleCompo.vue';
 import FairyPlayer from './components/pages/FairyPlayer.vue';
@@ -95,6 +97,14 @@ watch(
         layoutStore.setShowNav(newRouteName === 'FairyTaleList');
     },
 );
+
+// showFooter 계산된 속성 수정 및 디버깅 로그 추가
+const showFooter = computed(() => {
+    const currentRouteName = router.currentRoute.value.name;
+    console.log('Current route name:', currentRouteName);
+    console.log('Is ProfileView?', currentRouteName === 'ProfileView');
+    return currentRouteName !== 'ProfileView';
+});
 </script>
 
 <style>
