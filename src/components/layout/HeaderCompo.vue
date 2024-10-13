@@ -10,7 +10,7 @@
                     {{ userName }} 님
                 </div>
                 <div :class="['center-logo', { 'logo-invert': isScrolled }]" @click="goToMain">
-                    <img src="https://dainyong-s-playground.github.io/imageServer/src/kkkLogo_none.png" />
+                    <img :src="`${IMAGE_SERVER_URL}/src/kkkLogo_none.png`" @error="handleImageError" />
                 </div>
                 <div class="search-container">
                     <input
@@ -89,6 +89,7 @@ import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import { useLayoutStore } from '@/stores/layout';
 import { storeToRefs } from 'pinia';
+import { USER_API_URL, TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 
 // ESLint 오류를 방지하기 위한 주석
 // eslint-disable-next-line no-undef
@@ -153,7 +154,7 @@ const handleOutsideClick = (event) => {
 };
 
 const onNaverLogin = () => {
-    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+    window.location.href = `${USER_API_URL}/oauth2/authorization/naver`;
 };
 
 const logout = async () => {
@@ -190,6 +191,17 @@ const toggleSearch = () => {
     if (!isSearchVisible.value) {
         searchQuery.value = '';
     }
+};
+
+// IMAGE_SERVER_URL 값을 확인하기 위해 콘솔에 출력
+console.log('IMAGE_SERVER_URL:', IMAGE_SERVER_URL);
+console.log('USER_API_URL:', USER_API_URL);
+console.log('TALE_API_URL:', TALE_API_URL);
+
+const handleImageError = (e) => {
+    console.error('이미지 로드 실패:', e.target.src);
+    // 필요한 경우 대체 이미지를 설정할 수 있습니다.
+    // e.target.src = '대체 이미지 URL';
 };
 
 onMounted(() => {
@@ -316,7 +328,6 @@ nav {
 .header.nav-hidden {
     height: 5vh;
 }
-
 @keyframes slideUpRight {
     0% {
         transform: translate(0, 0) scale(1);

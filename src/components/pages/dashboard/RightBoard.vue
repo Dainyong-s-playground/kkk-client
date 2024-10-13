@@ -59,6 +59,7 @@ import { mapState } from 'pinia';
 import axios from 'axios';
 import { Bar, Doughnut } from 'vue-chartjs';
 import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement, BarElement, CategoryScale, LinearScale } from 'chart.js';
+import { TALE_API_URL } from '@/constants/api';
 
 // Chart.js 모듈 등록
 ChartJS.register(Title, Tooltip, Legend, ArcElement, BarElement, CategoryScale, LinearScale);
@@ -118,9 +119,7 @@ export default {
         },
         async loadChartData() {
             try {
-                const favorResponse = await axios.get(
-                    `http://localhost:7772/api/graph/prefer/${this.selectedProfile.id}`,
-                );
+                const favorResponse = await axios.get(`${TALE_API_URL}/api/graph/prefer/${this.selectedProfile.id}`);
                 const favorTags = favorResponse.data;
 
                 this.favorChartData = {
@@ -137,7 +136,7 @@ export default {
                 };
 
                 const participateResponse = await axios.get(
-                    `http://localhost:7772/api/graph/report/${this.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/graph/report/${this.selectedProfile.id}`,
                 );
                 const participateData = participateResponse.data;
                 this.totalFairyTales = participateData.count;

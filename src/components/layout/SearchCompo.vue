@@ -2,10 +2,10 @@
     <div v-show="isAnimating" class="search-container">
         <div class="search-area-container">
             <div class="search-close-button" @click="closeSearch">
-                <img src="https://dainyong-s-playground.github.io/imageServer/src/backspace.png" />
+                <img :src="`${IMAGE_SERVER_URL}/src/backspace.png`" />
             </div>
             <div class="search-input-container">
-                <img src="https://dainyong-s-playground.github.io/imageServer/src/search.png" class="search-img" />
+                <img :src="`${IMAGE_SERVER_URL}/src/search.png`" class="search-img" />
                 <input
                     type="text"
                     v-model="searchKeyword"
@@ -105,6 +105,7 @@
 import { ref, computed, onMounted, defineEmits } from 'vue';
 import axios from 'axios';
 import FairyTaleDetail from '../pages/FairyTaleDetail.vue';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 // 부모 컴포넌트로 이벤트 전달
 const emit = defineEmits(['close-search']);
 
@@ -144,7 +145,7 @@ const closeSearch = () => {
 // 태그 목록 가져오기
 const fetchTags = async () => {
     try {
-        const response = await axios.get('http://localhost:7772/api/search/tags');
+        const response = await axios.get(`${TALE_API_URL}/api/search/tags`);
         availableTags.value = response.data;
     } catch (error) {
         console.error('태그 데이터를 가져오는 중 오류 발생:', error);
@@ -154,7 +155,7 @@ const fetchTags = async () => {
 // 스토리 데이터 가져오기
 const fetchStories = async () => {
     try {
-        const response = await axios.get('http://localhost:7772/api/search/fairytale');
+        const response = await axios.get(`${TALE_API_URL}/api/search/fairytale`);
         allStories.value = response.data;
         console.log(allStories.value);
         filteredStories.value = allStories.value;
@@ -166,7 +167,7 @@ const fetchStories = async () => {
 
 // TOP 5 동화 및 추천 동화 데이터 로딩
 const fetchTop5AndRecommended = async () => {
-    const top5Response = await axios.get('http://localhost:7772/api/fairytales/top5');
+    const top5Response = await axios.get(`${TALE_API_URL}/api/fairytales/top5`);
     top5Series.value = top5Response.data;
 };
 

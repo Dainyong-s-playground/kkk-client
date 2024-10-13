@@ -6,10 +6,7 @@
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
                     <button @click="openModal">
-                        <img
-                            src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
-                            alt="프로필 생성"
-                        />
+                        <img :src="getImageUrl('profile/resisterProfile.png')" alt="프로필 생성" />
                     </button>
                 </div>
             </div>
@@ -23,10 +20,7 @@
                 <div v-if="profiles.length < 3">
                     <div class="card">
                         <button @click="openModal">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/profile/resisterProfile.png"
-                                alt="프로필 생성"
-                            />
+                            <img :src="`${IMAGE_SERVER_URL}/profile/resisterProfile.png`" alt="프로필 생성" />
                             <p>프로필 생성</p>
                         </button>
                     </div>
@@ -81,44 +75,44 @@
 
 <script>
 import axios from 'axios';
-import { jwtDecode } from 'jwt-decode'; // jwt-decode 라이브러리에서 명명된 내보내기를 사용하여 임포트
+import { jwtDecode } from 'jwt-decode';
 import cookies from 'js-cookie';
+import { USER_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+
 export default {
     data() {
         return {
-            profiles: [], // 기존 프로필 리스트
-            showModal: false, // 모달 표시 여부
+            profiles: [],
+            showModal: false,
             newProfile: {
                 nickname: '',
                 gender: 'M',
                 birth: '',
-                image: null, // 선택된 이미지 저장
+                image: null,
             },
-            selectedImage: null, // 사용자가 선택한 이미지
+            selectedImage: null,
             imageList: [
-                // 미리 정의된 이미지 경로
-                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01.jpeg',
-                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02.png',
-                'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03.png',
-            ], // 프로필 이미지 리스트
+                `${IMAGE_SERVER_URL}/profile/profileFull01.jpeg`,
+                `${IMAGE_SERVER_URL}/profile/profileFull02.png`,
+                `${IMAGE_SERVER_URL}/profile/profileFull03.png`,
+            ],
+            IMAGE_SERVER_URL: IMAGE_SERVER_URL,
         };
     },
 
     async mounted() {
-        const token = this.getJwtToken(); // JWT 토큰 가져오기
+        const token = this.getJwtToken();
         console.log(token);
-        // JWT 토큰이 유효한지 확인
         if (token) {
             try {
-                const decodedToken = jwtDecode(token); // JWT 토큰 디코딩
-                const userId = decodedToken.id; // 토큰에서 userId 추출
+                const decodedToken = jwtDecode(token);
+                const userId = decodedToken.id;
 
-                // 프로필 조회 API 호출
-                const response = await axios.get(`http://localhost:7771/api/checkProfiles/${userId}`, {
+                const response = await axios.get(`${USER_API_URL}/api/checkProfiles/${userId}`, {
                     headers: {
-                        Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                        Authorization: `Bearer ${token}`,
                     },
-                    withCredentials: true, // 인증 정보를 포함하여 요청
+                    withCredentials: true,
                 });
                 this.profiles = response.data;
             } catch (error) {
@@ -126,23 +120,20 @@ export default {
             }
         } else {
             console.error('JWT 토큰이 없습니다.');
-            // 필요에 따라 프로필 선택 페이지로 리다이렉트
             this.$router.push('/');
         }
 
-        // 'Esc' 키 입력 시 모달 닫기 기능
         document.addEventListener('keydown', this.handleEscKey);
+        console.log('IMAGE_SERVER_URL22:', IMAGE_SERVER_URL);
+        console.log('USER_API_URL:', USER_API_URL);
     },
 
     beforeUnmount() {
-        // 컴포넌트가 언마운트될 때 이벤트 리스너 제거
         document.removeEventListener('keydown', this.handleEscKey);
     },
 
     methods: {
         getJwtToken() {
-            // 쿠키에서 JWT 토큰 가져오기
-            // return Cookies.get('Authorization');  // 쿠키에서 JWT 가져오기
             const token = cookies.get('Authorization');
             console.log('가져온 JWT 토큰:', token);
             return token;
@@ -150,31 +141,28 @@ export default {
 
         async selectProfile(profileId) {
             try {
-                const token = cookies.get('Authorization'); // 쿠키에서 JWT 토큰 가져오기
+                const token = cookies.get('Authorization');
                 if (!token) {
                     throw new Error('JWT 토큰이 없습니다.');
                 }
 
-                // 프로필 선택 API 호출
                 const response = await axios.post(
-                    'http://localhost:7771/api/selectProfile',
+                    `${USER_API_URL}/api/selectProfile`,
                     { profileId },
                     {
                         headers: {
-                            Authorization: `${token}`, // Authorization 헤더 추가
+                            Authorization: `${token}`,
                         },
-                        withCredentials: true, // 쿠키를 포함하기 위해 withCredentials 설정
+                        withCredentials: true,
                     },
                 );
 
-                // 서버에서 새로 발급된 JWT 토큰이 있는 경우 저장
-                const newToken = response.data.newToken; // 서버가 반환하는 새로운 JWT 토큰
+                const newToken = response.data.newToken;
                 if (newToken) {
-                    cookies.set('Authorization', newToken); // 쿠키에 새로운 토큰 저장
+                    cookies.set('Authorization', newToken);
                 }
 
-                // 메인 페이지로 라우팅
-                this.$router.push('/fairyTaleList'); // 메인 페이지로 이동
+                this.$router.push('/fairyTaleList');
             } catch (error) {
                 console.error('프로필 선택 중 오류가 발생했습니다.', error);
             }
@@ -186,41 +174,56 @@ export default {
             this.showModal = false;
         },
         selectImage(image) {
-            this.selectedImage = image; // 선택한 이미지 저장
-            this.newProfile.image = image; // 새 프로필 이미지로 설정
+            this.selectedImage = image;
+            this.newProfile.image = image;
+            console.log('선택된 이미지:', image); // 디버깅을 위해 추가
         },
         async createProfile() {
             try {
-                const token = this.getJwtToken(); // JWT 토큰 가져오기
+                const token = this.getJwtToken();
 
                 if (!token) {
                     throw new Error('JWT 토큰이 없습니다.');
                 }
 
-                // 새 프로필 데이터를 백엔드로 POST 요청
-                const response = await axios.post('http://localhost:7771/api/createProfile', this.newProfile, {
+                if (!this.newProfile.image) {
+                    throw new Error('프로필 이미지를 선택해주세요.');
+                }
+
+                const response = await axios.post(`${USER_API_URL}/api/createProfile`, this.newProfile, {
                     headers: {
-                        Authorization: `Bearer ${token}`, // JWT 토큰을 Authorization 헤더에 추가
+                        Authorization: `Bearer ${token}`,
                     },
-                    withCredentials: true, // 인증 정보를 포함하여 요청
+                    withCredentials: true,
                 });
 
-                // 프로필 생성이 성공하면 profiles 리스트를 업데이트
+                console.log('생성된 프로필:', response.data);
+
                 this.profiles.push(response.data);
 
-                // 프로필 생성 완료 후 모달 닫기 및 초기화
-                this.newProfile = { nickname: '', gender: 'M', birth: '', image: null }; // 입력값 초기화
-                this.selectedImage = null; // 선택된 이미지 초기화
+                this.newProfile = { nickname: '', gender: 'M', birth: '', image: null };
+                this.selectedImage = null;
+                this.closeModal();
                 this.$router.go(0);
             } catch (error) {
                 console.error('프로필 생성 중 오류가 발생했습니다.', error);
+                alert(error.message);
             }
         },
 
         handleEscKey(event) {
             if (event.key === 'Escape' && this.showModal) {
-                this.closeModal(); // Esc 키 입력 시 모달 닫기
+                this.closeModal();
             }
+        },
+
+        handleImageError(event) {
+            console.error('이미지 로드 실패:', event.target.src);
+            event.target.src = `/profile/default-profile.png`; // 기본 이미지로 대체
+        },
+
+        getImageUrl(path) {
+            return `${IMAGE_SERVER_URL}/${path}`;
         },
     },
 };
