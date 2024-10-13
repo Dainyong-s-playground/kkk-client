@@ -197,7 +197,6 @@ const playCurrentLine = async () => {
     try {
         const response = await axios.post(`${BASE_URL}/fairyTales/tts`, {
             sentence: currentContent,
-            speaker: 'Daisy Studious',
             language: 'ko'
         }, {
             responseType: 'arraybuffer'
