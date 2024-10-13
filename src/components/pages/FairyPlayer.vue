@@ -349,8 +349,8 @@ onUnmounted(() => {
 }
 
 .story-image {
-    max-width: 100%;
-    max-height: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
 }
 
@@ -493,6 +493,7 @@ onUnmounted(() => {
 .fairy-player.fullscreen .progress-bar {
     position: absolute;
     bottom: 7vh;
+    z-index: 100;
 }
 
 .fullscreen-button {
@@ -600,8 +601,7 @@ onUnmounted(() => {
 }
 
 .fairy-player:not(.fullscreen) {
-    max-width: 1280px;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 16 / 9;
     border-radius: 10px;
     background-color: #f0f0f0;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -635,7 +635,7 @@ onUnmounted(() => {
 .fairy-player:not(.fullscreen) .story-info {
     background-color: #f0f0f0;
     border-top: 1px solid #d8d8d8;
-    height: 100px;
+    height: 10%;
 }
 
 .fairy-player:not(.fullscreen) .control-icon {
