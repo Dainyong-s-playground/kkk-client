@@ -8,12 +8,12 @@
             <transition name="fade" mode="out-in">
                 <img
                     v-if="!isSuccess"
-                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/cover_motion_sun.png"
+                    :src="beforeHandImage"
                     class="before-hand-image"
                 />
                 <img
                     v-else
-                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/after_motion_sun_remove.png"
+                    :src="afterHandImage"
                     class="after-hand-image"
                 />
             </transition>
@@ -22,8 +22,15 @@
 </template>
 
 <script setup>
+import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref } from 'vue';
+
+
+// 이미지 URL을 사용하는 곳에서 IMAGE_SERVER_URL 사용
+const beforeHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/cover_motion_sun.png`;
+const afterHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/after_motion_sun_remove.png`;
+const backgroundImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/bg_motion_sun.png`;
 
 const video = ref(null);
 const canvas = ref(null);
@@ -207,7 +214,7 @@ onUnmounted(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-image: url('https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/bg_motion_sun.png');
+    background-image: v-bind(`url(${backgroundImage})`);
     background-size: 100% 100%;
     background-repeat: no-repeat;
     background-position: center;

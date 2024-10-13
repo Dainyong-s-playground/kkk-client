@@ -51,12 +51,14 @@
                 <span id="fullScreenTooltip" class="tooltip">{{ isFullscreen ? '전체화면 종료' : '전체화면' }}</span>
             </div>
         </div>
+        <div class="mac-close-button" v-if="!isFullscreen"></div>
     </div>
 </template>
 
 <script setup>
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
 import RopeCut from '@/components/pages/Game/RopeCut.vue';
+import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import axios from 'axios';
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -84,18 +86,18 @@ const progressPercentage = computed(() => {
 
 // 가이드 캐릭터 이미지 URL
 const guideCharacterImage = ref(
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+    `${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`,
 );
 
 // 컨트롤 아이콘 URL
-const previousIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/previousIcon.png');
-const playIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png');
-const stopIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/stopIcon.png');
-const skipIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/skipIcon.png');
-const fullscreenIcon = ref('https://dainyong-s-playground.github.io/imageServer/fairyPlayer/fullScreen.png');
+const previousIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/previousIcon.png`);
+const playIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/playIcon.png`);
+const stopIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/stopIcon.png`);
+const skipIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/skipIcon.png`);
+const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 
 const currentComponent = shallowRef('FairyPlayer');
-const BASE_URL = 'http://localhost:7772';
+const BASE_URL = TALE_API_URL;
 
 const checkSpecialContent = (content) => {
     if (content === "게임") {
@@ -308,6 +310,12 @@ onMounted(() => {
     FairyTaleData();
     updateCurrentImage(0);
     audioElement.value = new Audio();
+    
+    // 동적으로 mac close 버튼 배경 이미지 설정
+    const macCloseButton = playerRef.value.querySelector('.mac-close-button');
+    if (macCloseButton) {
+        macCloseButton.style.backgroundImage = `url(${IMAGE_SERVER_URL}/macCloseButton)`;
+    }
 });
 
 onUnmounted(() => {
@@ -657,7 +665,6 @@ onUnmounted(() => {
     left: 10px;
     width: 20px;
     height: 20px;
-    background-image: url('https://dainyong-s-playground.github.io/imageServer/macCloseButton');
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
@@ -694,5 +701,16 @@ onUnmounted(() => {
 
 .fairy-player.fullscreen .mac-window-controls {
     display: none;
+}
+
+.fairy-player:not(.fullscreen) .mac-close-button {
+    position: absolute;
+    top: 5px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 </style>
