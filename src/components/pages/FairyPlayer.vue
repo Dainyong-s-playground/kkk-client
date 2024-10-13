@@ -85,9 +85,7 @@ const progressPercentage = computed(() => {
 });
 
 // 가이드 캐릭터 이미지 URL
-const guideCharacterImage = ref(
-    `${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`,
-);
+const guideCharacterImage = ref(`${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`);
 
 // 컨트롤 아이콘 URL
 const previousIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/previousIcon.png`);
@@ -100,14 +98,14 @@ const currentComponent = shallowRef('FairyPlayer');
 const BASE_URL = TALE_API_URL;
 
 const checkSpecialContent = (content) => {
-    if (content === "게임") {
+    if (content === '게임') {
         currentComponent.value = RopeCut;
         return true;
-    } else if (content === "모션인식") {
+    } else if (content === '모션인식') {
         currentComponent.value = HandLandmark;
         return true;
     }
-    currentComponent.value = 'FairyPlayer';  // 일반 동화 플레이어로 돌아가기
+    currentComponent.value = 'FairyPlayer'; // 일반 동화 플레이어로 돌아가기
     return false;
 };
 
@@ -118,7 +116,7 @@ const FairyTaleData = async () => {
         const data = response.data;
 
         storyTitle.value = data.title || '제목 없음';
-        
+
         if (data.script) {
             storyLines.value = data.script.split('\\n');
         } else {
@@ -132,7 +130,7 @@ const FairyTaleData = async () => {
             sceneNumbers.value = [0];
             console.error('장면 번호 데이터가 없습니다.');
         }
-        
+
         if (data.url && Array.isArray(data.url)) {
             storyImages.value = data.url;
         } else if (data.image) {
@@ -141,7 +139,7 @@ const FairyTaleData = async () => {
             storyImages.value = ['기본 이미지 URL'];
             console.error('이미지 데이터가 없습니다.');
         }
-        
+
         // 첫 번째 이미지로 초기화
         currentImageIndex.value = 0;
 
@@ -149,7 +147,7 @@ const FairyTaleData = async () => {
             storyTitle: storyTitle.value,
             storyLines: storyLines.value,
             sceneNumbers: sceneNumbers.value,
-            storyImages: storyImages.value
+            storyImages: storyImages.value,
         });
     } catch (error) {
         console.error('동화 데이터를 가져오는 중 오류 발생:', error);
@@ -163,7 +161,7 @@ watch(currentLineIndex, (newIndex) => {
 const updateCurrentImage = (index) => {
     if (storyImages.value.length === 0) return; // 이미지가 없으면 함수 종료
 
-    const nextSceneIndex = sceneNumbers.value.findIndex(sceneNumber => sceneNumber > index);
+    const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
     if (nextSceneIndex === -1) {
         currentImageIndex.value = storyImages.value.length - 1;
     } else {
@@ -197,15 +195,19 @@ const playCurrentLine = async () => {
     currentComponent.value = 'FairyPlayer';
 
     try {
-        const response = await axios.post(`${BASE_URL}/fairyTales/tts`, {
-            sentence: currentContent,
-            language: 'ko'
-        }, {
-            responseType: 'arraybuffer',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
+        const response = await axios.post(
+            `${BASE_URL}/fairyTales/tts`,
+            {
+                sentence: currentContent,
+                language: 'ko',
+            },
+            {
+                responseType: 'arraybuffer',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            },
+        );
 
         const audioBlob = new Blob([response.data], { type: 'audio/wav' });
         const audioUrl = URL.createObjectURL(audioBlob);
@@ -310,7 +312,7 @@ onMounted(() => {
     FairyTaleData();
     updateCurrentImage(0);
     audioElement.value = new Audio();
-    
+
     // 동적으로 mac close 버튼 배경 이미지 설정
     const macCloseButton = playerRef.value.querySelector('.mac-close-button');
     if (macCloseButton) {
@@ -437,12 +439,12 @@ onUnmounted(() => {
 
 .story-title {
     display: flex;
-    position: fixed;
     left: 30%;
     align-items: center;
     font-size: 18px;
     max-width: 70%;
     overflow: hidden;
+    margin: 0 auto 0 35px;
 }
 
 .story-text {
@@ -451,6 +453,7 @@ onUnmounted(() => {
     overflow: hidden;
     text-overflow: ellipsis;
     color: #fff;
+    margin-left: 25px;
 }
 
 .line-counter {

@@ -98,7 +98,9 @@
             <transition name="fade">
                 <FairyTaleDetail
                     v-if="selectedFairyTale"
+                    :key="selectedFairyTale.id"
                     :fairyTale="selectedFairyTale"
+                    @update:fairyTale="updateSelectedFairyTale"
                     @close="closeDetail"
                     @update:views="updateFairyTaleViews"
                 />
@@ -113,6 +115,8 @@ import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+import { watch } from 'vue';
+import { useRoute } from 'vue-router';
 
 export default {
     components: {
@@ -121,7 +125,18 @@ export default {
     setup() {
         const profileStore = useProfileStore();
         const { selectedProfile } = storeToRefs(profileStore);
-        return { profileStore, selectedProfile };
+        const route = useRoute();
+
+        watch(
+            () => route.params.id,
+            async (newId, oldId) => {
+                if (newId && newId !== oldId) {
+                    await this.showDetail({ id: newId });
+                }
+            },
+        );
+
+        return { profileStore, selectedProfile, route };
     },
     data() {
         return {
@@ -256,7 +271,9 @@ export default {
                 const updatedFairyTale = response.data;
                 this.updateLocalFairyTaleData(updatedFairyTale);
 
-                this.selectedFairyTale = updatedFairyTale;
+                this.selectedFairyTale = null; // 강제로 컴포넌트를 언마운트
+                await this.$nextTick(); // DOM 업데이트를 기다림
+                this.selectedFairyTale = updatedFairyTale; // 새로운 데이터로 컴포넌트를 다시 마운트
             } catch (error) {
                 console.error('동화 정보를 가져오는 중 오류 발생:', error);
             } finally {
@@ -390,6 +407,9 @@ export default {
                 };
                 checkProfile();
             });
+        },
+        updateSelectedFairyTale(newFairyTale) {
+            this.showDetail(newFairyTale);
         },
     },
     watch: {
@@ -651,7 +671,7 @@ export default {
     z-index: 100;
 }
 
-/* TOP 5 동화 스타일 */
+/* TOP 5 동 스타일 */
 .top-5 {
     margin-bottom: 3vw;
     overflow: hidden; /* 세로 스크롤 비활성화 */

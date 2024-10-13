@@ -8,6 +8,7 @@ import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import MyPage from '@/components/pages/MyPage.vue';
 import PageMain from '@/components/pages/PageMain.vue';
 import ProfileView from '@/components/pages/ProfileView.vue';
+import FairyTaleDetail from '@/components/pages/FairyTaleDetail.vue';
 
 const routes = [
     {
@@ -22,6 +23,12 @@ const routes = [
                 path: '/fairyTaleList',
                 name: 'FairyTaleList',
                 component: FairyTaleList,
+            },
+            {
+                path: '/fairyTaleDetail/:id',
+                name: 'FairyTaleDetail',
+                component: FairyTaleDetail,
+                props: true,
             },
             {
                 path: '/fairyPlayer/:id',
@@ -41,7 +48,6 @@ const routes = [
         component: HandLandmark,
     },
     {
-
         path: '/game/ropeCut',
         component: RopeCut,
     },
