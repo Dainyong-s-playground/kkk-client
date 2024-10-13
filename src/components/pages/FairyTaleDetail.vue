@@ -54,34 +54,36 @@
                 </div>
                 <div class="detail-info">
                     <div class="button-group">
-                        <button
-                            v-if="fairyTale.rentalPrice === 0 || isOwnedOrRented"
-                            class="play-button"
-                            @click="playFairyTale"
-                        >
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
-                                alt="재생"
-                                class="play-icon"
-                            />
-                            {{ fairyTale.progress > 0 ? `이어보기 (${fairyTale.progress}%)` : '재생하기' }}
-                        </button>
-                        <button v-else class="rent-buy-button" @click="openRentBuyModal">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
-                                alt="구매"
-                                class="cart-icon"
-                            />
-                            동화 대여/소장하기
-                        </button>
-                        <button class="download-button">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/underArrow.png"
-                                alt="저장"
-                                class="download-icon"
-                            />
-                            저장
-                        </button>
+                        <template v-if="!isLoading">
+                            <button
+                                v-if="fairyTale.rentalPrice === 0 || isOwnedOrRented"
+                                class="play-button"
+                                @click="playFairyTale"
+                            >
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
+                                    alt="재생"
+                                    class="play-icon"
+                                />
+                                {{ fairyTale.progress > 0 ? `이어보기 (${fairyTale.progress}%)` : '재생하기' }}
+                            </button>
+                            <button v-else class="rent-buy-button" @click="openRentBuyModal">
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
+                                    alt="구매"
+                                    class="cart-icon"
+                                />
+                                동화 대여/소장하기
+                            </button>
+                            <button class="download-button">
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/underArrow.png"
+                                    alt="저장"
+                                    class="download-icon"
+                                />
+                                저장
+                            </button>
+                        </template>
                     </div>
                     <p class="description">{{ fairyTale.description }}</p>
                     <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
@@ -163,7 +165,7 @@ const recommendedTales = ref([
 ]);
 
 const playFairyTale = () => {
-    // fairyTale 객체에 id가 없는 경우를 ��비해 임시 ID를 생성합니다.
+    // fairyTale 객체에 id가 없는 경우를 비해 임시 ID를 생성합니다.
     const fairyTaleId = fairyTale.value.id || `temp_${Math.floor(Math.random() * 1000)}`;
 
     // 새 탭에 열 URL을 생성합니다.
@@ -208,13 +210,27 @@ const fetchAndIncrementViews = async () => {
     }
 };
 
-onMounted(async () => {
+const checkOwnership = async () => {
     isLoading.value = true;
+    try {
+        const response = await axios.get(
+            `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
+        );
+        console.log('소유권 확인 응답:', response.data);
+        fairyTale.value = { ...fairyTale.value, ...response.data };
+        isOwned.value = response.data.purchased;
+        isRented.value = response.data.rented;
+        console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
+    } catch (error) {
+        console.error('소유권 확인 실패:', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+onMounted(async () => {
     await checkOwnership();
     await fetchAndIncrementViews();
-    setTimeout(() => {
-        isLoading.value = false;
-    }, 300); // 0.3초 후에 로딩 상태를 false로 변경
 });
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
@@ -265,23 +281,6 @@ const buyFairyTale = async () => {
         closeRentBuyModal();
     } catch (error) {
         console.error('동화 구매 실패:', error);
-    }
-};
-
-const checkOwnership = async () => {
-    try {
-        const response = await axios.get(
-            `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
-        );
-        console.log('소유권 확인 응답:', response.data);
-        fairyTale.value = { ...fairyTale.value, ...response.data };
-        isOwned.value = response.data.purchased;
-        isRented.value = response.data.rented;
-        console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
-    } catch (error) {
-        console.error('소유권 확인 실패:', error);
-    } finally {
-        isLoading.value = false;
     }
 };
 
