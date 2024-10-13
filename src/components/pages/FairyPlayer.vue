@@ -211,13 +211,14 @@ const playCurrentLine = async () => {
         currentAudio.value = new Audio(audioUrl);
         currentAudio.value.onended = () => {
             if (currentLineIndex.value < storyLines.value.length - 1) {
+            if (currentLineIndex.value < storyLines.value.length - 1 && isPlaying.value) {
                 nextLine();
                 playCurrentLine();
             } else {
                 isPlaying.value = false;
             }
         };
-        currentAudio.value.play();
+        await currentAudio.value.play();
     } catch (error) {
         console.error('TTS 생성 중 오류 발생:', error);
         isPlaying.value = false;
