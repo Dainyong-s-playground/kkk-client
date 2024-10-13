@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const showModal = ref(true); // 가이드 모달 표시 여부
 const isDragging = ref(false); // 드래그 여부
@@ -228,17 +228,18 @@ const createConfetti = () => {
 };
 </script>
 
-<style>
+<style scoped>
 .game-container {
     position: relative;
-    width: 100%;
-    height: 400px;
-    margin-top: 200px;
+    height: -webkit-fill-available; 
+    max-height: 86vh;
+    overflow: hidden;
 }
 
 .rope-image {
     width: 100%;
-    height: 400px;
+    height: 100%;
+    object-fit: contain;
     position: relative;
     z-index: 1;
 }
