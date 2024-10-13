@@ -1,19 +1,6 @@
 <template>
-    <div class="fairy-tale-detail" @click="closeDetail" @wheel.prevent @touchmove.prevent>
-        <div v-if="isLoading" class="loading-overlay">
-            <div class="loading-spinner">
-                <div></div>
-                <div></div>
-                <div></div>
-                <div></div>
-            </div>
-        </div>
-        <div
-            v-if="!isRemoving"
-            class="detail-content"
-            @click.stop
-            :class="{ 'fade-in': !isLoading, 'fade-out': isClosing }"
-        >
+    <div class="fairy-tale-detail-overlay" @click="closeDetail" @wheel.prevent @touchmove.prevent>
+        <div class="detail-content" @click.stop :class="{ 'fade-in': !isClosing, 'fade-out': isClosing }">
             <div class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
@@ -54,34 +41,41 @@
                 </div>
                 <div class="detail-info">
                     <div class="button-group">
-                        <button
-                            v-if="fairyTale.rentalPrice === 0 || isOwnedOrRented"
-                            class="play-button"
-                            @click="playFairyTale"
-                        >
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
-                                alt="재생"
-                                class="play-icon"
-                            />
-                            {{ fairyTale.progress > 0 ? `이어보기 (${fairyTale.progress}%)` : '재생하기' }}
-                        </button>
-                        <button v-else class="rent-buy-button" @click="openRentBuyModal">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
-                                alt="구매"
-                                class="cart-icon"
-                            />
-                            동화 대여/소장하기
-                        </button>
-                        <button class="download-button">
-                            <img
-                                src="https://dainyong-s-playground.github.io/imageServer/detailPage/underArrow.png"
-                                alt="저장"
-                                class="download-icon"
-                            />
-                            저장
-                        </button>
+                        <template v-if="!isLoading">
+                            <button
+                                v-if="fairyTale.rentalPrice === 0 || isOwnedOrRented"
+                                class="play-button"
+                                @click="playFairyTale"
+                            >
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/fairyPlayer/playIcon.png"
+                                    alt="재생"
+                                    class="play-icon"
+                                />
+                                <span :class="{ 'fade-in': isDataLoaded }">
+                                    {{ playButtonText }}
+                                </span>
+                            </button>
+                            <button v-else class="rent-buy-button" @click="openRentBuyModal">
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/cartIcon.png"
+                                    alt="구매"
+                                    class="cart-icon"
+                                />
+                                동화 대여/소장하기
+                            </button>
+                            <button class="download-button">
+                                <img
+                                    src="https://dainyong-s-playground.github.io/imageServer/detailPage/underArrow.png"
+                                    alt="저장"
+                                    class="download-icon"
+                                />
+                                저장
+                            </button>
+                        </template>
+                        <template v-else>
+                            <div class="loading-placeholder">로딩 중...</div>
+                        </template>
                     </div>
                     <p class="description">{{ fairyTale.description }}</p>
                     <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
@@ -132,9 +126,10 @@ const profileStore = useProfileStore();
 const showRentBuyModal = ref(false);
 const isOwned = ref(false);
 const isRented = ref(false);
-const isLoading = ref(true);
 const isClosing = ref(false);
 const isRemoving = ref(false);
+const isLoading = ref(true);
+const isDataLoaded = ref(false);
 
 const props = defineProps({
     fairyTale: {
@@ -159,11 +154,11 @@ const props = defineProps({
 const recommendedTales = ref([
     { id: 1, title: '백설공주', thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1' },
     { id: 2, title: '빨간 모자', thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1' },
-    { id: 3, title: '피노키오', thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1' },
+    { id: 3, title: '피키오', thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1' },
 ]);
 
 const playFairyTale = () => {
-    // fairyTale 객체에 id가 없는 경우를 ��비해 임시 ID를 생성합니다.
+    // fairyTale 객체에 id가 없는 경우를 비해 임시 ID를 생성합니다.
     const fairyTaleId = fairyTale.value.id || `temp_${Math.floor(Math.random() * 1000)}`;
 
     // 새 탭에 열 URL을 생성합니다.
@@ -184,12 +179,12 @@ const playFairyTale = () => {
 const emit = defineEmits(['close', 'update:views']);
 
 const closeDetail = () => {
-    if (isClosing.value) return; // 이미 닫히는 중이면 무시
+    if (isClosing.value) return;
     isClosing.value = true;
     setTimeout(() => {
         isRemoving.value = true;
         emit('close');
-    }, 300); // 애니메이션 지속 시간과 일치
+    }, 300);
 };
 
 const disableScroll = (e) => {
@@ -198,23 +193,44 @@ const disableScroll = (e) => {
 
 const localViews = ref(props.fairyTale.views);
 
-const fetchAndIncrementViews = async () => {
+// const fetchAndIncrementViews = async () => {
+//     try {
+//         const response = await axios.get(`http://localhost:7772/api/fairytales/${fairyTale.value.id}`, {
+//             headers: {
+//                 Authorization: `Bearer ${profileStore.jwtToken}`,
+//             },
+//         });
+//         fairyTale.value = response.data;
+//         localViews.value = fairyTale.value.views;
+//         emit('update:views', fairyTale.value.id, localViews.value);
+//     } catch (error) {
+//         console.error('동화 정보 가져오기 중 오류 발생:', error);
+//     }
+// };
+
+const checkOwnership = async () => {
+    isLoading.value = true;
     try {
-        const response = await axios.post(`http://localhost:7772/api/fairytales/${fairyTale.value.id}/incrementViews`);
-        localViews.value = response.data.views;
-        emit('update:views', fairyTale.value.id, localViews.value);
+        const response = await axios.get(
+            `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
+        );
+        console.log('소유권 확인 응답:', response.data);
+        fairyTale.value = { ...fairyTale.value, ...response.data };
+        isOwned.value = response.data.purchased;
+        isRented.value = response.data.rented;
+        console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
     } catch (error) {
-        console.error('조회수 증가 중 오류 발생:', error);
+        console.error('소유권 확인 실패:', error);
+    } finally {
+        isLoading.value = false;
+        setTimeout(() => {
+            isDataLoaded.value = true;
+        }, 100);
     }
 };
 
-onMounted(async () => {
-    isLoading.value = true;
-    await checkOwnership();
-    await fetchAndIncrementViews();
-    setTimeout(() => {
-        isLoading.value = false;
-    }, 300); // 0.3초 후에 로딩 상태를 false로 변경
+onMounted(() => {
+    checkOwnership();
 });
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
@@ -268,23 +284,6 @@ const buyFairyTale = async () => {
     }
 };
 
-const checkOwnership = async () => {
-    try {
-        const response = await axios.get(
-            `http://localhost:7772/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
-        );
-        console.log('소유권 확인 응답:', response.data);
-        fairyTale.value = { ...fairyTale.value, ...response.data };
-        isOwned.value = response.data.purchased;
-        isRented.value = response.data.rented;
-        console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
-    } catch (error) {
-        console.error('소유권 확인 실패:', error);
-    } finally {
-        isLoading.value = false;
-    }
-};
-
 watch(
     () => props.fairyTale,
     () => {
@@ -315,30 +314,28 @@ const showProgressBar = computed(() => {
 
 // fairyTale 객체를 반응형으로 만듭니다
 const fairyTale = ref(props.fairyTale);
+
+const playButtonText = computed(() => {
+    if (fairyTale.value.progress > 0) {
+        return `이어보기 (${fairyTale.value.progress}%)`;
+    }
+    return '재생하기';
+});
 </script>
 
 <style scoped>
-.fairy-tale-detail {
+.fairy-tale-detail-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 9999; /* z-index 값을 높임 */
-    /* background-color: rgba(0, 0, 0, 0.5); 배경에 반투명한 오버레이 추가 */
-    overflow: hidden; /* 외부 스크롤 완전히 차단 */
-}
-
-.overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1001;
+    z-index: 1000;
 }
 
 .detail-content {
@@ -351,10 +348,10 @@ const fairyTale = ref(props.fairyTale);
     width: 650px;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4); /* 그림자 효과 추가 */
-    max-height: 90vh; /* 뷰포트 높이의 90%로 제한 */
-    overflow-y: auto; /* 내용이 넘칠 경우 스크롤 허용 */
-    -webkit-overflow-scrolling: touch; /* iOS 스크롤 개선 */
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    max-height: 90vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
@@ -485,7 +482,7 @@ const fairyTale = ref(props.fairyTale);
     width: 24px;
     height: 24px;
     margin-right: 8px;
-    vertical-align: middle; /* 아이콘을 수직 중앙에 맞춥니다 */
+    vertical-align: middle; /* 이콘을 수직 중앙에 맞춥니다 */
 }
 
 .download-icon {
@@ -778,66 +775,12 @@ const fairyTale = ref(props.fairyTale);
     background-color: rgba(0, 123, 255, 0.7); /* 대여 상태의 색상 (파란색) */
 }
 
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); /* 반투명한 배경으로 변경 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.loading-spinner {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-.loading-spinner div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border: 8px solid #fff;
-    border-radius: 50%;
-    animation: loading-spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #fff transparent transparent transparent;
-}
-
-.loading-spinner div:nth-child(1) {
-    animation-delay: -0.45s;
-}
-
-.loading-spinner div:nth-child(2) {
-    animation-delay: -0.3s;
-}
-
-.loading-spinner div:nth-child(3) {
-    animation-delay: -0.15s;
-}
-
-@keyframes loading-spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
 .fade-in {
     animation: fadeIn 0.3s ease-in-out;
 }
 
 .fade-out {
-    animation: fadeOut 0.3s ease-in-out;
+    animation: fadeOut 0.3s ease-in-out forwards;
 }
 
 @keyframes fadeIn {
@@ -858,7 +801,32 @@ const fairyTale = ref(props.fairyTale);
     }
     to {
         opacity: 0;
-        transform: scale(0.95) translateY(10px);
+        transform: scale(0.9) translateY(20px);
+    }
+}
+
+.loading-placeholder {
+    width: 100%;
+    height: 50px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 16px;
+}
+
+.fade-in {
+    animation: textFadeIn 0.3s ease-in-out;
+}
+
+@keyframes textFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 </style>
