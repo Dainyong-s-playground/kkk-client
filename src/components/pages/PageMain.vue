@@ -5,7 +5,8 @@
             <div class="content-container">
                 <h1>다이뇽에 오신 것을 환영합니다!</h1>
                 <hr />
-                <button @click="onNaverLogin" class="login-button">네이버로 로그인</button>
+                <button v-if="!isLoggedIn" @click="onNaverLogin" class="login-button">네이버로 로그인</button>
+                <button v-else @click="goToProfiles" class="profile-button">프로필 선택</button>
             </div>
         </div>
 
@@ -53,8 +54,21 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
 
 const router = useRouter();
+const profileStore = useProfileStore();
+const { isLoggedIn } = storeToRefs(profileStore);
+
+const characters = ref([
+    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
+    'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
+    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02-removebg.png',
+    'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
+    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03-removebg.png',
+    'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
+]);
 
 const onNaverLogin = () => {
     window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
@@ -68,14 +82,9 @@ const goToDashboard = () => {
     router.push('/dashboard');
 };
 
-const characters = ref([
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull01-removebg.png',
-    'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull02-removebg.png',
-    'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-    'https://dainyong-s-playground.github.io/imageServer/profile/profileFull03-removebg.png',
-    'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-]);
+const goToProfiles = () => {
+    router.push('/profiles');
+};
 </script>
 
 <style scoped>
@@ -219,5 +228,20 @@ const characters = ref([
 
 .character-imgContainer:hover {
     animation-play-state: paused;
+}
+
+.profile-button {
+    padding: 10px 20px;
+    font-size: 18px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.profile-button:hover {
+    background-color: #45a049;
 }
 </style>
