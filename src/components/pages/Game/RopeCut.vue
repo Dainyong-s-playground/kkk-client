@@ -2,17 +2,14 @@
     <div class="game-container">
         <!-- 가이드 모달 -->
         <div v-if="showModal" class="modal" @click="closeModal">
-            <!-- <div class="modal-guide"> -->
             <div class="highlight-area">
                 <img
                     :style="{ left: handPosition + 'px' }"
                     class="hand-image"
-                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/handPointer.png"
+                    :src="`${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/handPointer.png`"
                     alt="Hand"
                 />
             </div>
-            <!-- 허용 범위 강조 -->
-            <!-- </div> -->
             <div class="modal-content">
                 <p>화면을 클릭하고 드래그하여 동아줄을 자르세요!</p>
             </div>
@@ -22,7 +19,7 @@
         <div class="drag-area" ref="dragArea"></div>
 
         <!-- 로프 이미지 -->
-        <img src="https://dainyong-s-playground.github.io/imageServer/fairytale/TheSunAndTheMoon/Rope.png" alt="Rope" class="rope-image" />
+        <img :src="`${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/Rope.png`" alt="Rope" class="rope-image" />
 
         <!-- 드래그 가이드 (선 그리기) -->
         <canvas ref="ropeCanvas" @mousedown="startDragging" @mousemove="onDragging" @mouseup="endDragging"></canvas>
@@ -52,6 +49,7 @@
 </template>
 
 <script setup>
+import { IMAGE_SERVER_URL } from '@/constants/api';
 import { onMounted, ref } from 'vue';
 
 const showModal = ref(true); // 가이드 모달 표시 여부
