@@ -4,9 +4,11 @@ import ReservationSearch from '@/components/pages/dashboard/ReservationSearch.vu
 import FairyPlayer from '@/components/pages/FairyPlayer.vue';
 import FairyTaleList from '@/components/pages/FairyTaleList.vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
+import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import MyPage from '@/components/pages/MyPage.vue';
 import PageMain from '@/components/pages/PageMain.vue';
 import ProfileView from '@/components/pages/ProfileView.vue';
+import FairyTaleDetail from '@/components/pages/FairyTaleDetail.vue';
 
 const routes = [
     {
@@ -23,6 +25,12 @@ const routes = [
                 component: FairyTaleList,
             },
             {
+                path: '/fairyTaleDetail/:id',
+                name: 'FairyTaleDetail',
+                component: FairyTaleDetail,
+                props: true,
+            },
+            {
                 path: '/fairyPlayer/:id',
                 name: 'FairyPlayer',
                 component: FairyPlayer,
@@ -32,11 +40,16 @@ const routes = [
     },
     {
         path: '/profiles',
+        name: 'ProfileView',
         component: ProfileView,
     },
     {
         path: '/game/hand',
         component: HandLandmark,
+    },
+    {
+        path: '/game/ropeCut',
+        component: RopeCut,
     },
     {
         path: '/mypage',

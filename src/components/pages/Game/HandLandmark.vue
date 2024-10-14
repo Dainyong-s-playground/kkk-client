@@ -8,12 +8,12 @@
             <transition name="fade" mode="out-in">
                 <img
                     v-if="!isSuccess"
-                    src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png"
+                    :src="beforeHandImage"
                     class="before-hand-image"
                 />
                 <img
                     v-else
-                    src="https://Dainyong-s-playground.github.io/imageServer/src/after_motion_sun_remove.png"
+                    :src="afterHandImage"
                     class="after-hand-image"
                 />
             </transition>
@@ -22,8 +22,15 @@
 </template>
 
 <script setup>
+import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref } from 'vue';
+
+
+// 이미지 URL을 사용하는 곳에서 IMAGE_SERVER_URL 사용
+const beforeHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/cover_motion_sun.png`;
+const afterHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/after_motion_sun_remove.png`;
+const backgroundImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/bg_motion_sun.png`;
 
 const video = ref(null);
 const canvas = ref(null);
@@ -192,37 +199,25 @@ onUnmounted(() => {
 
 <style scoped>
 .game-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: url('https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png');
-    background-size: 100% 100%;
-    width: 100%;
-    height: 600px;
+    position: relative;
+    height: -webkit-fill-available;
+    max-height: 86vh;
+    overflow: hidden;
 }
 
-.background-image {
+.content-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 600px;
-    z-index: 1;
-}
-
-.svg-rect {
-    /* 이 부분 나중에 이미지로 대체 */
-    width: inherit;
-    height: 100%;
-    fill: blue;
-}
-
-.content-container {
+    height: 88dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    background-image: v-bind(`url(${backgroundImage})`);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .webcam-container {
@@ -265,7 +260,7 @@ onUnmounted(() => {
     position: absolute;
     z-index: 2;
     transform: scaleX(-1);
-    height: 90%;
+    height: 100%;
 }
 
 .webcam-canvas {

@@ -8,8 +8,7 @@
     </div>
 </template>
 
-<script setup>
-</script>
+<script setup></script>
 
 <style scope>
 .sidebar {
@@ -18,7 +17,7 @@
     padding: 20px;
     height: 100vh;
     position: fixed;
-    top: 100px;
+    top: 10vh;
     left: 0;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     transition: width 0.3s ease;
