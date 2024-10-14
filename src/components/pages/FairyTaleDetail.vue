@@ -1,5 +1,5 @@
 <template>
-    <div class="fairy-tale-detail-overlay" @click="closeDetail" @wheel.prevent @touchmove.prevent>
+    <div class="fairy-tale-detail-overlay" @click="closeDetail" @wheel.stop>
         <div
             class="detail-content"
             @click.stop
@@ -83,7 +83,7 @@
                             <div class="loading-placeholder">로딩 ...</div>
                         </template>
                     </div>
-                    <div class="scrollable-content">
+                    <div class="scrollable-content" @wheel.stop>
                         <p class="description">{{ fairyTale.description }}</p>
                         <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
                         <div class="recommendations">
