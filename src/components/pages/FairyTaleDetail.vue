@@ -35,14 +35,16 @@
                         <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
                     </div>
                     <div class="image-overlay"></div>
-                    <div
-                        v-if="isOwned || isRented"
-                        class="ownership-status"
-                        :class="{ owned: isOwned, rented: isRented }"
-                    >
-                        {{ isOwned ? '소장' : '대여 중' }}
+                    <div class="title-container">
+                        <div
+                            v-if="isOwned || isRented"
+                            class="ownership-status"
+                            :class="{ owned: isOwned, rented: isRented }"
+                        >
+                            {{ isOwned ? '소장' : '대여 중' }}
+                        </div>
+                        <h2 class="detail-title">{{ fairyTale.title }}</h2>
                     </div>
-                    <h2 class="detail-title">{{ fairyTale.title }}</h2>
                     <div class="content-info">
                         <div class="content-type-icon" :class="{ paid: fairyTale.rentalPrice > 0 }">
                             {{ fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
@@ -135,6 +137,37 @@
                 <button @click="closeRentBuyModal" class="close-modal-button">닫기</button>
             </div>
         </div>
+
+        <!-- 에러 모달 컴포넌트 -->
+        <div v-if="showErrorModal" class="modal-overlay" @click="showErrorModal = false">
+            <div class="modal-content error-modal" @click.stop>
+                <h2>오류 발생</h2>
+                <p>{{ errorMessage }}</p>
+                <button @click="showErrorModal = false" class="close-modal-button">확인</button>
+            </div>
+        </div>
+
+        <!-- 크레딧 부족 모달 컴포넌트 -->
+        <div v-if="showInsufficientCreditModal" class="modal-overlay" @click="showInsufficientCreditModal = false">
+            <div class="modal-content insufficient-credit-modal" @click.stop>
+                <h2>크레��� 부족</h2>
+                <p>크레딧이 부족합니다. 크레딧을 충전하시겠습니까?</p>
+                <div class="modal-buttons">
+                    <button @click="goToChargeCredit" class="charge-button">충전하기</button>
+                    <button @click="showInsufficientCreditModal = false" class="close-modal-button">취소</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결제 성공 모달 -->
+        <div v-if="showSuccessModal" class="modal-overlay" @click="closeSuccessModal">
+            <div class="modal-content success-modal" @click.stop>
+                <img :src="`${IMAGE_SERVER_URL}/successIcon.png`" alt="성공" class="success-icon" />
+                <h2>{{ successTitle }}</h2>
+                <p>{{ successMessage }}</p>
+                <button @click="closeSuccessModal" class="close-modal-button">확인</button>
+            </div>
+        </div>
     </div>
 </template>
 <script setup>
@@ -153,6 +186,9 @@ const isClosing = ref(false);
 const isLoading = ref(false);
 const isDataLoaded = ref(false);
 const progress = ref(0);
+const showErrorModal = ref(false);
+const errorMessage = ref('');
+const showInsufficientCreditModal = ref(false);
 
 const props = defineProps({
     fairyTale: {
@@ -306,6 +342,20 @@ const closeRentBuyModal = () => {
     showRentBuyModal.value = false;
 };
 
+const showSuccessModal = ref(false);
+const successTitle = ref('');
+const successMessage = ref('');
+
+const showSuccessMessage = (title, message) => {
+    successTitle.value = title;
+    successMessage.value = message;
+    showSuccessModal.value = true;
+};
+
+const closeSuccessModal = () => {
+    showSuccessModal.value = false;
+};
+
 const rentFairyTale = async () => {
     try {
         const response = await axios.post(`${TALE_API_URL}/api/fairy-tale-ownership/rent`, {
@@ -315,11 +365,17 @@ const rentFairyTale = async () => {
         console.log('동화 대여 성공:', response.data);
         isRented.value = true;
         closeRentBuyModal();
+        showSuccessMessage('대여 성공', '동화가 성공적으로 대여되었습니다.');
     } catch (error) {
         console.error('동화 대여 실패:', error);
+        if (error.response && error.response.status === 402) {
+            showInsufficientCreditModal.value = true;
+        } else {
+            errorMessage.value = '동화 대여 중 오류가 발생했습니다.';
+            showErrorModal.value = true;
+        }
     }
 };
-
 const buyFairyTale = async () => {
     try {
         const response = await axios.post(`${TALE_API_URL}/api/fairy-tale-ownership/purchase`, {
@@ -329,8 +385,15 @@ const buyFairyTale = async () => {
         console.log('동화 구매 성공:', response.data);
         isOwned.value = true;
         closeRentBuyModal();
+        showSuccessMessage('구매 성공', '동화가 성공적으로 구매되었습니다.');
     } catch (error) {
         console.error('동화 구매 실패:', error);
+        if (error.response && error.response.status === 402) {
+            showInsufficientCreditModal.value = true;
+        } else {
+            errorMessage.value = '동화 구매 중 오류가 발생했습니다.';
+            showErrorModal.value = true;
+        }
     }
 };
 
@@ -354,6 +417,13 @@ const progressPercentage = computed(() => {
 const playButtonText = computed(() => {
     return progress.value > 0 ? `이어보기 ${progressPercentage.value}%` : '재생하기';
 });
+
+const goToChargeCredit = () => {
+    showInsufficientCreditModal.value = false;
+    alert('추후 구현 예정입니다.');
+    // 여기에 실제 충전 페이지로 이동하는 로직을 추가할 수 있습니다.
+    // router.push('/charge-credit');
+};
 </script>
 
 <style scoped>
@@ -395,9 +465,6 @@ const playButtonText = computed(() => {
 }
 
 .detail-title {
-    position: absolute;
-    bottom: 30px;
-    left: 20px;
     font-size: 40px;
     font-weight: bold;
     color: white;
@@ -551,8 +618,14 @@ const playButtonText = computed(() => {
     bottom: 0;
     left: 0;
     right: 0;
-    height: 150px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
+    height: 180px;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 1) 0%,
+        rgba(0, 0, 0, 0.8) 20%,
+        rgba(0, 0, 0, 0.6) 50%,
+        rgba(0, 0, 0, 0) 80%
+    );
 }
 
 .recommendations-category-title {
@@ -792,21 +865,30 @@ const playButtonText = computed(() => {
     background-color: #ff0000;
     transition: width 0.3s ease;
 }
-
+.title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    position: absolute;
+    bottom: 0px;
+    width: 95%;
+    height: 150px;
+    margin-bottom: 25px;
+}
 .ownership-status {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    bottom: 78px;
-    left: 20px;
+    position: relative;
+    width: 35px;
     color: white;
-    padding: 6px 14px;
-    border-radius: 15px;
-    font-size: 15px;
+    padding: 5px 18px;
+    border-radius: 20px;
+    font-size: 18px;
     font-weight: bold;
-    z-index: 3;
-    line-height: 1;
+    z-index: 5555;
+    bottom: 5px;
+    line-height: 1.2;
 }
 
 .ownership-status.owned {
@@ -920,5 +1002,111 @@ const playButtonText = computed(() => {
     height: 100%;
     background-color: rgba(0, 0, 0, 0.7);
     z-index: 1001;
+}
+
+.error-modal {
+    background-color: #ff4444;
+    color: white;
+}
+
+.error-modal h2 {
+    color: white;
+}
+
+.error-modal .close-modal-button {
+    background-color: white;
+    color: #ff4444;
+}
+
+.insufficient-credit-modal {
+    background-color: #ff9800;
+    color: white;
+}
+
+.insufficient-credit-modal h2 {
+    color: white;
+}
+
+.insufficient-credit-modal .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    gap: 10px; /* 버튼 사이의 간격 추가 */
+}
+
+.insufficient-credit-modal .charge-button,
+.insufficient-credit-modal .close-modal-button {
+    flex: 1;
+    padding: 10px 0;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px; /* 모든 모서리를 둥글게 */
+}
+
+.insufficient-credit-modal .charge-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.insufficient-credit-modal .close-modal-button {
+    background-color: #f44336;
+    color: white;
+}
+
+/* 중간 선을 제거하기 위해 이 부분을 삭제 또는 주석 처리합니다 */
+/*
+.insufficient-credit-modal .charge-button::after {
+    content: '';
+    position: absolute;
+    right: 50%;
+    top: 10%;
+    bottom: 10%;
+    width: 1px;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+*/
+
+.success-modal {
+    background-color: #4caf50;
+    color: white;
+    text-align: center;
+    padding: 30px;
+    border-radius: 10px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.success-modal h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+.success-modal p {
+    margin-bottom: 20px;
+}
+
+.success-icon {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 20px;
+    filter: brightness(0) invert(1); /* 이미지를 흰색으로 변경 */
+}
+
+.success-modal .close-modal-button {
+    background-color: white;
+    color: #4caf50;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.success-modal .close-modal-button:hover {
+    background-color: #e0e0e0;
 }
 </style>
