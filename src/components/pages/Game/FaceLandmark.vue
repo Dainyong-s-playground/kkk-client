@@ -1,8 +1,10 @@
 <template>
-    <div class="background-container"></div>
-    <div class="game-container" v-show="!isSuccess">
-        <video ref="video" class="video-element" autoplay playsinline></video>
-        <canvas ref="canvas" class="webcam-canvas"></canvas>
+    <div class="player-container" :class="{ 'is-fullscreen': isFullscreen }">
+        <div class="background-container"></div>
+        <div class="game-container" v-show="!isSuccess">
+            <video ref="video" class="video-element" autoplay playsinline></video>
+            <canvas ref="canvas" class="webcam-canvas"></canvas>
+        </div>
     </div>
 </template>
 
@@ -43,6 +45,7 @@ var ellipseArea = 1;
 // 상태 변수
 const stopLandmarkPrediction = ref(false);
 const isSuccess = ref(false);
+const isFullscreen = ref(false);
 
 // 비디오와 캔버스 크기를 동기화하는 함수
 const syncCanvasSize = () => {
@@ -127,7 +130,7 @@ const trackFaceInEllipse = (landmarks) => {
             }, 100); // 100ms 간격으로 타이머 실행
         }
     } else {
-        // 얼굴 부위가 타원에서 벗어나면 타이머 초기화
+        // 얼굴 부위가 타원에 벗어나면 타이머 초기화
         clearInterval(trackingInterval);
         trackingInterval = null;
         insideEllipseTime = 0;
@@ -205,7 +208,7 @@ const predictWebcam = async () => {
         result.faceLandmarks.forEach((landmarks) => {
             drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL, { color: "#0067a3" });
 
-            // 눈, 코, 입이 타원 안에 있는지 추적
+            // 눈, 코, 입이 타원 안에 있지 추적
             trackFaceInEllipse(landmarks);
         });
     } else {
@@ -234,24 +237,30 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.background-container {
+.player-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.background-container,
+.game-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 90%;
+    height: 100%;
+}
+
+.background-container {
     background-image: v-bind(`url(${backgroundImage})`);
-    background-size: contain;
-    background-repeat: no-repeat;
+    background-size: cover;
     background-position: center;
     z-index: 2;
 }
 
 .game-container {
-    position: relative;
-    width: 100%;
-    height: calc(100% - 7vh);
-    overflow: hidden;
     z-index: 1;
 }
 
@@ -263,33 +272,31 @@ onUnmounted(() => {
     width: 100%;
     height: 100%;
     transform: scaleX(-1);
-    z-index: 1;
 }
 
 /* 전체 화면 모드를 위한 스타일 */
-.face-landmark-container.is-fullscreen .background-container {
-    height: 100%;
-    background-size: cover;
+.player-container.is-fullscreen {
+    position: fixed;
+    top: 7vh;
+    left: 0;
+    width: 100vw;
+    height: calc(100vh - 14vh);
+}
+
+.player-container.is-fullscreen .background-container {
+    background-size: contain;
     background-position: center;
 }
 
-.face-landmark-container.is-fullscreen .game-container {
-    height: 100;
-}
-
-.face-landmark-container.is-fullscreen .video-element,
-.face-landmark-container.is-fullscreen .webcam-canvas {
-    object-fit: cover;
-    height: 100%;
+.player-container.is-fullscreen .video-element,
+.player-container.is-fullscreen .webcam-canvas {
+    object-fit: contain;
 }
 
 /* 모바일 및 태블릿 대응 */
 @media (max-width: 768px) {
-
-    .face-landmark-container.is-fullscreen .background-container,
-    .face-landmark-container.is-fullscreen .game-container,
-    .face-landmark-container.is-fullscreen .video-element,
-    .face-landmark-container.is-fullscreen .webcam-canvas {
+    .player-container.is-fullscreen {
+        top: 0;
         height: 100vh;
     }
 }
