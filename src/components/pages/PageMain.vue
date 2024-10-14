@@ -20,7 +20,7 @@
                 />
                 <img
                     class="parent-dashboard"
-                    :src="`${IMAGE_SERVER_URL}/parentDashboard-removebg.png`"
+                    :src="`${IMAGE_SERVER_URL}/parentDashboard-removebg2.png`"
                     alt="부모 대시보드"
                     @click="goToDashboard"
                 />

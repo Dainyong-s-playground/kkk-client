@@ -1,5 +1,13 @@
 <template>
     <div class="fairy-tale-detail-overlay" @click="closeDetail" @wheel.stop>
+        <div v-if="isDetailLoading" class="loading-overlay detail-loading">
+            <div class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
         <div
             class="detail-content"
             @click.stop
@@ -9,14 +17,17 @@
                 'fade-out-in': isTransitioning,
             }"
         >
-            <!-- 로딩 인디케이터 추가 -->
-            <div v-if="isLoading" class="loading-overlay">
-                <div class="loading-spinner"></div>
+            <!-- 로딩 인디케이터 수정 -->
+            <div v-if="isLoading || isTransitioning" class="loading-overlay detail-loading">
+                <div class="loading-spinner">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
             </div>
 
-            <!-- 기존 코드 ... -->
-
-            <div v-else class="detail-body">
+            <div v-else class="detail-body" :class="{ 'content-fade-in': !isLoading && !isTransitioning }">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
                     <!-- 프로그레스 바를 항상 표시하도록 수정 -->
@@ -127,7 +138,7 @@
     </div>
 </template>
 <script setup>
-import { defineProps, ref, defineEmits, computed, onMounted, watch, onUnmounted } from 'vue';
+import { defineProps, ref, defineEmits, computed, onMounted, watch, onUnmounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
@@ -147,6 +158,10 @@ const props = defineProps({
     fairyTale: {
         type: Object,
         required: true,
+    },
+    isDetailLoading: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -204,6 +219,8 @@ const selectRecommendedTale = async (taleId) => {
         isLoading.value = true;
 
         try {
+            // 즉시 로딩 상태를 표시하기 위해 nextTick을 사용합니다
+            await nextTick();
             await fetchFairyTaleDetails(taleId);
             await checkOwnership();
             await fetchRecommendations();
@@ -211,16 +228,21 @@ const selectRecommendedTale = async (taleId) => {
             console.error('동화 전환 중 오류 발생:', error);
         } finally {
             isLoading.value = false;
-            setTimeout(() => {
-                isTransitioning.value = false;
-            }, 300); // 페이드 인 효과를 위해 약간의 지연 추가
+            isTransitioning.value = false;
         }
     }
 };
 
-onMounted(() => {
-    checkOwnership();
-    fetchRecommendations();
+onMounted(async () => {
+    isLoading.value = true;
+    try {
+        await checkOwnership();
+        await fetchRecommendations();
+    } catch (error) {
+        console.error('초기 데이터 로딩 중 오류 발생:', error);
+    } finally {
+        isLoading.value = false;
+    }
     document.body.style.overflow = 'hidden';
 });
 
@@ -238,7 +260,7 @@ watch(
 );
 
 const playFairyTale = () => {
-    // fairyTale 객체에 id 는 경우를 비해 임시 ID를 생성합니다.
+    // fairyTale 객체에 id 는 경우를 비해 임시 ID를 생성합니.
     const fairyTaleId = fairyTale.value.id || `temp_${Math.floor(Math.random() * 1000)}`;
 
     // 새 탭에 열 URL을 생성합니다.
@@ -335,14 +357,16 @@ const playButtonText = computed(() => {
 </script>
 
 <style scoped>
+@import '../../assets/common.css';
+
 .fairy-tale-detail-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.85);
-    backdrop-filter: blur(8px);
+    /* background-color: rgba(0, 0, 0, 0.1); */
+    /* backdrop-filter: blur(8px); */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -366,6 +390,8 @@ const playButtonText = computed(() => {
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     transition: opacity 0.3s ease, transform 0.3s ease;
+    position: relative;
+    overflow: hidden;
 }
 
 .detail-title {
@@ -410,6 +436,16 @@ const playButtonText = computed(() => {
     border-radius: 10px;
     border: 2px solid rgb(68, 68, 68);
     overflow-y: hidden;
+    position: relative;
+    z-index: 1;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.detail-body.content-fade-in {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .detail-image {
@@ -516,7 +552,7 @@ const playButtonText = computed(() => {
     left: 0;
     right: 0;
     height: 150px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.88), rgba(0, 0, 0, 0));
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0));
 }
 
 .recommendations-category-title {
@@ -782,7 +818,7 @@ const playButtonText = computed(() => {
 }
 
 .fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.5s ease-in-out;
 }
 
 .fade-out {
@@ -840,35 +876,20 @@ const playButtonText = computed(() => {
     flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
 }
 
-.loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1003;
+.detail-content {
+    position: relative;
+    overflow: hidden;
 }
 
-.loading-spinner {
-    width: 50px;
-    height: 50px;
-    border: 5px solid #f3f3f3;
-    border-top: 5px solid #3498db;
-    border-radius: 50%;
-    animation: spin 1s linear infinite;
+.detail-body {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-@keyframes spin {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
+.detail-body.content-fade-in {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .fade-out-in {
@@ -878,15 +899,26 @@ const playButtonText = computed(() => {
 @keyframes fadeOutIn {
     0% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scale(1);
     }
     50% {
-        opacity: 0;
-        transform: scale(0.95) translateY(10px);
+        opacity: 0.5; /* 중간 지점의 투명도를 0.5로 조정 */
+        transform: scale(0.9);
     }
+
     100% {
         opacity: 1;
-        transform: scale(1) translateY(0);
+        transform: scale(1);
     }
+}
+
+.detail-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1001;
 }
 </style>

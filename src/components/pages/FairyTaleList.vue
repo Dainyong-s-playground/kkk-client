@@ -1,7 +1,7 @@
 /* eslint-disable */
 <template>
     <div class="fairy-tale-list-container">
-        <div v-if="isLoading || isDetailLoading" class="loading-overlay">
+        <div v-if="isLoading" class="loading-overlay">
             <div class="loading-spinner">
                 <div></div>
                 <div></div>
@@ -100,6 +100,7 @@
                 v-if="selectedFairyTale"
                 :key="selectedFairyTale.id"
                 :fairyTale="selectedFairyTale"
+                :isDetailLoading="isDetailLoading"
                 @update:fairyTale="updateSelectedFairyTale"
                 @close="closeDetail"
                 @update:views="updateFairyTaleViews"
@@ -114,7 +115,7 @@ import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-import { watch, ref, onMounted, nextTick, onUnmounted } from 'vue';
+import { watch, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -154,12 +155,17 @@ export default {
             }
 
             isDetailLoading.value = true;
-            scrollPosition.value = window.pageYOffset;
+
+            // 현재 스크롤 위치를 저장하되, 이미 상세 페이지가 열려있는 경우에는 저장하지 않습니다.
+            if (!isDetailOpen.value) {
+                scrollPosition.value = window.pageYOffset;
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${scrollPosition.value}px`;
+                document.body.style.width = '100%';
+            }
+
             isDetailOpen.value = true;
             document.body.style.overflow = 'hidden';
-            document.body.style.position = 'fixed';
-            document.body.style.width = '100%';
-            document.body.style.top = `-${scrollPosition.value}px`;
 
             try {
                 const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
@@ -171,8 +177,6 @@ export default {
                 const updatedFairyTale = response.data;
                 updateLocalFairyTaleData(updatedFairyTale);
 
-                selectedFairyTale.value = null;
-                await nextTick();
                 selectedFairyTale.value = updatedFairyTale;
             } catch (error) {
                 console.error('동화 정보를 가져오는 중 오류 발생:', error);
@@ -237,7 +241,7 @@ export default {
                 { id: 7, name: '동물' },
                 { id: 8, name: '이별' },
                 { id: 9, name: '모험' },
-                { id: 10, name: '교육' },
+                { id: 10, name: '육' },
                 { id: 11, name: '코미디' },
             ];
 
@@ -338,6 +342,8 @@ export default {
 
             if (profileStore.selectedProfile && !dataLoaded.value) {
                 await loadAllData();
+            } else {
+                isLoading.value = false; // 데이터가 이미 로드된 경우 로딩 상태를 false로 설정
             }
             await fetchAllFairyTales();
         });
@@ -394,6 +400,8 @@ export default {
 </script>
 
 <style scoped>
+@import '../../assets/common.css';
+
 .main-container {
     color: black;
     padding: 0 4%;
@@ -714,58 +722,6 @@ export default {
     box-shadow: 0 1px px rgba(0, 0, 0, 0.2); /* 그림자 약간 더 강하게 */
 }
 
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10000;
-}
-
-.loading-spinner {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-.loading-spinner div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border: 8px solid #fff;
-    border-radius: 50%;
-    animation: loading-spinner 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #fff transparent transparent transparent;
-}
-
-.loading-spinner div:nth-child(1) {
-    animation-delay: -0.45s;
-}
-.loading-spinner div:nth-child(2) {
-    animation-delay: -0.3s;
-}
-.loading-spinner div:nth-child(3) {
-    animation-delay: -0.15s;
-}
-
-@keyframes loading-spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
 .fade-enter-active,
 .fade-leave-active {
     transition: opacity 0.3s;
@@ -782,5 +738,18 @@ body {
 .fairy-tale-list-container {
     position: relative;
     min-height: 100vh;
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
 }
 </style>
