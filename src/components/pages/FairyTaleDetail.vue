@@ -421,8 +421,6 @@ const playButtonText = computed(() => {
 const goToChargeCredit = () => {
     showInsufficientCreditModal.value = false;
     alert('추후 구현 예정입니다.');
-    // 여기에 실제 충전 페이지로 이동하는 로직을 추가할 수 있습니다.
-    // router.push('/charge-credit');
 };
 </script>
 
@@ -1054,19 +1052,6 @@ const goToChargeCredit = () => {
     background-color: #f44336;
     color: white;
 }
-
-/* 중간 선을 제거하기 위해 이 부분을 삭제 또는 주석 처리합니다 */
-/*
-.insufficient-credit-modal .charge-button::after {
-    content: '';
-    position: absolute;
-    right: 50%;
-    top: 10%;
-    bottom: 10%;
-    width: 1px;
-    background-color: rgba(255, 255, 255, 0.5);
-}
-*/
 
 .success-modal {
     background-color: #4caf50;
