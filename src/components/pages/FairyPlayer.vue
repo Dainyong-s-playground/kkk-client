@@ -56,9 +56,8 @@
 </template>
 
 <script setup>
-import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
-import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
+import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
 import axios from 'axios';
 import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
@@ -97,15 +96,29 @@ const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 const currentComponent = shallowRef('FairyPlayer');
 const BASE_URL = TALE_API_URL;
 
+const getGameComponent = (fairyTaleId) => {
+    return gameComponentMap[fairyTaleId] || null;
+};
+
+const getMotionComponent = (fairyTaleId) => {
+    return motionComponentMap[fairyTaleId] || null;
+};
+
 const checkSpecialContent = (content) => {
     if (content === '게임') {
-        currentComponent.value = RopeCut;
-        return true;
+        const gameComponent = getGameComponent(fairyTaleId.value);
+        if (gameComponent) {
+            currentComponent.value = gameComponent;
+            return true;
+        }
     } else if (content === '모션인식') {
-        currentComponent.value = HandLandmark;
-        return true;
+        const motionComponent = getMotionComponent(fairyTaleId.value);
+        if (motionComponent) {
+            currentComponent.value = motionComponent;
+            return true;
+        }
     }
-    currentComponent.value = 'FairyPlayer'; // 일반 동화 플레이어로 돌아가기
+    currentComponent.value = 'FairyPlayer';
     return false;
 };
 
