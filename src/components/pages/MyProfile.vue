@@ -26,10 +26,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- <img :src="profileStore.selectedProfile.image" alt="프로필 이미지" class="profile-img" />
-            <h2>{{ profileStore.selectedProfile.nickname }}</h2>
-            <p>{{ profileStore.selectedProfile.birth }}</p>
-            <p>{{ profileStore.selectedProfile.gender }}</p> -->
             </div>
         </div>
         <div class="stats">
@@ -88,7 +84,7 @@ import { useProfileStore } from '@/stores/profile'; // 프로필 스토어 가�
 import { onMounted, ref } from 'vue';
 import cookies from 'js-cookie';
 import axios from 'axios';
-import { USER_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+import { USER_API_URL, IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 
 const profiles = ref([]);
 const profileStore = useProfileStore();
@@ -119,7 +115,7 @@ const fetchProfileStats = async () => {
         return;
     }
     try {
-        const response = await axios.get(`http://localhost:7772/api/mypage/buyingStats/${profileStore.loginId}`);
+        const response = await axios.get(`${TALE_API_URL}/api/mypage/buyingStats/${profileStore.loginId}`);
 
         // 서버에서 받아온 데이터로 상태 업데이트
         totalPurchases.value = response.data.totalPurchaseCount;

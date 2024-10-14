@@ -51,6 +51,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
+import { TALE_API_URL } from '@/constants/api';
 const profileStore = useProfileStore();
 
 const isLoading = ref(true);
@@ -66,7 +67,7 @@ const fetchRentalBooks = async () => {
         return;
     }
     try {
-        const response = await axios.get(`http://localhost:7772/api/mypage/rental/${profileStore.loginId}`);
+        const response = await axios.get(`${TALE_API_URL}/api/mypage/rental/${profileStore.loginId}`);
 
         rentalBooks.value = response.data; // 데이터를 상태에 저장
     } catch (error) {
