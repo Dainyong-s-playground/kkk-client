@@ -59,7 +59,7 @@
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -94,7 +94,18 @@ const skipIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/skipIcon.png`);
 const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 
 const currentComponent = shallowRef('FairyPlayer');
+const isMotionComplete = ref(false);
 const BASE_URL = TALE_API_URL;
+
+// 모션 인식 완료 시 호출될 함수
+const handleMotionComplete = () => {
+  isMotionComplete.value = true;
+  currentComponent.value = 'FairyPlayer';
+  nextLine();
+};
+
+// provide를 사용하여 자식 컴포넌트에 함수 전달
+provide('handleMotionComplete', handleMotionComplete);
 
 const getGameComponent = (fairyTaleId) => {
     return gameComponentMap[fairyTaleId] || null;
@@ -115,6 +126,7 @@ const checkSpecialContent = (content) => {
         const motionComponent = getMotionComponent(fairyTaleId.value);
         if (motionComponent) {
             currentComponent.value = motionComponent;
+            isMotionComplete.value = false; // 모션 인식 시작 시 상태 초기화
             return true;
         }
     }
@@ -254,9 +266,9 @@ const nextLine = () => {
     if (currentLineIndex.value < storyLines.value.length - 1) {
         currentLineIndex.value++;
         const nextContent = storyLines.value[currentLineIndex.value];
-        checkSpecialContent(nextContent);
+        const isSpecialContent = checkSpecialContent(nextContent);
         updateCurrentImage(currentLineIndex.value);
-        if (!checkSpecialContent(nextContent) && isPlaying.value) {
+        if (!isSpecialContent && isPlaying.value) {
             playCurrentLine();
         }
     } else {

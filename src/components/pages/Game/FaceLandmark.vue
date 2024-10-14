@@ -11,7 +11,7 @@
 <script setup>
 import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
-import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
+import { inject, onMounted, onUnmounted, ref, shallowRef } from 'vue';
 const backgroundImage = `${IMAGE_SERVER_URL}/fairytale/SnowWhite/SnowWhite04.png`;
 const video = ref(null);
 const canvas = ref(null);
@@ -109,6 +109,8 @@ const predictWebcam = async () => {
                 isSuccess.value = true;
                 stopLandmarkPrediction.value = true;
                 console.log('얼굴 인식 성공!');
+                // 모션 인식이 완료되면 부모 컴포넌트에 알립니다.
+                handleMotionComplete();
                 return;
             }
         } else {
@@ -133,6 +135,9 @@ const isInsideEllipse = (x, y) => {
     const normalizedY = (y - centerY) / semiMinorAxis;
     return (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
 };
+
+// handleMotionComplete 함수를 주입받습니다.
+const handleMotionComplete = inject('handleMotionComplete');
 
 onMounted(async () => {
     await initFaceLandmarker();
