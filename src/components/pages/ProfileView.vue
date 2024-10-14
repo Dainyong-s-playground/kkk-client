@@ -109,7 +109,7 @@
                         <p>생년월일</p>
                         <input v-model="newProfile.birth" type="date" required />
                     </div>
-                    <button type="submit">생성</button>
+                    <button type="submit">수정</button>
                 </form>
             </div>
         </div>
@@ -315,11 +315,15 @@ export default {
         },
         async deleteProfile(profileId) {
             try {
+                console.log(profileId);
                 const token = this.getJwtToken();
                 await axios.delete(`${USER_API_URL}/api/deleteProfile/${profileId}`, {
-                    headers: { Authorization: `Bearer ${token}` },
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
                 });
-                this.profiles = this.profiles.filter((profile) => profile.id !== profileId);
+                await this.loadProfile();
                 console.log('프로필이 삭제되었습니다.');
             } catch (error) {
                 console.error('프로필 삭제 중 오류가 발생했습니다.', error);
