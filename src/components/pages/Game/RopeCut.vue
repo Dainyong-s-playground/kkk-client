@@ -2,17 +2,14 @@
     <div class="game-container">
         <!-- 가이드 모달 -->
         <div v-if="showModal" class="modal" @click="closeModal">
-            <!-- <div class="modal-guide"> -->
             <div class="highlight-area">
                 <img
                     :style="{ left: handPosition + 'px' }"
                     class="hand-image"
-                    src="https://ifh.cc/g/LSaFT9.png"
+                    :src="`${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/handPointer.png`"
                     alt="Hand"
                 />
             </div>
-            <!-- 허용 범위 강조 -->
-            <!-- </div> -->
             <div class="modal-content">
                 <p>화면을 클릭하고 드래그하여 동아줄을 자르세요!</p>
             </div>
@@ -22,7 +19,7 @@
         <div class="drag-area" ref="dragArea"></div>
 
         <!-- 로프 이미지 -->
-        <img src="https://ifh.cc/g/4Pc4SW.jpg" alt="Rope" class="rope-image" />
+        <img :src="`${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/Rope.png`" alt="Rope" class="rope-image" />
 
         <!-- 드래그 가이드 (선 그리기) -->
         <canvas ref="ropeCanvas" @mousedown="startDragging" @mousemove="onDragging" @mouseup="endDragging"></canvas>
@@ -52,7 +49,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { IMAGE_SERVER_URL } from '@/constants/api';
+import { onMounted, ref } from 'vue';
 
 const showModal = ref(true); // 가이드 모달 표시 여부
 const isDragging = ref(false); // 드래그 여부
@@ -228,17 +226,18 @@ const createConfetti = () => {
 };
 </script>
 
-<style>
+<style scoped>
 .game-container {
     position: relative;
-    width: 100%;
-    height: 400px;
-    margin-top: 200px;
+    height: -webkit-fill-available; 
+    max-height: 86vh;
+    overflow: hidden;
 }
 
 .rope-image {
     width: 100%;
-    height: 400px;
+    height: 100%;
+    object-fit: contain;
     position: relative;
     z-index: 1;
 }

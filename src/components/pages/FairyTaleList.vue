@@ -1,267 +1,402 @@
 <template>
-    <div class="main-container">
-        <section class="hero-section">
-            <img
-                src="https://dainyong-s-playground.github.io/imageServer/Tumb1.png"
-                alt="Hero Image"
-                class="hero-image"
-            />
-            <div class="hero-content">
-                <h1>잭과 콩나물</h1>
-                <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
-                <button class="play-button">▶ 재생</button>
-                <button class="info-button">ⓘ 상세 정보</button>
+    <div>
+        <div v-if="isLoading || isDetailLoading" class="loading-overlay">
+            <div class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
             </div>
-        </section>
-        <!-- 나님이 시청 중인 콘텐츠 -->
-        <section class="category recently-watched">
-            <h2 class="category-title">나님이 시청 중인 콘텐츠</h2>
-            <div class="content-slider">
-                <div
-                    v-for="(item, index) in recentlyWatched"
-                    :key="index"
-                    class="content-item"
-                    @click="showDetail(item)"
-                >
-                    <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
-                        <div class="gradient-overlay"></div>
-                        <div class="play-overlay">▶</div>
-                        <div class="progress-bar">
-                            <div class="progress" :style="{ width: `${item.progress}%` }"></div>
+        </div>
+        <div class="main-container" :class="{ 'fade-in': !isLoading }">
+            <section class="hero-section">
+                <img :src="`${IMAGE_SERVER_URL}/Tumb1.png`" alt="Hero Image" class="hero-image" />
+                <div class="hero-content">
+                    <h1>잭과 콩나물</h1>
+                    <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
+                    <button class="play-button">▶ 재생</button>
+                    <button class="info-button">ⓘ 상세 정보</button>
+                </div>
+            </section>
+            <!-- 나님이 시청 중인 콘텐츠 -->
+            <section v-if="profileStore.selectedProfile" class="category recently-watched">
+                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="(item, index) in recentlyWatched"
+                        :key="index"
+                        class="content-item"
+                        @click="showDetail(item.fairyTale)"
+                    >
+                        <div class="thumbnail-container">
+                            <img :src="item.fairyTale.imageUrl" :alt="item.fairyTale.title" class="thumbnail" />
+                            <div class="gradient-overlay"></div>
+                            <div class="play-overlay">▶</div>
+                            <div class="progress-bar">
+                                <div class="progress" :style="{ width: `${calculateProgress(item.progress)}%` }"></div>
+                            </div>
+                            <div class="content-type-icon" :class="{ paid: item.fairyTale.rentalPrice > 0 }">
+                                {{ item.fairyTale.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
+                        </div>
+                        <div class="content-info recently-watched-info">
+                            <span class="title">{{ item.fairyTale.title }}</span>
+                            <span class="episode">{{ item.fairyTale.description }}</span>
+                        </div>
+                        <button class="more-info" @click.stop="showDetail(item.fairyTale)">ⓘ</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 오늘 TOP 5 동화 -->
+            <section class="category top-5">
+                <h2 class="category-title">오늘 TOP 5 동화</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="(item, index) in top5Series"
+                        :key="index"
+                        class="content-item"
+                        @click="showDetail(item)"
+                    >
+                        <div class="rank">{{ index + 1 }}</div>
+                        <div class="thumbnail-container">
+                            <img :src="item.imageUrl" :alt="item.title" class="thumbnail" />
+                            <div class="play-overlay">▶</div>
+                            <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                                {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
                         </div>
                     </div>
-                    <div class="content-info recently-watched-info">
-                        <span class="title">{{ item.title }}</span>
-                        <span class="episode">{{ item.episode }}</span>
-                    </div>
-                    <button class="more-info">ⓘ</button>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 오늘 TOP 5 동화 -->
-        <section class="category top-5">
-            <h2 class="category-title">오늘 TOP 5 동화</h2>
-            <div class="content-slider">
-                <div v-for="(item, index) in top5Series" :key="index" class="content-item" @click="showDetail(item)">
-                    <div class="rank">{{ index + 1 }}</div>
-                    <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
-                        <div class="play-overlay">▶</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- 추천 동화 -->
-        <section class="category recommended">
-            <h2 class="category-title">추천 동화</h2>
-            <div class="content-slider">
-                <div
-                    v-for="(item, index) in categoryContent"
-                    :key="index"
-                    class="content-item"
-                    @click="showDetail(item)"
-                >
-                    <div class="thumbnail-container">
-                        <img :src="item.thumbnail" :alt="item.title" class="thumbnail" />
-                        <div class="play-overlay">▶</div>
-                    </div>
-                    <div class="content-info">
-                        <span class="title">{{ item.title }}</span>
+            <!-- 카테고리별 동화 리스트 -->
+            <section v-for="category in categories" :key="category.id" class="category recommended">
+                <h2 class="category-title">{{ category.name }}</h2>
+                <div class="content-slider">
+                    <div
+                        v-for="item in getCategoryContent(category.name)"
+                        :key="item.id"
+                        class="content-item"
+                        @click="showDetail(item)"
+                    >
+                        <div class="thumbnail-container">
+                            <img :src="item.fairyTaleImage" :alt="item.fairyTaleTitle" class="thumbnail" />
+                            <div class="play-overlay">▶</div>
+                            <div class="content-type-icon" :class="{ paid: item.rentalPrice > 0 }">
+                                {{ item.rentalPrice > 0 ? '유료' : '무료' }}
+                            </div>
+                        </div>
+                        <div class="content-info">
+                            <span class="title">{{ item.fairyTaleTitle }}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <!-- 동화 상세 정보 오버레이 -->
-        <div v-if="selectedFairyTale" class="fairy-tale-detail-overlay">
-            <FairyTaleDetail :fairyTale="selectedFairyTale" @close="closeDetail" />
+            <!-- 동화 상세 정보 오버레이 -->
+            <transition name="fade">
+                <FairyTaleDetail
+                    v-if="selectedFairyTale"
+                    :key="selectedFairyTale.id"
+                    :fairyTale="selectedFairyTale"
+                    @update:fairyTale="updateSelectedFairyTale"
+                    @close="closeDetail"
+                    @update:views="updateFairyTaleViews"
+                />
+            </transition>
         </div>
     </div>
 </template>
 
 <script>
 import FairyTaleDetail from './FairyTaleDetail.vue';
+import axios from 'axios';
+import { useProfileStore } from '@/stores/profile';
+import { storeToRefs } from 'pinia';
+import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+import { watch } from 'vue';
+import { useRoute } from 'vue-router';
+import { ref } from 'vue';
 
 export default {
     components: {
         FairyTaleDetail,
     },
+    setup() {
+        const profileStore = useProfileStore();
+        const { selectedProfile } = storeToRefs(profileStore);
+        const route = useRoute();
+
+        watch(
+            () => route.params.id,
+            async (newId, oldId) => {
+                if (newId && newId !== oldId) {
+                    await this.showDetail({ id: newId });
+                }
+            },
+        );
+
+        const categories = ref([]);
+
+        const setupCategories = () => {
+            const fixedCategories = [
+                { id: 1, name: '전래동화' },
+                { id: 2, name: '외국동화' },
+            ];
+
+            const randomCategories = [
+                { id: 3, name: '권선징악' },
+                { id: 4, name: '공주' },
+                { id: 5, name: '노력' },
+                { id: 6, name: '지혜' },
+                { id: 7, name: '동물' },
+                { id: 8, name: '이별' },
+                { id: 9, name: '모험' },
+                { id: 10, name: '교육' },
+                { id: 11, name: '코미디' },
+            ];
+
+            // Fisher-Yates 셔플 알고리즘을 사용하여 랜덤 카테고리 섞기
+            for (let i = randomCategories.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [randomCategories[i], randomCategories[j]] = [randomCategories[j], randomCategories[i]];
+            }
+
+            categories.value = [...fixedCategories, ...randomCategories];
+        };
+
+        const allFairyTales = ref([]);
+
+        return { profileStore, selectedProfile, route, categories, allFairyTales, setupCategories };
+    },
     data() {
         return {
-            recentlyWatched: [
-                {
-                    title: '큼이네집 한글놀이 자음모음편',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    episode: '자음모음편: 50%',
-                    progress: 90,
-                },
-                {
-                    title: '소미의 소리 가득 하루',
-                    thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    episode: '의성어로 만나는 신나는 세상',
-                    progress: 45,
-                },
-                {
-                    title: '쓱쓱 싹싹',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 꿈나무 그림책 111',
-                    progress: 72,
-                },
-                {
-                    title: '토네이똥',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    episode: '똥똥똥',
-                    progress: 41,
-                },
-                {
-                    title: '달은 어떻게 달이 될까?',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 궁금해 시리즈 25',
-                    progress: 10,
-                },
-                {
-                    title: '아빠의 토마토스튜',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    episode: '오늘 아침은 뭘 먹을까?',
-                    progress: 50,
-                },
-                {
-                    title: '고양이 산책',
-                    thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
-                    episode: '물구나무 세상보기',
-                    progress: 80,
-                },
-                {
-                    title: '엄마에게 비밀이!',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    episode: '6년 만에 엄마에게 비밀이 생겼다!',
-                    progress: 20,
-                },
-                {
-                    title: '큼이네집 한글놀이 자음모음편',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000046/xxlarge?dpi=xxhdpi#1',
-                    episode: '자음모음편: 50%',
-                    progress: 30,
-                },
-                {
-                    title: '소미의 소리 가득 하루',
-                    thumbnail: 'https://img.ridicdn.net/cover/4261000010/xxlarge?dpi=xxhdpi#1',
-                    episode: '의성어로 만나는 신나는 세상',
-                    progress: 20,
-                },
-                {
-                    title: '쓱쓱 싹싹',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000215/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 꿈나무 그림책 111',
-                    progress: 70,
-                },
-                {
-                    title: '토네이똥',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000263/xxlarge?dpi=xxhdpi#1',
-                    episode: '똥똥똥',
-                    progress: 40,
-                },
-                {
-                    title: '달은 어떻게 달이 될까?',
-                    thumbnail: 'https://img.ridicdn.net/cover/1451000214/xxlarge?dpi=xxhdpi#1',
-                    episode: '북극곰 궁금해 시리즈 25',
-                    progress: 50,
-                },
-                {
-                    title: '아빠의 토마토스튜',
-                    thumbnail: 'https://img.ridicdn.net/cover/2353000261/xxlarge?dpi=xxhdpi#1',
-                    episode: '오늘 아침은 뭘 먹을까?',
-                    progress: 50,
-                },
-                {
-                    title: '고양이 산책',
-                    thumbnail: 'https://img.ridicdn.net/cover/749000361/xxlarge?dpi=xxhdpi#1',
-                    episode: '물구나무 세상보기',
-                    progress: 50,
-                },
-                {
-                    title: '엄마에게 비밀이!',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007613/xxlarge?dpi=xxhdpi#1',
-                    episode: '6년 만에 엄마에게 비밀이 생겼다!',
-                    progress: 50,
-                },
-                // Add more items...
-            ],
-            top5Series: [
-                { title: '감각 통합 놀이', thumbnail: 'https://img.ridicdn.net/cover/3397000176/xxlarge?dpi=xxhdpi#1' },
-                {
-                    title: '조용한 빵 가게',
-                    thumbnail: 'https://img.ridicdn.net/cover/1351000111/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '소나기',
-                    thumbnail: 'https://img.ridicdn.net/cover/852001701/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리아이 괜찮아요 1권',
-                    thumbnail: 'https://img.ridicdn.net/cover/887000033/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리아이 괜찮아요 2권',
-                    thumbnail: 'https://img.ridicdn.net/cover/734001025/xxlarge?dpi=xxhdpi#1',
-                },
-                // Add more items...
-            ],
-            categoryContent: [
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리 바다 친구들',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리 바다 친구들',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: 'The story of 붉은 여우 루비',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004218/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '알렉스 미아와 장난감 공장의 비밀',
-                    thumbnail: 'https://img.ridicdn.net/cover/1745007459/xxlarge?dpi=xxhdpi#1',
-                },
-                {
-                    title: '우리 바다 친구들',
-                    thumbnail: 'https://img.ridicdn.net/cover/5273004187/xxlarge?dpi=xxhdpi#1',
-                },
-                // 추가 아이템...
-            ],
+            isLoading: true,
+            showContent: false,
+            recentlyWatched: [],
+            top5Series: [],
             selectedFairyTale: null,
+            fairyTales: {}, // 동화 데이터를 저장할 객체
+            isDetailLoading: false,
+            IMAGE_SERVER_URL,
+            dataLoaded: false,
+            categoryContents: {},
         };
     },
     methods: {
-        showDetail(item) {
-            this.selectedFairyTale = {
-                ...item,
-                description: '이 동화의 상세 설명입니다.', // 실제로는 API에서 가져올 수 있습니다
-            };
+        async fetchRecentlyWatched() {
+            if (!this.profileStore.selectedProfile) {
+                console.error('선택된 프로필 정보가 없습니다.');
+                return;
+            }
+            try {
+                const response = await axios.get(
+                    `${TALE_API_URL}/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                        },
+                    },
+                );
+                console.log('서버에서 받은 데이터:', response.data);
+                this.recentlyWatched = response.data.map((item) => {
+                    return {
+                        ...item,
+                        progress: item.progress || 0,
+                    };
+                });
+            } catch (error) {
+                console.error('최근 시청 목록을 가져오는데 실했습니다:', error);
+            }
+        },
+        async showDetail(fairyTale) {
+            if (!(await this.validateTokenAndRedirect())) {
+                return;
+            }
+
+            this.isDetailLoading = true;
+
+            try {
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                    },
+                });
+
+                const updatedFairyTale = response.data;
+                this.updateLocalFairyTaleData(updatedFairyTale);
+
+                this.selectedFairyTale = null; // 강제로 컴포넌트를 언마운트
+                await this.$nextTick(); // DOM 업데이트를 기다림
+                this.selectedFairyTale = updatedFairyTale; // 새로운 데이터로 컴포넌트를 다시 마운트
+            } catch (error) {
+                console.error('동화 정보를 가져오는 중 오류 발생:', error);
+            } finally {
+                this.isDetailLoading = false;
+            }
         },
         closeDetail() {
             this.selectedFairyTale = null;
         },
+        async fetchTop5FairyTales() {
+            try {
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/top5`);
+                this.top5Series = response.data.map((item) => ({
+                    title: item.title,
+                    imageUrl: item.imageUrl,
+                    rentalPrice: item.rentalPrice,
+                    purchasePrice: item.purchasePrice,
+                    description: item.description,
+                    author: item.author,
+                    views: item.views,
+                    id: item.id,
+                }));
+            } catch (error) {
+                console.error('TOP 5 동화를 가져오는 데 실패했습니다:', error);
+            }
+        },
+        calculateProgress(progress) {
+            let numericProgress;
+            if (typeof progress === 'string') {
+                // 문자열인 경우 숫자로 변환
+                numericProgress = parseFloat(progress);
+            } else if (typeof progress === 'number') {
+                numericProgress = progress;
+            } else {
+                console.error('잘못된 progress 형식:', progress);
+                return 0;
+            }
+
+            // NaN 체크
+            if (isNaN(numericProgress)) {
+                console.error('progress를 숫자로 변환할 수 없습니다:', progress);
+                return 0;
+            }
+
+            // 0-1 사이의 값으로 가정
+            if (numericProgress <= 1) {
+                numericProgress *= 100;
+            }
+
+            const result = Math.min(Math.max(numericProgress, 0), 100);
+            return result;
+        },
+        async loadAllData() {
+            if (!this.profileStore.selectedProfile) {
+                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 시도합니다.');
+                return;
+            }
+
+            if (this.dataLoaded) {
+                console.log('데이터가 이미 로드되었습니다.');
+                return;
+            }
+
+            try {
+                this.isLoading = true;
+                this.showContent = false;
+                await Promise.all([
+                    this.fetchRecentlyWatched(),
+                    this.fetchTop5FairyTales(),
+                    // 추가적인 데이터 로딩 메서드가 있다면 여기에 추가
+                ]);
+                this.dataLoaded = true;
+            } catch (error) {
+                console.error('데이터 로딩 중 오류 발생:', error);
+            } finally {
+                this.isLoading = false;
+                this.showContent = true;
+            }
+        },
+        async validateTokenAndRedirect() {
+            const isValid = await this.profileStore.validateToken();
+            if (!isValid) {
+                console.error('인증 토큰이 유효하지 않습니다. 로그인이 필요합니다.');
+                this.$router.push('/');
+                return false;
+            }
+            return true;
+        },
+        updateLocalFairyTaleData(updatedFairyTale) {
+            // fairyTales 객체 업데이트
+            if (this.fairyTales[updatedFairyTale.id]) {
+                this.fairyTales[updatedFairyTale.id] = updatedFairyTale;
+            }
+
+            // recentlyWatched 배열 업데이트
+            this.recentlyWatched = this.recentlyWatched.map((item) => {
+                if (item.fairyTale.id === updatedFairyTale.id) {
+                    return { ...item, fairyTale: updatedFairyTale };
+                }
+                return item;
+            });
+
+            // top5Series 배열 업데이트
+            this.top5Series = this.top5Series.map((item) => {
+                if (item.id === updatedFairyTale.id) {
+                    return updatedFairyTale;
+                }
+                return item;
+            });
+        },
+        updateFairyTaleViews(id, newViews) {
+            // 이 메서드는 더 이상 요하지 않으므로 제거하거나 다음과 같이 수정할 수 있습니다.
+            this.updateLocalFairyTaleData({ id, views: newViews });
+        },
+        async waitForProfile() {
+            return new Promise((resolve) => {
+                const checkProfile = () => {
+                    if (this.profileStore.selectedProfile) {
+                        resolve();
+                    } else {
+                        setTimeout(checkProfile, 100);
+                    }
+                };
+                checkProfile();
+            });
+        },
+        updateSelectedFairyTale(newFairyTale) {
+            this.showDetail(newFairyTale);
+        },
+        async fetchAllFairyTales() {
+            try {
+                const response = await axios.get(`${TALE_API_URL}/api/search/fairytale`, {
+                    headers: {
+                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                    },
+                });
+                this.allFairyTales = response.data;
+            } catch (error) {
+                console.error('동화를 가져오는 데 실패했습니다:', error);
+            }
+        },
+        getCategoryContent(categoryName) {
+            return this.allFairyTales.filter((tale) => tale.tag.includes(categoryName));
+        },
+    },
+    watch: {
+        'profileStore.selectedProfile': {
+            handler(newProfile) {
+                if (newProfile && !this.dataLoaded) {
+                    this.loadAllData();
+                }
+            },
+            immediate: true,
+        },
+    },
+    async mounted() {
+        if (!(await this.validateTokenAndRedirect())) {
+            return;
+        }
+
+        this.setupCategories(); // 카테고리 설정 추가
+
+        // 프로필 정보가 이미 로드되었다면 바로 데이터를 로드합니다.
+        if (this.profileStore.selectedProfile && !this.dataLoaded) {
+            await this.loadAllData();
+        }
+        await this.fetchAllFairyTales();
     },
 };
 </script>
@@ -270,6 +405,12 @@ export default {
 .main-container {
     color: black;
     padding: 0 4%;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.main-container.fade-in {
+    opacity: 1;
 }
 
 .hero-section {
@@ -280,6 +421,7 @@ export default {
     margin-bottom: 3vw;
     align-items: center;
     justify-content: center;
+    margin-top: 7vh;
 }
 
 .hero-image {
@@ -341,7 +483,7 @@ export default {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
-    justify-content: space-around;
+    gap: 10px;
 }
 
 .content-slider::-webkit-scrollbar {
@@ -350,7 +492,7 @@ export default {
 
 .content-item {
     flex: 0 0 auto;
-    width: 200px;
+    width: 250px;
     margin-right: 20px;
     position: relative;
     cursor: pointer;
@@ -360,6 +502,7 @@ export default {
     position: relative;
     width: 100%;
     overflow: hidden;
+    padding-top: 150%; /* 2:3 비율 유지 */
 }
 
 .thumbnail {
@@ -410,7 +553,7 @@ export default {
 .episode,
 .status {
     font-size: 0.8vw;
-    color: #999;
+    color: #cbcbcbed !important;
 }
 
 .more-info {
@@ -427,22 +570,29 @@ export default {
     justify-content: center;
     align-items: center;
     font-size: 1vw;
+    line-height: 0;
     cursor: pointer;
 }
 
 /* 나님이 시청 중인 콘텐츠 스타일 */
 .recently-watched .content-item {
-    width: 200px;
+    width: 250px;
+    overflow: hidden;
 }
 
 .recently-watched .thumbnail-container {
-    padding-top: 120%; /* 2:3 비율로 수정 */
+    padding-top: 120%; /* 2:3 비율 유지 */
+    border-radius: 12px 12px 0 0; /* 상단만 둥글게 */
+    overflow: hidden;
+}
+
+.recently-watched .thumbnail {
+    border-radius: 12px 12px 0 0; /* 상단만 둥글게 */
 }
 
 .recently-watched .content-info.recently-watched-info {
     padding: 10px;
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
+    border-radius: 0 0 12px 12px; /* 하단만 둥글게 */
     height: 90px;
     background-color: #333333;
     margin-top: -2px;
@@ -489,20 +639,20 @@ export default {
     z-index: 100;
 }
 
-/* TOP 5 동화 스타일 */
+/* TOP 5 동 스타일 */
 .top-5 {
     margin-bottom: 3vw;
     overflow: hidden; /* 세로 스크롤 비활성화 */
 }
 
 .top-5 .content-slider {
-    padding-left: 5%;
+    padding-left: 7%;
     overflow-y: hidden; /* 세로 스크롤 비활성화 */
 }
 
 .top-5 .content-item {
-    width: 200px;
-    height: 300px; /* 높이 증가 */
+    width: 240px;
+    height: 320px; /* 높이 증가 */
     margin-right: 100px;
 }
 
@@ -514,22 +664,17 @@ export default {
 .top-5 .rank {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     position: absolute;
-    right: 78%;
-    bottom: 8px;
-    font-size: 230px;
+    right: 84%;
+    bottom: 2px;
+    font-size: 240px;
     font-weight: bold;
-    color: black;
-    -webkit-text-stroke: 4px white;
+    color: #90b4e2;
+    -webkit-text-stroke: 4px #000000;
     line-height: 0.8;
 }
 
-/* 추천 동화 스타일 */
-.recommended .content-item {
-    width: 200px;
-}
-
 .recommended .thumbnail-container {
-    padding-top: 140%; /* 2:3 비율로 수정 */
+    padding-top: 150%; /* 2:3 비율로 수정 */
 }
 
 /* 동화 상세 페이지 오버레이 스타일 */
@@ -539,10 +684,100 @@ export default {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+}
+
+.content-type-icon {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 4px 12px;
+    border-radius: 15px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    background-color: #4caf50;
+    z-index: 2;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.content-type-icon.paid {
+    background-color: #ffa500;
+}
+
+/* TOP 5 동화에 대한 특별한 스타일 */
+.top-5 .content-type-icon {
+    top: 8px;
+    left: 9px;
+    font-size: 16px;
+    box-shadow: 0 1px px rgba(0, 0, 0, 0.2); /* 그림자 약간 더 강하게 */
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.loading-spinner div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border: 8px solid #fff;
+    border-radius: 50%;
+    animation: loading-spinner 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: #fff transparent transparent transparent;
+}
+
+.loading-spinner div:nth-child(1) {
+    animation-delay: -0.3s;
+}
+
+.loading-spinner div:nth-child(2) {
+    animation-delay: -0.25s;
+}
+
+.loading-spinner div:nth-child(3) {
+    animation-delay: -0.1s;
+}
+
+@keyframes loading-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
 }
 </style>

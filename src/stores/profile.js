@@ -3,11 +3,12 @@ import { defineStore } from 'pinia';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 import cookies from 'js-cookie';
+import { USER_API_URL } from '@/constants/api';
 
 export const useProfileStore = defineStore('profile', {
     state: () => ({
         loginId: null,
-        selectedProfile: {},
+        selectedProfile: null, // {} 대신 null로 초기화
         jwtToken: null,
         isLoggedIn: false,
     }),
@@ -33,26 +34,32 @@ export const useProfileStore = defineStore('profile', {
             if (jwt) {
                 try {
                     const decodedToken = jwtDecode(jwt);
+                    this.setLoginId(decodedToken.id);
                     const profileId = decodedToken.profileId;
-                    if (profileId && !this.selectedProfile.id) {
-                        const response = await axios.get('http://localhost:7771/api/me', {
+                    if (profileId) {
+                        const response = await axios.get(`${USER_API_URL}/api/me`, {
                             headers: { Authorization: `Bearer ${jwt}` },
                             withCredentials: true,
                         });
                         this.setSelectedProfile(response.data);
+                        this.setJwtToken(jwt);
                         this.isLoggedIn = true;
                     }
                 } catch (error) {
                     console.error('사용자 정보를 가져오는 데 실패했습니다.', error);
                     this.isLoggedIn = false;
+                    this.clearUserData();
                 }
+            } else {
+                this.isLoggedIn = false;
+                this.clearUserData();
             }
         },
         async logout() {
             const jwt = this.getCookie('Authorization');
             try {
                 await axios.post(
-                    'http://localhost:7771/auth/logout',
+                    `${USER_API_URL}/auth/logout`,
                     {},
                     { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
                 );
@@ -71,7 +78,7 @@ export const useProfileStore = defineStore('profile', {
                 }
 
                 const response = await axios.post(
-                    'http://localhost:7771/api/selectProfile',
+                    `${USER_API_URL}/api/selectProfile`,
                     { profileId },
                     {
                         headers: { Authorization: `Bearer ${jwt}` },
@@ -122,11 +129,36 @@ export const useProfileStore = defineStore('profile', {
                 'max-age': -1,
             });
         },
+        async validateToken() {
+            const jwt = this.getCookie('Authorization');
+            if (!jwt) {
+                this.clearUserData();
+                return false;
+            }
+
+            try {
+                // JWT를 디코드하여 만료 시간을 확인합니다.
+                const decodedToken = jwtDecode(jwt);
+                const currentTime = Date.now() / 1000;
+                if (decodedToken.exp < currentTime) {
+                    // 토큰이 만료되었다면
+                    this.clearUserData();
+                    return false;
+                }
+                // 토큰이 유효하다면
+                return true;
+            } catch (error) {
+                console.error('토큰 검증 실패:', error);
+                this.clearUserData();
+                return false;
+            }
+        },
     },
 
     getters: {
         getLoginId: (state) => state.loginId,
         getSelectedProfile: (state) => state.selectedProfile,
         getJwtToken: (state) => state.jwtToken,
+        getUserName: (state) => state.selectedProfile?.nickname || '게스트',
     },
 });

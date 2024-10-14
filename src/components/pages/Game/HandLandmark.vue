@@ -6,19 +6,31 @@
                 <canvas ref="canvas" class="webcam-canvas"></canvas>
             </div>
             <transition name="fade" mode="out-in">
-                <img v-if="!isSuccess"
-                    src="https://Dainyong-s-playground.github.io/imageServer/src/cover_motion_sun.png"
-                    class="before-hand-image" />
-                <img v-else src="https://Dainyong-s-playground.github.io/imageServer/src/after_motion_sun_remove.png"
-                    class="after-hand-image" />
+                <img
+                    v-if="!isSuccess"
+                    :src="beforeHandImage"
+                    class="before-hand-image"
+                />
+                <img
+                    v-else
+                    :src="afterHandImage"
+                    class="after-hand-image"
+                />
             </transition>
         </div>
     </div>
 </template>
 
 <script setup>
+import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref } from 'vue';
+
+
+// 이미지 URL을 사용하는 곳에서 IMAGE_SERVER_URL 사용
+const beforeHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/cover_motion_sun.png`;
+const afterHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/after_motion_sun_remove.png`;
+const backgroundImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/bg_motion_sun.png`;
 
 const video = ref(null);
 const canvas = ref(null);
@@ -52,13 +64,14 @@ onMounted(async () => {
     }
 
     const vision = await FilesetResolver.forVisionTasks(
-        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm'
+        'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm',
     );
 
     // 손 감지를 위한 handLandmarker 인스턴스 생성
     handLandmarker = await HandLandmarker.createFromOptions(vision, {
         baseOptions: {
-            modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
+            modelAssetPath:
+                'https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task',
             delegate: 'GPU',
         },
         runningMode: 'VIDEO',
@@ -90,7 +103,7 @@ const enableWebcam = async () => {
 // 웹캠 예측 함수
 const predictWebcam = async () => {
     if (stopLandmarkPrediction) {
-        console.log("중단");
+        console.log('중단');
         return;
     }
 
@@ -121,7 +134,7 @@ const predictWebcam = async () => {
 // 손이 이미지 안에 있는지 확인
 const checkHandInImage = (landmarks) => {
     if (!landmarks || landmarks.length === 0) {
-        console.warn("랜드마크가 존재하지 않습니다.");
+        console.warn('랜드마크가 존재하지 않습니다.');
         return; // 랜드마크가 없으면 함수 종료
     }
 
@@ -129,27 +142,33 @@ const checkHandInImage = (landmarks) => {
     const fingertips = [landmarks[4], landmarks[8], landmarks[12], landmarks[16], landmarks[20]];
 
     // 랜드마크가 유효한지 검사
-    if (!wrist || typeof wrist.y === 'undefined' || fingertips.some(fingertip => !fingertip || typeof fingertip.y === 'undefined')) {
-        console.warn("유효하지 않은 랜드마크 값이 있습니다.");
+    if (
+        !wrist ||
+        typeof wrist.y === 'undefined' ||
+        fingertips.some((fingertip) => !fingertip || typeof fingertip.y === 'undefined')
+    ) {
+        console.warn('유효하지 않은 랜드마크 값이 있습니다.');
         return;
     }
 
     // 정규화된 좌표를 이미지 크기로 변환
     const wristY = wrist.y * imageHeight;
-    const fingertipsY = fingertips.map(fingertip => fingertip.y * imageHeight);
+    const fingertipsY = fingertips.map((fingertip) => fingertip.y * imageHeight);
 
     // 이미지의 상단, 하단 좌표 계산
     const imageTop = y;
     const imageBottom = y + imageHeight;
 
     // 1. 손목이 이미지 하단 10% ~ 30%에 속하는지 확인
-    const isWristInBottom = (wristY <= imageBottom * 0.9) && (wristY >= imageBottom * 0.7);
+    const isWristInBottom = wristY <= imageBottom * 0.9 && wristY >= imageBottom * 0.7;
 
     // 2. 손가락 끝이 이미지 상단 10% ~ 30%에 속하는지 확인
-    const areFingertipsInTop = fingertipsY.every(fingertipY => (fingertipY >= (imageTop + imageHeight) * 0.1) && (fingertipY <= (imageTop + imageHeight) * 0.3));
+    const areFingertipsInTop = fingertipsY.every(
+        (fingertipY) => fingertipY >= (imageTop + imageHeight) * 0.1 && fingertipY <= (imageTop + imageHeight) * 0.3,
+    );
 
     if (isWristInBottom && areFingertipsInTop) {
-        console.log("성공");
+        console.log('성공');
         // 2초 후 성공 이미지 표시
         setTimeout(() => {
             isSuccess.value = true;
@@ -158,13 +177,13 @@ const checkHandInImage = (landmarks) => {
             if (video.value && video.value.srcObject) {
                 const stream = video.value.srcObject;
                 const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
+                tracks.forEach((track) => track.stop());
             }
             // requestAnimationFrame 중단을 위해 종료 플래그 설정
             stopLandmarkPrediction = true;
-        }, 2000);  // 2초 지연
+        }, 2000); // 2초 지연
     } else {
-        console.log("아직 성공하지 않았습니다.");
+        console.log('아직 성공하지 않았습니다.');
     }
 };
 
@@ -180,37 +199,25 @@ onUnmounted(() => {
 
 <style scoped>
 .game-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: url('https://Dainyong-s-playground.github.io/imageServer/src/bg_motion_sun.png');
-    background-size: 100% 100%;
-    width: 100%;
-    height: 600px;
+    position: relative;
+    height: -webkit-fill-available;
+    max-height: 86vh;
+    overflow: hidden;
 }
 
-.background-image {
+.content-container {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 600px;
-    z-index: 1;
-}
-
-.svg-rect {
-    /* 이 부분 나중에 이미지로 대체 */
-    width: inherit;
-    height: 100%;
-    fill: blue;
-}
-
-.content-container {
+    height: 88dvh;
     display: flex;
     justify-content: center;
     align-items: center;
-    width: 100%;
-    height: 100%;
+    background-image: v-bind(`url(${backgroundImage})`);
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .webcam-container {
@@ -253,7 +260,7 @@ onUnmounted(() => {
     position: absolute;
     z-index: 2;
     transform: scaleX(-1);
-    height: 90%
+    height: 100%;
 }
 
 .webcam-canvas {

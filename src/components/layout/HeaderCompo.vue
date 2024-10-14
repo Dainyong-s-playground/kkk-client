@@ -5,10 +5,13 @@
                 <div
                     class="logo"
                     :class="{ 'logo-move-down': isNavHidden, 'logo-move-up': !isNavHidden && wasNavHidden }"
+                    @click="goToMain"
                 >
-                    나 님
+                    {{ userName }} 님
                 </div>
-                <div class="blank"></div>
+                <div :class="['center-logo', { 'logo-invert': isScrolled }]" @click="goToMain">
+                    <img :src="`${IMAGE_SERVER_URL}/src/kkkLogo_none.png`" @error="handleImageError" />
+                </div>
                 <div class="search-container">
                     <input
                         v-if="isSearchVisible"
@@ -18,7 +21,7 @@
                         v-model="searchQuery"
                         @blur="toggleSearch"
                     />
-                    <i class="search-icon" @click="toggleSearch">
+                    <i class="search-icon" @click="triggerSearchToggle">
                         <svg
                             v-if="!isScrolled"
                             class="svg-icon"
@@ -64,12 +67,14 @@
                         </div>
                     </div>
 
-                    <div v-else>
-                        <button @click="onNaverLogin" class="profile-image">로그인</button>
+                    <div v-else class="login-container">
+                        <div class="login-profile">
+                            <button @click="onNaverLogin" class="profile-image">로그인</button>
+                        </div>
                     </div>
                 </div>
             </div>
-            <nav :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
+            <nav v-if="showNav" :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
                 <a href="#" class="nav-item">최근 시청 동화</a>
                 <a href="#" class="nav-item">동화</a>
                 <a href="#" class="nav-item">카테고리 ▽</a>
@@ -79,14 +84,27 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, defineEmits } from 'vue';
 import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
+import { useLayoutStore } from '@/stores/layout';
 import { storeToRefs } from 'pinia';
+import { USER_API_URL, TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+
+// ESLint 오류를 방지하기 위한 주석
+// eslint-disable-next-line no-undef
+defineProps({
+    showNav: {
+        type: Boolean,
+        default: false,
+    },
+});
 
 const router = useRouter();
 const profileStore = useProfileStore();
+const layoutStore = useLayoutStore();
 const { isLoggedIn, selectedProfile: loginUser } = storeToRefs(profileStore);
+const { showNav } = storeToRefs(layoutStore);
 
 const isScrolled = ref(false);
 const isNavHidden = ref(false);
@@ -95,11 +113,18 @@ const lastScrollPosition = ref(0);
 const showDropdown = ref(false);
 const isSearchVisible = ref(false);
 const searchQuery = ref('');
+const userName = computed(() => profileStore.getUserName);
+
+const emit = defineEmits(['toggle-search']);
 
 const headerContentStyle = computed(() => ({
     padding: isScrolled.value && isNavHidden.value ? '0 30px' : '0 10px',
     transition: 'padding 0.5s ease',
 }));
+
+const triggerSearchToggle = () => {
+    emit('toggle-search');
+};
 
 const handleScroll = () => {
     const currentScrollPosition = window.scrollY;
@@ -129,14 +154,14 @@ const handleOutsideClick = (event) => {
 };
 
 const onNaverLogin = () => {
-    window.location.href = 'http://localhost:7771/oauth2/authorization/naver';
+    window.location.href = `${USER_API_URL}/oauth2/authorization/naver`;
 };
 
 const logout = async () => {
     try {
         await profileStore.logout();
         router.push('/');
-        alert('로그아웃 성공!');
+        window.location.reload(); // 로그아웃 후 페이지 새로고침
     } catch (error) {
         alert('로그아웃 실패: ' + error.message);
     }
@@ -151,6 +176,10 @@ const goToMyPage = () => {
     showDropdown.value = false;
 };
 
+const goToMain = () => {
+    router.push('/');
+};
+
 const changeProfile = () => {
     profileStore.clearUserData();
     router.push('/profiles');
@@ -163,14 +192,17 @@ const toggleSearch = () => {
         searchQuery.value = '';
     }
 };
-// 상태 변화 감지
-watch(
-    loginUser,
-    (newValue, oldValue) => {
-        console.log('selectedProfile 변경됨:', newValue, oldValue);
-    },
-    { deep: true },
-);
+
+// IMAGE_SERVER_URL 값을 확인하기 위해 콘솔에 출력
+console.log('IMAGE_SERVER_URL:', IMAGE_SERVER_URL);
+console.log('USER_API_URL:', USER_API_URL);
+console.log('TALE_API_URL:', TALE_API_URL);
+
+const handleImageError = (e) => {
+    console.error('이미지 로드 실패:', e.target.src);
+    // 필요한 경우 대체 이미지를 설정할 수 있습니다.
+    // e.target.src = '대체 이미지 URL';
+};
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
@@ -212,7 +244,7 @@ onUnmounted(() => {
     font-size: 2rem;
     font-weight: bold;
     padding: 10px 0;
-    color: #e50914;
+    color: rgb(155, 190, 78);
     transition: all 0.5s ease;
     width: 15%;
 }
@@ -223,6 +255,21 @@ onUnmounted(() => {
 
 .logo-move-up {
     animation: logoMoveUp 0.5s ease forwards;
+}
+
+.center-logo {
+    width: 70%;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+}
+.center-logo img {
+    width: 450px;
+    object-fit: contain;
+}
+
+.center-logo.logo-invert img {
+    filter: invert(1); /* 이미지 색 반전 효과 */
 }
 
 nav {
@@ -281,7 +328,6 @@ nav {
 .header.nav-hidden {
     height: 5vh;
 }
-
 @keyframes slideUpRight {
     0% {
         transform: translate(0, 0) scale(1);
@@ -335,8 +381,8 @@ nav.nav-hidden {
 }
 
 .profile-image {
-    width: 75px;
-    height: 75px;
+    width: 85px;
+    height: 85px;
     border-radius: 50%;
     object-fit: cover;
     text-align: center;
@@ -371,10 +417,7 @@ nav.nav-hidden {
     background-color: #f0f0f0;
 }
 
-.blank {
-    width: 60%;
-}
 .search-container {
-    width: 20%;
+    width: 5%;
 }
 </style>
