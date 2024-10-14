@@ -114,7 +114,7 @@ import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-import { watch, ref, onMounted, nextTick } from 'vue';
+import { watch, ref, onMounted, nextTick, inject } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -136,6 +136,7 @@ export default {
         const dataLoaded = ref(false);
         const categoryContents = ref({});
         const fairyTales = ref({});
+        const controlScroll = inject('controlScroll');
 
         const calculateProgress = (progress) => {
             let numericProgress = parseFloat(progress);
@@ -152,6 +153,7 @@ export default {
             }
 
             isDetailLoading.value = true;
+            controlScroll(true); // 스크롤 비활성화
 
             try {
                 const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
@@ -175,6 +177,7 @@ export default {
 
         const closeDetail = () => {
             selectedFairyTale.value = null;
+            controlScroll(false); // 스크롤 활성화
         };
 
         const updateLocalFairyTaleData = (updatedFairyTale) => {

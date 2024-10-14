@@ -264,6 +264,7 @@ const closeDetail = () => {
     isClosing.value = true;
     setTimeout(() => {
         emit('close');
+        document.body.style.overflow = '';
     }, 300);
 };
 
