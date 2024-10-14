@@ -878,9 +878,9 @@ const goToChargeCredit = () => {
     align-items: center;
     justify-content: center;
     position: relative;
-    width: 35px;
+    width: 60px;
     color: white;
-    padding: 5px 18px;
+    padding: 5px 10px;
     border-radius: 20px;
     font-size: 18px;
     font-weight: bold;
