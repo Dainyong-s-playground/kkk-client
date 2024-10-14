@@ -120,7 +120,9 @@ export default {
 .game-container {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: -webkit-fill-available;
+    max-height: 86vh;
+    overflow: hidden;
 }
 
 .game-content {
@@ -128,19 +130,20 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 400px;
+    height: 100%;
 }
 
 .apple-container {
-    position: relative;
+    display: flex;
+    justify-content: space-around;
 }
 
 /* 사과 이미지 스타일 */
 .apple {
-    width: 350px;
+    width: 50%;
     cursor: pointer;
-    border-radius: 10px;
-    margin-top: 20px;
+    border-radius: 20px;
+    margin-top: 50px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 .apple:hover {
@@ -149,10 +152,10 @@ export default {
 
 /* 모달 창 스타일 */
 .modal-overlay {
-    position: fixed;
+    position: relative;
     left: 0;
-    width: 100%;
-    height: 400px;
+    width: -webkit-fill-available;
+    height: min-content;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -162,25 +165,26 @@ export default {
 
 /* 가이드 모달 스타일 */
 .guide-modal {
-    position: fixed;
-    left: 0;
-    width: 100%;
-    height: 400px;
+    position: relative;
+    /* left: 0; */
+    width: -webkit-fill-available;
+    height: min-content;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 50px;
     animation: fade-in 0.5s ease-in-out;
 }
 
 .guide-content {
     width: 500px;
-    height: 300px;
+    height: -webkit-fill-available;
     background: #fff;
     border-radius: 15px;
     text-align: center;
-    padding: 20px;
+    padding: 40px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     animation: content-expand 0.5s ease-in-out;
 }
@@ -212,10 +216,10 @@ export default {
 
 /* 성공 시 이미지 확장 애니메이션 */
 .success-image {
-    width: 350px;
+    width: 45%;
     cursor: pointer;
     animation: image-expand 1s ease-in-out;
-    border-radius: 10px;
+    border-radius: 20px;
 }
 .guide-ment {
     margin: 20px;

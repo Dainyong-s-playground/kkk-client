@@ -26,10 +26,10 @@ export default {
 
 <style scoped>
 .gauge-bar {
-    width: 300px;
-    height: 20px;
+    width: 45%;
+    height: 30px;
     background: #ddd;
-    border-radius: 10px;
+    border-radius: 20px;
     overflow: hidden;
     margin-top: 20px;
 }
