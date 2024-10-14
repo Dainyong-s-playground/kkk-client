@@ -7,9 +7,10 @@
             </div>
             <transition name="fade" mode="out-in">
                 <img
-                    v-if="!isSuccess"
+                    v-if="!showAfterImage"
                     :src="beforeHandImage"
                     class="before-hand-image"
+                    :class="{ 'success-fade': isSuccess }"
                 />
                 <img
                     v-else
@@ -24,8 +25,10 @@
 <script setup>
 import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
-import { onMounted, onUnmounted, ref } from 'vue';
+import { inject, onMounted, onUnmounted, ref } from 'vue';
 
+// handleMotionComplete 함수를 주입받습니다.
+const handleMotionComplete = inject('handleMotionComplete');
 
 // 이미지 URL을 사용하는 곳에서 IMAGE_SERVER_URL 사용
 const beforeHandImage = `${IMAGE_SERVER_URL}/fairytale/TheSunAndTheMoon/cover_motion_sun.png`;
@@ -42,6 +45,7 @@ var imageHeight = 0;
 const image = ref(null);
 let stopLandmarkPrediction = false;
 const isSuccess = ref(false);
+const showAfterImage = ref(false);
 
 const getImagePosition = () => {
     if (image.value) {
@@ -169,19 +173,25 @@ const checkHandInImage = (landmarks) => {
 
     if (isWristInBottom && areFingertipsInTop) {
         console.log('성공');
-        // 2초 후 성공 이미지 표시
-        setTimeout(() => {
-            isSuccess.value = true;
+        isSuccess.value = true;
 
-            // 카메라 스트림 종료
-            if (video.value && video.value.srcObject) {
-                const stream = video.value.srcObject;
-                const tracks = stream.getTracks();
-                tracks.forEach((track) => track.stop());
-            }
-            // requestAnimationFrame 중단을 위해 종료 플래그 설정
-            stopLandmarkPrediction = true;
-        }, 2000); // 2초 지연
+        // 카메라 스트림 종료
+        if (video.value && video.value.srcObject) {
+            const stream = video.value.srcObject;
+            const tracks = stream.getTracks();
+            tracks.forEach((track) => track.stop());
+        }
+        // requestAnimationFrame 중단을 위해 종료 플래그 설정
+        stopLandmarkPrediction = true;
+
+        // 단계적 전환 시작
+        setTimeout(() => {
+            showAfterImage.value = true;
+            
+            setTimeout(() => {
+                handleMotionComplete();
+            }, 3000); // 3초 후 FairyPlayer로 돌아가기
+        }, 2000); // 2초 후 성공 이미지 표시
     } else {
         console.log('아직 성공하지 않았습니다.');
     }
@@ -277,5 +287,10 @@ onUnmounted(() => {
 .fade-enter,
 .fade-leave-to {
     opacity: 0;
+}
+
+.success-fade {
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
 }
 </style>
