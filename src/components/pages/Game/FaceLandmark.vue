@@ -12,131 +12,22 @@
 import { IMAGE_SERVER_URL } from '@/constants/api';
 import { DrawingUtils, FaceLandmarker, FilesetResolver } from '@mediapipe/tasks-vision';
 import { onMounted, onUnmounted, ref, shallowRef } from 'vue';
-
 const backgroundImage = `${IMAGE_SERVER_URL}/fairytale/SnowWhite/SnowWhite04.png`;
 const video = ref(null);
 const canvas = ref(null);
 const faceLandmarker = shallowRef(null);
 let canvasCtx = null;
 
-// 이미지 원본 크기
-const imageWidth = 2160;
-const imageHeight = 1215;
-
-// 타원의 중심 좌표 및 반지름 (픽셀 단위)
-const ellipseCenterX = 1047.0;
-const ellipseCenterY = 611.5;
-const semiMajorAxis = 360.0;  // 가로 반지름
-const semiMinorAxis = 548.2;  // 세로 반지름
-
-// 정규화된 좌표 계산
-var normalizedX = ellipseCenterX / imageWidth;
-var normalizedY = ellipseCenterY / imageHeight;
-var normalizedSemiMajorAxis = semiMajorAxis / imageWidth;
-var normalizedSemiMinorAxis = semiMinorAxis / imageHeight;
-var width = 0;
-var height = 0;
-var insideEllipseTime = 0;  // 얼굴 부위가 타원 안에 머무는 시간을 추적
-var trackingInterval = null; // 타이머 인터벌
-
-// 타원의 넓이 계산 (공식 적용)
-var ellipseArea = 1;
-
 // 상태 변수
 const stopLandmarkPrediction = ref(false);
 const isSuccess = ref(false);
 const isFullscreen = ref(false);
 
-// 비디오와 캔버스 크기를 동기화하는 함수
-const syncCanvasSize = () => {
-    if (video.value && canvas.value) {
-        canvas.value.width = video.value.videoWidth;
-        canvas.value.height = video.value.videoHeight;
-        width = canvas.value.width;
-        height = canvas.value.height;
-    }
-};
+const semiMajorAxis = 360.0;  // 가로 반지름
+const semiMinorAxis = 548.2;  // 세로 반지름
 
-// 타원 내부에 있는지 확인하는 함수 (점이 타원 안에 있는지 계산)
-const isPointInNormalizedEllipse = (x, y) => {
-    const normX = (x - normalizedX * width) / (normalizedSemiMajorAxis * width);
-    const normY = (y - normalizedY * height) / (normalizedSemiMinorAxis * height);
-    const result = normX * normX + normY * normY;
-    console.log(`내부 타원의 넓이: ${result}`);
-    console.log(`ellipseArea = ${ellipseArea}`);
-    return result <= ellipseArea;
-};
-
-// 얼굴의 눈, 코, 입 랜드마크가 타원 내부에 있는지 확인
-const isFaceFeaturesInNormalizedEllipse = (landmarks) => {
-    // Mediapipe의 랜드마크 인덱스를 정확하게 참조 (문서에서 확인 필요)
-    // const leftEyeIndices = [33, 133]; // 예시로서 왼쪽 눈 인덱스
-    // const rightEyeIndices = [362, 263]; // 예시로서 오른쪽 눈 인덱스
-    const noseTipIndex = 1; // 예시로서 코끝 인덱스
-    // const lipsIndices = [61, 291]; // 예시로서 입 인덱스
-
-    // const featureIndices = [...leftEyeIndices, ...rightEyeIndices, noseTipIndex, ...lipsIndices];
-
-    const landmark = landmarks[noseTipIndex];
-    if (!landmark) {
-        console.warn(`랜드마크가 존재하지 않습니다. 인덱스: ${landmark}`);
-        return false;
-    }
-
-    const x = landmark.x * width;
-    const y = landmark.y * height;
-    console.log('x = ', x);
-    console.log('y = ', y);
-    return isPointInNormalizedEllipse(x, y);
-
-    // return featureIndices.every(index => {
-    //     // landmarks[index]가 undefined인지 확인
-    //     const landmark = landmarks[index];
-    //     if (!landmark) {
-    //         console.warn(`랜드마크가 존재하지 않습니다. 인덱스: ${index}`);
-    //         return false;
-    //     }
-    //     const x = landmark.x * width;
-    //     const y = landmark.y * height;
-    //     return isPointInNormalizedEllipse(x, y);
-    // });
-};
-
-// 화면 크기가 줄어들 때 정규화된 좌표 업데이트
-const updateNormalizedEllipseValues = () => {
-    if (canvas.value) {
-        const canvasWidth = canvas.value.width;
-        const canvasHeight = canvas.value.height;
-
-        // 정규화된 값을 재계산
-        normalizedX = ellipseCenterX / canvasWidth;
-        normalizedY = ellipseCenterY / canvasHeight;
-        normalizedSemiMajorAxis = semiMajorAxis / canvasWidth;
-        normalizedSemiMinorAxis = semiMinorAxis / canvasHeight;
-    }
-};
-
-// 타원 안에 얼굴의 눈, 코, 입이 3초 이상 있으면 isSuccess를 true로 설정
-const trackFaceInEllipse = (landmarks) => {
-    if (isFaceFeaturesInNormalizedEllipse(landmarks)) {
-        if (trackingInterval === null) {
-            trackingInterval = setInterval(() => {
-                insideEllipseTime += 100; // 0.1초 단위로 증가
-                if (insideEllipseTime >= 3000) {  // 3초
-                    clearInterval(trackingInterval);
-                    isSuccess.value = true;
-                    console.log('눈, 코, 입이 타원 안에 3초 이상 머물렀습니다.');
-                }
-            }, 100); // 100ms 간격으로 타이머 실행
-        }
-    } else {
-        // 얼굴 부위가 타원에 벗어나면 타이머 초기화
-        clearInterval(trackingInterval);
-        trackingInterval = null;
-        insideEllipseTime = 0;
-        isSuccess.value = false;
-    }
-};
+const faceDetectedTime = ref(null);
+const faceDetectionThreshold = 3000; // 3초
 
 // Mediapipe FaceLandmarker 초기화
 const initFaceLandmarker = async () => {
@@ -174,9 +65,7 @@ const enableWebcam = async () => {
         video.value.srcObject = stream;
 
         video.value.onloadedmetadata = () => {
-            syncCanvasSize();
             canvasCtx = canvas.value.getContext("2d");
-            updateNormalizedEllipseValues();  // 정규화된 타원 좌표 업데이트
 
             // 3초 후에 얼굴 인식 시작
             setTimeout(() => {
@@ -201,24 +90,48 @@ const predictWebcam = async () => {
     // 캔버스 초기화
     canvasCtx.clearRect(0, 0, canvas.value.width, canvas.value.height);
 
-    if (result.faceLandmarks) {
+    if (result.faceLandmarks && result.faceLandmarks.length > 0) {
         const drawingUtils = new DrawingUtils(canvasCtx);
+        const landmarks = result.faceLandmarks[0];  // 첫 번째 얼굴의 랜드마크
 
-        // 각 랜드마크 그리기
-        result.faceLandmarks.forEach((landmarks) => {
-            drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL, { color: "#0067a3" });
+        // 랜드마크 그리기
+        drawingUtils.drawConnectors(landmarks, FaceLandmarker.FACE_LANDMARKS_FACE_OVAL, { color: "#0067a3" });
 
-            // 눈, 코, 입이 타원 안에 있지 추적
-            trackFaceInEllipse(landmarks);
-        });
+        // 얼굴의 중심점 계산
+        const centerX = landmarks.reduce((sum, point) => sum + point.x, 0) / landmarks.length;
+        const centerY = landmarks.reduce((sum, point) => sum + point.y, 0) / landmarks.length;
+
+        // 타원 내부에 얼굴이 있는지 확인
+        if (isInsideEllipse(centerX, centerY)) {
+            if (!faceDetectedTime.value) {
+                faceDetectedTime.value = performance.now();
+            } else if (performance.now() - faceDetectedTime.value >= faceDetectionThreshold) {
+                isSuccess.value = true;
+                stopLandmarkPrediction.value = true;
+                console.log('얼굴 인식 성공!');
+                return;
+            }
+        } else {
+            faceDetectedTime.value = null;
+        }
     } else {
         console.warn('얼굴 랜드마크가 감지되지 않았습니다.');
+        faceDetectedTime.value = null;
     }
 
     // 계속해서 얼굴 랜드마크 감지를 반복 실행
     if (!stopLandmarkPrediction.value) {
         window.requestAnimationFrame(predictWebcam);
     }
+};
+
+// 타원 내부에 점이 있는지 확인하는 함수
+const isInsideEllipse = (x, y) => {
+    const centerX = canvas.value.width / 2;
+    const centerY = canvas.value.height / 2;
+    const normalizedX = (x - centerX) / semiMajorAxis;
+    const normalizedY = (y - centerY) / semiMinorAxis;
+    return (normalizedX * normalizedX + normalizedY * normalizedY) <= 1;
 };
 
 onMounted(async () => {
@@ -232,7 +145,6 @@ onUnmounted(() => {
         const tracks = stream.getTracks();
         tracks.forEach((track) => track.stop());
     }
-    clearInterval(trackingInterval); // 컴포넌트가 제거될 때 타이머를 정리
 });
 </script>
 
