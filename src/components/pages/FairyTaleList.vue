@@ -241,7 +241,7 @@ export default {
                 { id: 7, name: '동물' },
                 { id: 8, name: '이별' },
                 { id: 9, name: '모험' },
-                { id: 10, name: '육' },
+                { id: 10, name: '교육' },
                 { id: 11, name: '코미디' },
             ];
 
