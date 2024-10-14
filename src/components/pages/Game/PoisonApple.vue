@@ -33,7 +33,7 @@
             <div v-if="isSuccess" class="modal-overlay">
                 <img
                     class="success-image"
-                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.JPG"
+                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.png"
                     @mousedown.prevent
                     @dragstart.prevent
                     alt="Eaten Apple"
@@ -56,11 +56,11 @@ export default {
             showGuide: true, // 게임 가이드 모달 표시 여부
             imageStage: 0, // 이미지 단계 (0: 시작, 1: 25%, 2: 50%, 3: 75%, 4: 100%)
             appleImages: [
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple1.JPG', // 초기 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple2.JPG', // 25% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple3.JPG', // 50% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple4.JPG', // 75% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.JPG', // 100% 이미지 (완료)
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple1.png', // 초기 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple2.png', // 25% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple3.png', // 50% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple4.png', // 75% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.png', // 100% 이미지 (완료)
             ],
         };
     },
