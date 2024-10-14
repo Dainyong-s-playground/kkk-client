@@ -216,20 +216,6 @@ const deleteProfile = async (profileId) => {
     }
 };
 
-// const loadAllData = async () => {
-//     try {
-//         isLoading.value = true;
-//         showContent.value = false;
-//         await Promise.all([fetchProfileStats(), fetchProfiles()]);
-//     } catch (error) {
-//         console.error('데이터 로딩 중 오류 발생:', error);
-//     } finally {
-//         isLoading.value = false;
-//         // 로딩이 끝난 후 바로 컨텐츠를 표시합니다.
-//         showContent.value = true;
-//     }
-// };
-
 // 컴포넌트가 마운트될 때 데이터 가져오기
 onMounted(async () => {
     await fetchProfiles();

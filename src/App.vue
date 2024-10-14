@@ -100,10 +100,16 @@ watch(
 
 // showFooter 계산된 속성 수정 및 디버깅 로그 추가
 const showFooter = computed(() => {
-    const currentRouteName = router.currentRoute.value.name;
-    console.log('Current route name:', currentRouteName);
-    console.log('Is ProfileView?', currentRouteName === 'ProfileView');
-    return currentRouteName !== 'ProfileView';
+    const hiddenFooterrRoutes = ['/profiles', '/search'];
+    const isMainPage = router.currentRoute.value.path === '/';
+
+    if (isMainPage && !isLoggedIn.value) {
+        return false;
+    }
+
+    return !hiddenFooterrRoutes.some((hiddenRoute) =>
+        router.currentRoute.value.path.toLowerCase().startsWith(hiddenRoute.toLowerCase()),
+    );
 });
 </script>
 
