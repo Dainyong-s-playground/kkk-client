@@ -1,15 +1,29 @@
 <template>
     <div class="fairy-tale-detail-overlay" @click="closeDetail" @wheel.prevent @touchmove.prevent>
-        <div class="detail-content" @click.stop :class="{ 'fade-in': !isClosing, 'fade-out': isClosing }">
-            <div class="detail-body">
+        <div
+            class="detail-content"
+            @click.stop
+            :class="{
+                'fade-in': !isClosing && !isTransitioning,
+                'fade-out': isClosing,
+                'fade-out-in': isTransitioning,
+            }"
+        >
+            <!-- 로딩 인디케이터 추가 -->
+            <div v-if="isLoading" class="loading-overlay">
+                <div class="loading-spinner"></div>
+            </div>
+
+            <!-- 기존 코드 ... -->
+
+            <div v-else class="detail-body">
                 <div class="image-container">
                     <img :src="fairyTale.imageUrl" :alt="fairyTale.title" class="detail-image" />
-                    <!-- 프로그레스 바 수정 -->
-                    <div v-if="showProgressBar" class="progress-bar-container">
-                        <div class="progress-bar" :style="{ width: `${calculateProgress(fairyTale.progress)}%` }"></div>
+                    <!-- 프로그레스 바를 항상 표시하도록 수정 -->
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" :style="{ width: `${progressPercentage}%` }"></div>
                     </div>
                     <div class="image-overlay"></div>
-                    <!-- 대여/소장 상태 표시 수정 -->
                     <div
                         v-if="isOwned || isRented"
                         class="ownership-status"
@@ -69,19 +83,21 @@
                             <div class="loading-placeholder">로딩 ...</div>
                         </template>
                     </div>
-                    <p class="description">{{ fairyTale.description }}</p>
-                    <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
-                    <div class="recommendations">
-                        <h3 class="recommendations-category-title">다른 동화 추천</h3>
-                        <div class="recommendations-list">
-                            <div
-                                v-for="tale in recommendedTales"
-                                :key="tale.id"
-                                class="recommendation-item"
-                                @click="selectRecommendedTale(tale.id)"
-                            >
-                                <img :src="tale.imageUrl" :alt="tale.title" class="recommendation-image" />
-                                <p class="recommendation-title">{{ tale.title }}</p>
+                    <div class="scrollable-content">
+                        <p class="description">{{ fairyTale.description }}</p>
+                        <p v-if="fairyTale.episode" class="episode">{{ fairyTale.episode }}</p>
+                        <div class="recommendations">
+                            <h3 class="recommendations-category-title">다른 동화 추천</h3>
+                            <div class="recommendations-list">
+                                <div
+                                    v-for="tale in recommendedTales"
+                                    :key="tale.id"
+                                    class="recommendation-item"
+                                    @click="selectRecommendedTale(tale.id)"
+                                >
+                                    <img :src="tale.imageUrl" :alt="tale.title" class="recommendation-image" />
+                                    <p class="recommendation-title">{{ tale.title }}</p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -110,64 +126,119 @@
         </div>
     </div>
 </template>
-
 <script setup>
-import { defineProps, ref, defineEmits, computed, onMounted, watch } from 'vue';
-import { onUnmounted } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { defineProps, ref, defineEmits, computed, onMounted, watch, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+// import { inject } from 'vue';
+// import { nextTick } from 'vue';
 
 const router = useRouter();
-const route = useRoute();
 const profileStore = useProfileStore();
 const showRentBuyModal = ref(false);
 const isOwned = ref(false);
 const isRented = ref(false);
 const isClosing = ref(false);
-const isRemoving = ref(false);
-const isLoading = ref(true);
+// const isRemoving = ref(false);
+const isLoading = ref(false);
 const isDataLoaded = ref(false);
+const progress = ref(0);
 
 const props = defineProps({
     fairyTale: {
         type: Object,
         required: true,
-        validator: (value) => {
-            return (
-                value &&
-                typeof value.id !== 'undefined' &&
-                typeof value.title !== 'undefined' &&
-                typeof value.imageUrl !== 'undefined' &&
-                typeof value.views !== 'undefined' &&
-                typeof value.rentalPrice !== 'undefined' &&
-                typeof value.purchasePrice !== 'undefined' &&
-                typeof value.description !== 'undefined' &&
-                typeof value.author !== 'undefined'
-            );
-        },
     },
 });
 
+const fairyTale = ref({ ...props.fairyTale });
 const recommendedTales = ref([]);
 
 const emit = defineEmits(['update:fairyTale', 'close', 'update:views']);
 
+const checkOwnership = async () => {
+    isLoading.value = true;
+    try {
+        const response = await axios.get(
+            `${TALE_API_URL}/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
+        );
+        console.log('소유권 확인 응답:', response.data);
+        fairyTale.value = { ...fairyTale.value, ...response.data };
+        isOwned.value = response.data.purchased;
+        isRented.value = response.data.rented;
+        progress.value = response.data.progress || 0;
+        console.log('Progress updated:', progress.value);
+    } catch (error) {
+        console.error('소유권 확인 실패:', error);
+    } finally {
+        isLoading.value = false;
+        isDataLoaded.value = true;
+    }
+};
+
 const fetchRecommendations = async () => {
     try {
-        const response = await axios.get(`${TALE_API_URL}/api/fairytales/${props.fairyTale.id}/recommendations`);
+        const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.value.id}/recommendations`);
         recommendedTales.value = response.data;
     } catch (error) {
         console.error('추천 동화 가져오기 실패:', error);
     }
 };
 
-const selectRecommendedTale = async (taleId) => {
-    if (route.params.id !== taleId.toString()) {
-        emit('update:fairyTale', { id: taleId });
+const fetchFairyTaleDetails = async (id) => {
+    try {
+        const response = await axios.get(`${TALE_API_URL}/api/fairytales/${id}`);
+        fairyTale.value = response.data;
+        localViews.value = response.data.views;
+        emit('update:fairyTale', fairyTale.value);
+        emit('update:views', localViews.value);
+    } catch (error) {
+        console.error('동화 상세 정보 가져오기 실패:', error);
     }
 };
+
+const isTransitioning = ref(false);
+
+const selectRecommendedTale = async (taleId) => {
+    if (fairyTale.value.id !== taleId) {
+        isTransitioning.value = true;
+        isLoading.value = true;
+
+        try {
+            await fetchFairyTaleDetails(taleId);
+            await checkOwnership();
+            await fetchRecommendations();
+        } catch (error) {
+            console.error('동화 전환 중 오류 발생:', error);
+        } finally {
+            isLoading.value = false;
+            setTimeout(() => {
+                isTransitioning.value = false;
+            }, 300); // 페이드 인 효과를 위해 약간의 지연 추가
+        }
+    }
+};
+
+onMounted(() => {
+    checkOwnership();
+    fetchRecommendations();
+    document.body.style.overflow = 'hidden';
+});
+
+onUnmounted(() => {
+    document.body.style.overflow = '';
+});
+
+watch(
+    () => props.fairyTale,
+    (newValue) => {
+        fairyTale.value = { ...newValue };
+        checkOwnership();
+    },
+    { deep: true },
+);
 
 const playFairyTale = () => {
     // fairyTale 객체에 id 는 경우를 비해 임시 ID를 생성합니다.
@@ -192,42 +263,15 @@ const closeDetail = () => {
     if (isClosing.value) return;
     isClosing.value = true;
     setTimeout(() => {
-        isRemoving.value = true;
         emit('close');
     }, 300);
 };
 
-const disableScroll = (e) => {
-    e.preventDefault();
-};
+// const disableScroll = (e) => {
+//     e.preventDefault();
+// };
 
 const localViews = ref(props.fairyTale.views);
-
-const checkOwnership = async () => {
-    isLoading.value = true;
-    try {
-        const response = await axios.get(
-            `${TALE_API_URL}/api/fairy-tale-ownership/check/${profileStore.selectedProfile.id}/${fairyTale.value.id}`,
-        );
-        console.log('소유권 확인 응답:', response.data);
-        fairyTale.value = { ...fairyTale.value, ...response.data };
-        isOwned.value = response.data.purchased;
-        isRented.value = response.data.rented;
-        console.log('isOwned:', isOwned.value, 'isRented:', isRented.value);
-    } catch (error) {
-        console.error('소유권 확인 실패:', error);
-    } finally {
-        isLoading.value = false;
-        setTimeout(() => {
-            isDataLoaded.value = true;
-        }, 100);
-    }
-};
-
-onMounted(() => {
-    checkOwnership();
-    fetchRecommendations();
-});
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
 watch(
@@ -236,12 +280,6 @@ watch(
         localViews.value = newViews;
     },
 );
-
-onUnmounted(() => {
-    document.body.style.overflow = '';
-    document.removeEventListener('wheel', disableScroll);
-    document.removeEventListener('touchmove', disableScroll);
-});
 
 const openRentBuyModal = () => {
     console.log('모달 열기');
@@ -280,14 +318,6 @@ const buyFairyTale = async () => {
     }
 };
 
-watch(
-    () => props.fairyTale,
-    () => {
-        checkOwnership();
-    },
-    { deep: true },
-);
-
 // rentPrice와 buyPrice 계산된 속성 수정
 const rentPrice = computed(() => fairyTale.value.rentalPrice);
 const buyPrice = computed(() => fairyTale.value.purchasePrice || fairyTale.value.rentalPrice * 2);
@@ -295,36 +325,21 @@ const buyPrice = computed(() => fairyTale.value.purchasePrice || fairyTale.value
 const isOwnedOrRented = computed(() => isOwned.value || isRented.value);
 
 // calculateProgress 함수 추가
-const calculateProgress = (progress) => {
-    let numericProgress = parseFloat(progress);
-    if (isNaN(numericProgress)) {
-        console.error('잘못된 progress 값:', progress);
-        return 0;
-    }
-    return Math.min(Math.max(numericProgress, 0), 100);
+const calculateProgress = (progressValue) => {
+    if (!progressValue) return 0;
+    let numericProgress = parseFloat(progressValue);
+    return isNaN(numericProgress) ? 0 : Math.min(Math.max(numericProgress, 0), 100);
 };
 
-const showProgressBar = computed(() => {
-    return fairyTale.value.progress > 0;
+const progressPercentage = computed(() => {
+    return calculateProgress(progress.value);
 });
-
-// fairyTale 객체를 반응형으로 만니다
-const fairyTale = ref(props.fairyTale);
 
 const playButtonText = computed(() => {
-    if (fairyTale.value.progress > 0) {
-        return `이어보기 (${fairyTale.value.progress}%)`;
-    }
-    return '재생하기';
+    return progress.value > 0 ? `이어보기 ${progressPercentage.value}%` : '재생하기';
 });
 
-watch(
-    () => props.fairyTale,
-    () => {
-        fetchRecommendations();
-    },
-    { deep: true },
-);
+// const controlScroll = inject('controlScroll');
 </script>
 
 <style scoped>
@@ -340,6 +355,7 @@ watch(
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .detail-content {
@@ -353,6 +369,7 @@ watch(
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    margin: auto;
     max-height: 90vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -405,8 +422,7 @@ watch(
 
 .detail-image {
     width: 100%;
-    height: 100%;
-    max-height: 450px;
+    height: auto;
     object-fit: contain;
     border-radius: 9px 9px 0 0;
     background-color: #191919;
@@ -415,8 +431,9 @@ watch(
 .detail-info {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: 40vh;
     padding: 20px;
+    overflow-y: auto; /* 세로 스크롤 추가 */
 }
 
 .description {
@@ -495,7 +512,7 @@ watch(
 
 .image-container {
     display: flex;
-    height: 100%;
+    height: 50vh;
     justify-content: center;
     position: relative;
     overflow: hidden;
@@ -824,6 +841,60 @@ watch(
     }
     to {
         opacity: 1;
+    }
+}
+
+.scrollable-content {
+    flex-grow: 1; /* 남은 공간을 모두 차지하도록 설정 */
+}
+
+.loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1003;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.fade-out-in {
+    animation: fadeOutIn 0.6s ease-in-out;
+}
+
+@keyframes fadeOutIn {
+    0% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    50% {
+        opacity: 0;
+        transform: scale(0.95) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
 }
 </style>
