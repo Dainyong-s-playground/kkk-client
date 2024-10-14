@@ -136,7 +136,6 @@ export default {
         const dataLoaded = ref(false);
         const categoryContents = ref({});
         const fairyTales = ref({});
-        // const controlScroll = inject('controlScroll');
         const scrollPosition = ref(0);
         const isDetailOpen = ref(false);
 
@@ -389,7 +388,6 @@ export default {
             getCategoryContent,
             updateSelectedFairyTale,
             isDetailOpen,
-            // ... 기타 필요한 메서드들 ...
         };
     },
 };

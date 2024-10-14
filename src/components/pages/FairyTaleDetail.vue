@@ -132,8 +132,6 @@ import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-// import { inject } from 'vue';
-// import { nextTick } from 'vue';
 
 const router = useRouter();
 const profileStore = useProfileStore();
@@ -141,7 +139,6 @@ const showRentBuyModal = ref(false);
 const isOwned = ref(false);
 const isRented = ref(false);
 const isClosing = ref(false);
-// const isRemoving = ref(false);
 const isLoading = ref(false);
 const isDataLoaded = ref(false);
 const progress = ref(0);
@@ -268,10 +265,6 @@ const closeDetail = () => {
     }, 300);
 };
 
-// const disableScroll = (e) => {
-//     e.preventDefault();
-// };
-
 const localViews = ref(props.fairyTale.views);
 
 // props.fairyTale.views가 변경될 때마다 localViews를 업데이트합니다.
@@ -339,8 +332,6 @@ const progressPercentage = computed(() => {
 const playButtonText = computed(() => {
     return progress.value > 0 ? `이어보기 ${progressPercentage.value}%` : '재생하기';
 });
-
-// const controlScroll = inject('controlScroll');
 </script>
 
 <style scoped>
