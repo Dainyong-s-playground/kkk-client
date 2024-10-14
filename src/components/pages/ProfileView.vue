@@ -5,21 +5,31 @@
 
             <div class="profile-card" v-if="profiles.length === 0">
                 <div class="card">
-                    <button @click="openModal">
+                    <button class="select-btn" @click="openModal">
                         <img :src="getImageUrl('profile/resisterProfile.png')" alt="프로필 생성" />
                     </button>
                 </div>
             </div>
+
             <div class="profile-card" v-else>
                 <div class="card" v-for="profile in profiles" :key="profile.id">
-                    <button @click="selectProfile(profile.id)">
+                    <div class="card-header">
+                        <button class="edit-btn" @click="openEdit(profile)">
+                            <img class="edit-img" :src="`${IMAGE_SERVER_URL}/profile/modify.png`" />
+                        </button>
+                        <button class="delete-btn" @click="deleteProfile(profile.id)">
+                            <img class="delete-img" :src="`${IMAGE_SERVER_URL}/profile/delete.png`" />
+                        </button>
+                    </div>
+                    <button class="select-btn" @click="selectProfile(profile.id)">
                         <img :src="profile.image" />
                         <p>{{ profile.nickname }}</p>
                     </button>
                 </div>
+
                 <div v-if="profiles.length < 3">
                     <div class="card">
-                        <button @click="openModal">
+                        <button class="select-btn" @click="openModal">
                             <img :src="`${IMAGE_SERVER_URL}/profile/resisterProfile.png`" alt="프로필 생성" />
                             <p>프로필 생성</p>
                         </button>
@@ -30,12 +40,10 @@
 
         <!-- 프로필 생성 모달 -->
         <div v-if="showModal" class="modal" @click.self="closeModal">
-            <!-- 모달 외부 클릭으로 닫기 -->
             <div class="modal-content">
                 <button class="close-btn" @click="closeModal">X</button>
                 <h2>프로필 생성</h2>
 
-                <!-- 이미지 리스트 -->
                 <div class="img-profile">
                     <p>프로필 이미지 선택</p>
                     <div class="image-list">
@@ -51,22 +59,57 @@
                     </div>
                 </div>
 
-                <!-- 프로필 생성 폼 -->
                 <form class="form-display" @submit.prevent="createProfile">
                     <div class="profile-dataform">
                         <p>닉네임</p>
                         <input v-model="newProfile.nickname" placeholder="닉네임" required type="text" />
-
                         <p>성별</p>
                         <div class="radio-group">
                             <label><input type="radio" value="M" v-model="newProfile.gender" /> 남자</label>
                             <label><input type="radio" value="F" v-model="newProfile.gender" /> 여자</label>
                         </div>
-
                         <p>생년월일</p>
                         <input v-model="newProfile.birth" type="date" required />
                     </div>
                     <button type="submit">생성</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- 프로필 수정 모달 -->
+        <div v-if="showEdit" class="modal" @click.self="closeEdit">
+            <div class="modal-content">
+                <button class="close-btn" @click="closeEdit">X</button>
+                <h2>프로필 생성</h2>
+
+                <div class="img-profile">
+                    <p>프로필 이미지 선택</p>
+                    <div class="image-list">
+                        <div
+                            v-for="(image, index) in imageList"
+                            :key="index"
+                            @click="selectImage(image)"
+                            :class="{ selected: selectedImage === image }"
+                            class="image-option"
+                        >
+                            <img :src="image" class="profile-image" />
+                        </div>
+                    </div>
+                </div>
+
+                <form class="form-display" @submit.prevent="editProfile">
+                    <div class="profile-dataform">
+                        <p>닉네임</p>
+                        <input v-model="newProfile.nickname" placeholder="닉네임" required type="text" />
+                        <p>성별</p>
+                        <div class="radio-group">
+                            <label><input type="radio" value="M" v-model="newProfile.gender" /> 남자</label>
+                            <label><input type="radio" value="F" v-model="newProfile.gender" /> 여자</label>
+                        </div>
+                        <p>생년월일</p>
+                        <input v-model="newProfile.birth" type="date" required />
+                    </div>
+                    <button type="submit">수정</button>
                 </form>
             </div>
         </div>
@@ -82,8 +125,10 @@ import { USER_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
 export default {
     data() {
         return {
+            selectedProfileId: '',
             profiles: [],
             showModal: false,
+            showEdit: false,
             newProfile: {
                 nickname: '',
                 gender: 'M',
@@ -101,31 +146,8 @@ export default {
     },
 
     async mounted() {
-        const token = this.getJwtToken();
-        console.log(token);
-        if (token) {
-            try {
-                const decodedToken = jwtDecode(token);
-                const userId = decodedToken.id;
-
-                const response = await axios.get(`${USER_API_URL}/api/checkProfiles/${userId}`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                    withCredentials: true,
-                });
-                this.profiles = response.data;
-            } catch (error) {
-                console.error('JWT 토큰을 디코딩하는 중 오류가 발생했습니다.', error);
-            }
-        } else {
-            console.error('JWT 토큰이 없습니다.');
-            this.$router.push('/');
-        }
-
+        await this.loadProfile();
         document.addEventListener('keydown', this.handleEscKey);
-        console.log('IMAGE_SERVER_URL22:', IMAGE_SERVER_URL);
-        console.log('USER_API_URL:', USER_API_URL);
     },
 
     beforeUnmount() {
@@ -137,6 +159,30 @@ export default {
             const token = cookies.get('Authorization');
             console.log('가져온 JWT 토큰:', token);
             return token;
+        },
+
+        async loadProfile() {
+            const token = this.getJwtToken();
+            console.log(token);
+            if (token) {
+                try {
+                    const decodedToken = jwtDecode(token);
+                    const userId = decodedToken.id;
+
+                    const response = await axios.get(`${USER_API_URL}/api/checkProfiles/${userId}`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        withCredentials: true,
+                    });
+                    this.profiles = response.data;
+                } catch (error) {
+                    console.error('JWT 토큰을 디코딩하는 중 오류가 발생했습니다.', error);
+                }
+            } else {
+                console.error('JWT 토큰이 없습니다.');
+                this.$router.push('/');
+            }
         },
 
         async selectProfile(profileId) {
@@ -162,7 +208,7 @@ export default {
                     cookies.set('Authorization', newToken);
                 }
 
-                this.$router.push('/fairyTaleList');
+                this.$router.push('/');
             } catch (error) {
                 console.error('프로필 선택 중 오류가 발생했습니다.', error);
             }
@@ -172,6 +218,15 @@ export default {
         },
         closeModal() {
             this.showModal = false;
+        },
+        openEdit(profile) {
+            this.newProfile = { ...profile };
+            this.selectedImage = profile.image;
+            this.showEdit = true;
+            this.selectedProfileId = profile.id;
+        },
+        closeEdit() {
+            this.showEdit = false;
         },
         selectImage(image) {
             this.selectedImage = image;
@@ -199,11 +254,44 @@ export default {
 
                 console.log('생성된 프로필:', response.data);
 
-                this.profiles.push(response.data);
-
                 this.newProfile = { nickname: '', gender: 'M', birth: '', image: null };
                 this.selectedImage = null;
                 this.closeModal();
+                this.$router.go(0);
+            } catch (error) {
+                console.error('프로필 생성 중 오류가 발생했습니다.', error);
+                alert(error.message);
+            }
+        },
+
+        async editProfile() {
+            try {
+                const token = this.getJwtToken();
+                console.log(this.selectedProfileId);
+                if (!token) {
+                    throw new Error('JWT 토큰이 없습니다.');
+                }
+
+                if (!this.newProfile.image) {
+                    throw new Error('프로필 이미지를 선택해주세요.');
+                }
+
+                const response = await axios.post(
+                    `${USER_API_URL}/api/editProfile/${this.selectedProfileId}`,
+                    this.newProfile,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                        withCredentials: true,
+                    },
+                );
+
+                console.log('수정된 프로필:', response.data);
+
+                this.newProfile = { nickname: '', gender: 'M', birth: '', image: null };
+                this.selectedImage = null;
+                this.closeEdit();
                 this.$router.go(0);
             } catch (error) {
                 console.error('프로필 생성 중 오류가 발생했습니다.', error);
@@ -224,6 +312,22 @@ export default {
 
         getImageUrl(path) {
             return `${IMAGE_SERVER_URL}/${path}`;
+        },
+        async deleteProfile(profileId) {
+            try {
+                console.log(profileId);
+                const token = this.getJwtToken();
+                await axios.delete(`${USER_API_URL}/api/deleteProfile/${profileId}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
+                });
+                await this.loadProfile();
+                console.log('프로필이 삭제되었습니다.');
+            } catch (error) {
+                console.error('프로필 삭제 중 오류가 발생했습니다.', error);
+            }
         },
     },
 };
@@ -253,25 +357,59 @@ export default {
 }
 
 .profile-card .card {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     width: 350px;
     height: 350px;
     animation: profile-card-scale-in 0.5s ease-in-out;
 }
+.card-header {
+    position: absolute;
+    top: 8px;
+    display: flex;
+    gap: 2px;
+    right: 30px;
+}
 
-.card button {
+.edit-btn,
+.delete-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 18px;
+}
+.edit-img,
+.delete-img {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 0;
+}
+
+.edit-btn:hover {
+    color: green;
+}
+
+.delete-btn:hover {
+    color: red;
+}
+.select-btn {
     width: 350px;
     height: 100%;
     background: none;
     border: none;
 }
 
-.card button img {
+.select-btn img {
     width: 300px;
     height: 300px;
-    border-radius: 50%;
+    border-radius: 10px;
     object-fit: contain;
     border: 1px solid #45a049;
 }
