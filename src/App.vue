@@ -1,5 +1,5 @@
 <template>
-    <div class="app-container" :class="{ 'home-background': isHomePage }">
+    <div class="app-container" :class="{ 'home-background': isHomePage, 'no-scroll': isDetailOpen }">
         <header-compo
             v-if="showHeader && !searchMode"
             :class="{ 'header-scrolled': isHeaderScrolled }"
@@ -19,7 +19,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch, provide } from 'vue';
 import { useRouter } from 'vue-router';
 import { storeToRefs } from 'pinia';
 import { useProfileStore } from './stores/profile';
@@ -100,11 +100,38 @@ watch(
 
 // showFooter 계산된 속성 수정 및 디버깅 로그 추가
 const showFooter = computed(() => {
-    const currentRouteName = router.currentRoute.value.name;
-    console.log('Current route name:', currentRouteName);
-    console.log('Is ProfileView?', currentRouteName === 'ProfileView');
-    return currentRouteName !== 'ProfileView';
+    const hiddenFooterrRoutes = ['/profiles', '/search'];
+    const isMainPage = router.currentRoute.value.path === '/';
+
+    if (isMainPage && !isLoggedIn.value) {
+        return false;
+    }
+
+    return !hiddenFooterrRoutes.some((hiddenRoute) =>
+        router.currentRoute.value.path.toLowerCase().startsWith(hiddenRoute.toLowerCase()),
+    );
 });
+
+// isDetailOpen 상태 추가
+const isDetailOpen = ref(false);
+
+// isDetailOpen 상태를 자식 컴포넌트에 제공
+provide('isDetailOpen', isDetailOpen);
+
+// 스크롤 제어 함수 추가
+const controlScroll = (isOpen) => {
+    isDetailOpen.value = isOpen;
+    if (isOpen) {
+        document.body.style.overflow = 'hidden';
+        document.body.style.height = '100vh';
+    } else {
+        document.body.style.overflow = '';
+        document.body.style.height = '';
+    }
+};
+
+// controlScroll 함수를 자식 컴포넌트에 제공
+provide('controlScroll', controlScroll);
 </script>
 
 <style>
@@ -115,5 +142,10 @@ div {
 .app-container.search-mode {
     overflow: hidden;
     height: 100vh;
+}
+.app-container.no-scroll {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
 }
 </style>

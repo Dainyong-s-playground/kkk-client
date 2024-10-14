@@ -97,10 +97,12 @@ onMounted(async () => {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+    display: flex;
+    justify-content: center;
 }
 
 table {
-    width: 100%;
+    width: 80%;
     border-collapse: collapse;
     margin-top: 20px;
     background-color: #fff;

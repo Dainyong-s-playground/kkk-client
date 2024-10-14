@@ -14,13 +14,13 @@
             <div class="middle-content-container">
                 <img
                     class="fairy-list"
-                    :src="`${IMAGE_SERVER_URL}/fairyList.png`"
+                    :src="`${IMAGE_SERVER_URL}/fairyList2.png`"
                     alt="동화 목록"
                     @click="goToFairyList"
                 />
                 <img
                     class="parent-dashboard"
-                    :src="`${IMAGE_SERVER_URL}/parentDashboard-removebg.png`"
+                    :src="`${IMAGE_SERVER_URL}/parentDashboard-removebg2.png`"
                     alt="부모 대시보드"
                     @click="goToDashboard"
                 />

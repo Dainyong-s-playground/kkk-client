@@ -10,7 +10,7 @@
                     {{ userName }} 님
                 </div>
                 <div :class="['center-logo', { 'logo-invert': isScrolled }]" @click="goToMain">
-                    <img :src="`${IMAGE_SERVER_URL}/src/kkkLogo_none.png`" @error="handleImageError" />
+                    <img :src="logoSrc" @error="handleImageError" />
                 </div>
                 <div class="search-container">
                     <input
@@ -60,11 +60,13 @@
                             <img :src="loginUser.image" class="profile-image" />
                         </div>
 
-                        <div v-if="showDropdown" class="dropdown-menu" ref="dropdownMenu">
-                            <button @click="goToMyPage">마이페이지</button>
-                            <button @click="changeProfile">프로필 변경</button>
-                            <button @click="logout">로그아웃</button>
-                        </div>
+                        <transition name="dropdown">
+                            <div v-if="showDropdown" class="dropdown-menu" ref="dropdownMenu">
+                                <button @click="goToMyPage">마이페이지</button>
+                                <button @click="changeProfile">프로필 변경</button>
+                                <button @click="logout">로그아웃</button>
+                            </div>
+                        </transition>
                     </div>
 
                     <div v-else class="login-container">
@@ -75,12 +77,14 @@
                 </div>
             </div>
             <nav v-if="showNav" :class="{ scrolled: isScrolled, 'nav-hidden': isNavHidden }">
-                <a href="#" class="nav-item">최근 시청 동화</a>
-                <a href="#" class="nav-item">동화</a>
-                <a href="#" class="nav-item">카테고리 ▽</a>
+                <a href="#" class="nav-item" @click.prevent="scrollToSection('recentlyWatched')">최근 시청 동화</a>
+                <a href="#" class="nav-item" @click.prevent="scrollToSection('top-5')">TOP 5 동화</a>
+                <!-- 카테고리 드롭다운 제거 -->
             </nav>
         </div>
     </header>
+
+    <!-- 카테고리 드롭다운 콘텐츠 제거 -->
 </template>
 
 <script setup>
@@ -163,7 +167,7 @@ const logout = async () => {
         router.push('/');
         window.location.reload(); // 로그아웃 후 페이지 새로고침
     } catch (error) {
-        alert('로그아웃 실패: ' + error.message);
+        alert('로그아 실패: ' + error.message);
     }
 };
 
@@ -204,10 +208,45 @@ const handleImageError = (e) => {
     // e.target.src = '대체 이미지 URL';
 };
 
+const logoSrc = computed(() => {
+    return isScrolled.value
+        ? `${IMAGE_SERVER_URL}/src/kkkLogo_noneBlack.png`
+        : `${IMAGE_SERVER_URL}/src/kkkLogo_none.png`;
+});
+
+const scrollToSection = (sectionId) => {
+    let offset = 144; // 기본 오프셋
+
+    window.dispatchEvent(
+        new CustomEvent('scrollToSection', {
+            detail: {
+                sectionId: sectionId,
+                offset: offset,
+            },
+        }),
+    );
+};
+
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('click', handleOutsideClick);
     profileStore.checkLoginStatus();
+});
+
+onMounted(() => {
+    window.addEventListener('scrollToSection', (event) => {
+        const { sectionId, offset } = event.detail;
+        const element = document.getElementById(sectionId);
+        if (element) {
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth',
+            });
+        }
+    });
 });
 
 onUnmounted(() => {
@@ -269,7 +308,8 @@ onUnmounted(() => {
 }
 
 .center-logo.logo-invert img {
-    filter: invert(1); /* 이미지 색 반전 효과 */
+    /* 이 부분은 더 이상 필요하지 않으므로 제거하거나 주석 처리합니다 */
+    /* filter: invert(1); */
 }
 
 nav {
@@ -401,6 +441,19 @@ nav.nav-hidden {
     padding: 10px;
     display: flex;
     flex-direction: column;
+    transform-origin: top center;
+}
+
+/* 드롭다운 애니메이션 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+    transition: all 0.3s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+    opacity: 0;
+    transform: translateY(-20px);
 }
 
 .dropdown-menu button {
@@ -419,5 +472,12 @@ nav.nav-hidden {
 
 .search-container {
     width: 5%;
+}
+
+/* 네비게이션 숨김 상태에 대한 스타일 추가 */
+.nav-hidden {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
 }
 </style>

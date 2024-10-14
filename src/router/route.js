@@ -68,6 +68,10 @@ const routes = [
         path: '/search',
         component: ReservationSearch,
     },
+    {
+        path: '/rope',
+        component: RopeCut,
+    },
 ];
 
 export default routes;

@@ -1,6 +1,7 @@
+/* eslint-disable */
 <template>
-    <div>
-        <div v-if="isLoading || isDetailLoading" class="loading-overlay">
+    <div class="fairy-tale-list-container">
+        <div v-if="isLoading" class="loading-overlay">
             <div class="loading-spinner">
                 <div></div>
                 <div></div>
@@ -19,8 +20,8 @@
                 </div>
             </section>
             <!-- 나님이 시청 중인 콘텐츠 -->
-            <section v-if="profileStore.selectedProfile" class="category recently-watched">
-                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
+            <section id="recentlyWatched" v-if="profileStore.selectedProfile" class="category recently-watched">
+                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 텐츠</h2>
                 <div class="content-slider">
                     <div
                         v-for="(item, index) in recentlyWatched"
@@ -49,7 +50,7 @@
             </section>
 
             <!-- 오늘 TOP 5 동화 -->
-            <section class="category top-5">
+            <section id="top-5" class="category top-5">
                 <h2 class="category-title">오늘 TOP 5 동화</h2>
                 <div class="content-slider">
                     <div
@@ -71,7 +72,7 @@
             </section>
 
             <!-- 카테고리별 동화 리스트 -->
-            <section v-for="category in categories" :key="category.id" class="category recommended">
+            <section v-for="category in categories" :key="category.id" :id="category.name" class="category recommended">
                 <h2 class="category-title">{{ category.name }}</h2>
                 <div class="content-slider">
                     <div
@@ -93,19 +94,18 @@
                     </div>
                 </div>
             </section>
-
-            <!-- 동화 상세 정보 오버레이 -->
-            <transition name="fade">
-                <FairyTaleDetail
-                    v-if="selectedFairyTale"
-                    :key="selectedFairyTale.id"
-                    :fairyTale="selectedFairyTale"
-                    @update:fairyTale="updateSelectedFairyTale"
-                    @close="closeDetail"
-                    @update:views="updateFairyTaleViews"
-                />
-            </transition>
         </div>
+        <transition name="fade">
+            <FairyTaleDetail
+                v-if="selectedFairyTale"
+                :key="selectedFairyTale.id"
+                :fairyTale="selectedFairyTale"
+                :isDetailLoading="isDetailLoading"
+                @update:fairyTale="updateSelectedFairyTale"
+                @close="closeDetail"
+                @update:views="updateFairyTaleViews"
+            />
+        </transition>
     </div>
 </template>
 
@@ -115,9 +115,8 @@ import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-import { watch } from 'vue';
+import { watch, ref, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
-import { ref } from 'vue';
 
 export default {
     components: {
@@ -128,16 +127,105 @@ export default {
         const { selectedProfile } = storeToRefs(profileStore);
         const route = useRoute();
 
-        watch(
-            () => route.params.id,
-            async (newId, oldId) => {
-                if (newId && newId !== oldId) {
-                    await this.showDetail({ id: newId });
-                }
-            },
-        );
-
         const categories = ref([]);
+        const allFairyTales = ref([]);
+        const isLoading = ref(true);
+        const isDetailLoading = ref(false);
+        const selectedFairyTale = ref(null);
+        const recentlyWatched = ref([]);
+        const top5Series = ref([]);
+        const dataLoaded = ref(false);
+        const categoryContents = ref({});
+        const fairyTales = ref({});
+        const scrollPosition = ref(0);
+        const isDetailOpen = ref(false);
+
+        const calculateProgress = (progress) => {
+            let numericProgress = parseFloat(progress);
+            if (isNaN(numericProgress)) {
+                console.error('잘못된 progress 값:', progress);
+                return 0;
+            }
+            return Math.min(Math.max(numericProgress, 0), 100);
+        };
+
+        const showDetail = async (fairyTale) => {
+            if (!(await validateTokenAndRedirect())) {
+                return;
+            }
+
+            isDetailLoading.value = true;
+
+            // 현재 스크롤 위치를 저장하되, 이미 상세 페이지가 열려있는 경우에는 저장하지 않습니다.
+            if (!isDetailOpen.value) {
+                scrollPosition.value = window.pageYOffset;
+                document.body.style.position = 'fixed';
+                document.body.style.top = `-${scrollPosition.value}px`;
+                document.body.style.width = '100%';
+            }
+
+            isDetailOpen.value = true;
+            document.body.style.overflow = 'hidden';
+
+            try {
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
+                    headers: {
+                        Authorization: `Bearer ${profileStore.jwtToken}`,
+                    },
+                });
+
+                const updatedFairyTale = response.data;
+                updateLocalFairyTaleData(updatedFairyTale);
+
+                selectedFairyTale.value = updatedFairyTale;
+            } catch (error) {
+                console.error('동화 정보를 가져오는 중 오류 발생:', error);
+            } finally {
+                isDetailLoading.value = false;
+            }
+        };
+
+        const closeDetail = () => {
+            selectedFairyTale.value = null;
+            isDetailOpen.value = false;
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, scrollPosition.value);
+        };
+
+        const updateLocalFairyTaleData = (updatedFairyTale) => {
+            if (fairyTales.value[updatedFairyTale.id]) {
+                fairyTales.value[updatedFairyTale.id] = updatedFairyTale;
+            }
+
+            recentlyWatched.value = recentlyWatched.value.map((item) => {
+                if (item.fairyTale.id === updatedFairyTale.id) {
+                    return { ...item, fairyTale: updatedFairyTale };
+                }
+                return item;
+            });
+
+            top5Series.value = top5Series.value.map((item) => {
+                if (item.id === updatedFairyTale.id) {
+                    return updatedFairyTale;
+                }
+                return item;
+            });
+        };
+
+        const updateFairyTaleViews = (id, newViews) => {
+            updateLocalFairyTaleData({ id, views: newViews });
+        };
+
+        const getCategoryContent = (categoryName) => {
+            return allFairyTales.value.filter((tale) => tale.tag.includes(categoryName));
+        };
+
+        const updateSelectedFairyTale = (newFairyTale) => {
+            showDetail(newFairyTale);
+        };
 
         const setupCategories = () => {
             const fixedCategories = [
@@ -153,7 +241,7 @@ export default {
                 { id: 7, name: '동물' },
                 { id: 8, name: '이별' },
                 { id: 9, name: '모험' },
-                { id: 10, name: '교육' },
+                { id: 10, name: '육' },
                 { id: 11, name: '코미디' },
             ];
 
@@ -166,41 +254,22 @@ export default {
             categories.value = [...fixedCategories, ...randomCategories];
         };
 
-        const allFairyTales = ref([]);
-
-        return { profileStore, selectedProfile, route, categories, allFairyTales, setupCategories };
-    },
-    data() {
-        return {
-            isLoading: true,
-            showContent: false,
-            recentlyWatched: [],
-            top5Series: [],
-            selectedFairyTale: null,
-            fairyTales: {}, // 동화 데이터를 저장할 객체
-            isDetailLoading: false,
-            IMAGE_SERVER_URL,
-            dataLoaded: false,
-            categoryContents: {},
-        };
-    },
-    methods: {
-        async fetchRecentlyWatched() {
-            if (!this.profileStore.selectedProfile) {
+        const fetchRecentlyWatched = async () => {
+            if (!profileStore.selectedProfile) {
                 console.error('선택된 프로필 정보가 없습니다.');
                 return;
             }
             try {
                 const response = await axios.get(
-                    `${TALE_API_URL}/api/history/recently-watched/${this.profileStore.selectedProfile.id}`,
+                    `${TALE_API_URL}/api/history/recently-watched/${profileStore.selectedProfile.id}`,
                     {
                         headers: {
-                            Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                            Authorization: `Bearer ${profileStore.jwtToken}`,
                         },
                     },
                 );
                 console.log('서버에서 받은 데이터:', response.data);
-                this.recentlyWatched = response.data.map((item) => {
+                recentlyWatched.value = response.data.map((item) => {
                     return {
                         ...item,
                         progress: item.progress || 0,
@@ -209,40 +278,12 @@ export default {
             } catch (error) {
                 console.error('최근 시청 목록을 가져오는데 실했습니다:', error);
             }
-        },
-        async showDetail(fairyTale) {
-            if (!(await this.validateTokenAndRedirect())) {
-                return;
-            }
+        };
 
-            this.isDetailLoading = true;
-
-            try {
-                const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
-                    headers: {
-                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
-                    },
-                });
-
-                const updatedFairyTale = response.data;
-                this.updateLocalFairyTaleData(updatedFairyTale);
-
-                this.selectedFairyTale = null; // 강제로 컴포넌트를 언마운트
-                await this.$nextTick(); // DOM 업데이트를 기다림
-                this.selectedFairyTale = updatedFairyTale; // 새로운 데이터로 컴포넌트를 다시 마운트
-            } catch (error) {
-                console.error('동화 정보를 가져오는 중 오류 발생:', error);
-            } finally {
-                this.isDetailLoading = false;
-            }
-        },
-        closeDetail() {
-            this.selectedFairyTale = null;
-        },
-        async fetchTop5FairyTales() {
+        const fetchTop5FairyTales = async () => {
             try {
                 const response = await axios.get(`${TALE_API_URL}/api/fairytales/top5`);
-                this.top5Series = response.data.map((item) => ({
+                top5Series.value = response.data.map((item) => ({
                     title: item.title,
                     imageUrl: item.imageUrl,
                     rentalPrice: item.rentalPrice,
@@ -255,158 +296,119 @@ export default {
             } catch (error) {
                 console.error('TOP 5 동화를 가져오는 데 실패했습니다:', error);
             }
-        },
-        calculateProgress(progress) {
-            let numericProgress;
-            if (typeof progress === 'string') {
-                // 문자열인 경우 숫자로 변환
-                numericProgress = parseFloat(progress);
-            } else if (typeof progress === 'number') {
-                numericProgress = progress;
-            } else {
-                console.error('잘못된 progress 형식:', progress);
-                return 0;
-            }
+        };
 
-            // NaN 체크
-            if (isNaN(numericProgress)) {
-                console.error('progress를 숫자로 변환할 수 없습니다:', progress);
-                return 0;
-            }
-
-            // 0-1 사이의 값으로 가정
-            if (numericProgress <= 1) {
-                numericProgress *= 100;
-            }
-
-            const result = Math.min(Math.max(numericProgress, 0), 100);
-            return result;
-        },
-        async loadAllData() {
-            if (!this.profileStore.selectedProfile) {
-                console.log('프로필 정보가 아직 로드되지 않았습니다. 나중에 다시 시도합니다.');
-                return;
-            }
-
-            if (this.dataLoaded) {
-                console.log('데이터가 이미 로드되었습니다.');
-                return;
-            }
-
+        const loadAllData = async () => {
+            isLoading.value = true;
             try {
-                this.isLoading = true;
-                this.showContent = false;
-                await Promise.all([
-                    this.fetchRecentlyWatched(),
-                    this.fetchTop5FairyTales(),
-                    // 추가적인 데이터 로딩 메서드가 있다면 여기에 추가
-                ]);
-                this.dataLoaded = true;
+                await Promise.all([fetchRecentlyWatched(), fetchTop5FairyTales(), fetchAllFairyTales()]);
+                dataLoaded.value = true;
             } catch (error) {
                 console.error('데이터 로딩 중 오류 발생:', error);
             } finally {
-                this.isLoading = false;
-                this.showContent = true;
+                isLoading.value = false;
             }
-        },
-        async validateTokenAndRedirect() {
-            const isValid = await this.profileStore.validateToken();
+        };
+
+        const validateTokenAndRedirect = async () => {
+            const isValid = await profileStore.validateToken();
             if (!isValid) {
                 console.error('인증 토큰이 유효하지 않습니다. 로그인이 필요합니다.');
                 this.$router.push('/');
                 return false;
             }
             return true;
-        },
-        updateLocalFairyTaleData(updatedFairyTale) {
-            // fairyTales 객체 업데이트
-            if (this.fairyTales[updatedFairyTale.id]) {
-                this.fairyTales[updatedFairyTale.id] = updatedFairyTale;
-            }
+        };
 
-            // recentlyWatched 배열 업데이트
-            this.recentlyWatched = this.recentlyWatched.map((item) => {
-                if (item.fairyTale.id === updatedFairyTale.id) {
-                    return { ...item, fairyTale: updatedFairyTale };
-                }
-                return item;
-            });
-
-            // top5Series 배열 업데이트
-            this.top5Series = this.top5Series.map((item) => {
-                if (item.id === updatedFairyTale.id) {
-                    return updatedFairyTale;
-                }
-                return item;
-            });
-        },
-        updateFairyTaleViews(id, newViews) {
-            // 이 메서드는 더 이상 요하지 않으므로 제거하거나 다음과 같이 수정할 수 있습니다.
-            this.updateLocalFairyTaleData({ id, views: newViews });
-        },
-        async waitForProfile() {
-            return new Promise((resolve) => {
-                const checkProfile = () => {
-                    if (this.profileStore.selectedProfile) {
-                        resolve();
-                    } else {
-                        setTimeout(checkProfile, 100);
-                    }
-                };
-                checkProfile();
-            });
-        },
-        updateSelectedFairyTale(newFairyTale) {
-            this.showDetail(newFairyTale);
-        },
-        async fetchAllFairyTales() {
+        const fetchAllFairyTales = async () => {
             try {
                 const response = await axios.get(`${TALE_API_URL}/api/search/fairytale`, {
                     headers: {
-                        Authorization: `Bearer ${this.profileStore.jwtToken}`,
+                        Authorization: `Bearer ${profileStore.jwtToken}`,
                     },
                 });
-                this.allFairyTales = response.data;
+                allFairyTales.value = response.data;
             } catch (error) {
                 console.error('동화를 가져오는 데 실패했습니다:', error);
             }
-        },
-        getCategoryContent(categoryName) {
-            return this.allFairyTales.filter((tale) => tale.tag.includes(categoryName));
-        },
-    },
-    watch: {
-        'profileStore.selectedProfile': {
-            handler(newProfile) {
-                if (newProfile && !this.dataLoaded) {
-                    this.loadAllData();
+        };
+
+        onMounted(async () => {
+            if (!(await validateTokenAndRedirect())) {
+                return;
+            }
+
+            setupCategories();
+
+            if (profileStore.selectedProfile && !dataLoaded.value) {
+                await loadAllData();
+            } else {
+                isLoading.value = false; // 데이터가 이미 로드된 경우 로딩 상태를 false로 설정
+            }
+            await fetchAllFairyTales();
+        });
+
+        onUnmounted(() => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+        });
+
+        watch(
+            () => route.params.id,
+            async (newId, oldId) => {
+                if (newId && newId !== oldId) {
+                    await showDetail({ id: newId });
                 }
             },
-            immediate: true,
-        },
-    },
-    async mounted() {
-        if (!(await this.validateTokenAndRedirect())) {
-            return;
-        }
+        );
 
-        this.setupCategories(); // 카테고리 설정 추가
+        watch(
+            () => profileStore.selectedProfile,
+            (newProfile) => {
+                if (newProfile && !dataLoaded.value) {
+                    loadAllData();
+                }
+            },
+            { immediate: true },
+        );
 
-        // 프로필 정보가 이미 로드되었다면 바로 데이터를 로드합니다.
-        if (this.profileStore.selectedProfile && !this.dataLoaded) {
-            await this.loadAllData();
-        }
-        await this.fetchAllFairyTales();
+        return {
+            profileStore,
+            selectedProfile,
+            categories,
+            allFairyTales,
+            isLoading,
+            isDetailLoading,
+            selectedFairyTale,
+            recentlyWatched,
+            top5Series,
+            dataLoaded,
+            categoryContents,
+            IMAGE_SERVER_URL,
+            showDetail,
+            closeDetail,
+            calculateProgress,
+            updateFairyTaleViews,
+            getCategoryContent,
+            updateSelectedFairyTale,
+            isDetailOpen,
+        };
     },
 };
 </script>
 
 <style scoped>
+@import '../../assets/common.css';
+
 .main-container {
     color: black;
     padding: 0 4%;
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
+    position: relative;
+    z-index: 1;
 }
 
 .main-container.fade-in {
@@ -421,7 +423,7 @@ export default {
     margin-bottom: 3vw;
     align-items: center;
     justify-content: center;
-    margin-top: 7vh;
+    margin-top: 5vh;
 }
 
 .hero-image {
@@ -469,6 +471,7 @@ export default {
 
 .category {
     margin-bottom: 3vw;
+    scroll-margin-top: 100px; /* 헤더 높이에 따 조정 */
 }
 
 .category-title {
@@ -690,6 +693,7 @@ export default {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .content-type-icon {
@@ -718,6 +722,24 @@ export default {
     box-shadow: 0 1px px rgba(0, 0, 0, 0.2); /* 그림자 약간 더 강하게 */
 }
 
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter,
+.fade-leave-to {
+    opacity: 0;
+}
+
+body {
+    transition: none;
+}
+
+.fairy-tale-list-container {
+    position: relative;
+    min-height: 100vh;
+}
+
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -728,56 +750,6 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
-}
-
-.loading-spinner {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-.loading-spinner div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border: 8px solid #fff;
-    border-radius: 50%;
-    animation: loading-spinner 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #fff transparent transparent transparent;
-}
-
-.loading-spinner div:nth-child(1) {
-    animation-delay: -0.3s;
-}
-
-.loading-spinner div:nth-child(2) {
-    animation-delay: -0.25s;
-}
-
-.loading-spinner div:nth-child(3) {
-    animation-delay: -0.1s;
-}
-
-@keyframes loading-spinner {
-    0% {
-        transform: rotate(0deg);
-    }
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.3s;
-}
-.fade-enter,
-.fade-leave-to {
-    opacity: 0;
+    z-index: 9999;
 }
 </style>
