@@ -1,6 +1,6 @@
 /* eslint-disable */
 <template>
-    <div>
+    <div class="fairy-tale-list-container">
         <div v-if="isLoading || isDetailLoading" class="loading-overlay">
             <div class="loading-spinner">
                 <div></div>
@@ -21,7 +21,7 @@
             </section>
             <!-- 나님이 시청 중인 콘텐츠 -->
             <section id="recentlyWatched" v-if="profileStore.selectedProfile" class="category recently-watched">
-                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
+                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 텐츠</h2>
                 <div class="content-slider">
                     <div
                         v-for="(item, index) in recentlyWatched"
@@ -114,7 +114,7 @@ import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { storeToRefs } from 'pinia';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-import { watch, ref, onMounted, nextTick, inject } from 'vue';
+import { watch, ref, onMounted, nextTick, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 
 export default {
@@ -136,7 +136,9 @@ export default {
         const dataLoaded = ref(false);
         const categoryContents = ref({});
         const fairyTales = ref({});
-        const controlScroll = inject('controlScroll');
+        // const controlScroll = inject('controlScroll');
+        const scrollPosition = ref(0);
+        const isDetailOpen = ref(false);
 
         const calculateProgress = (progress) => {
             let numericProgress = parseFloat(progress);
@@ -153,7 +155,12 @@ export default {
             }
 
             isDetailLoading.value = true;
-            controlScroll(true); // 스크롤 비활성화
+            scrollPosition.value = window.pageYOffset;
+            isDetailOpen.value = true;
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            document.body.style.top = `-${scrollPosition.value}px`;
 
             try {
                 const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`, {
@@ -177,7 +184,12 @@ export default {
 
         const closeDetail = () => {
             selectedFairyTale.value = null;
-            controlScroll(false); // 스크롤 활성화
+            isDetailOpen.value = false;
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            window.scrollTo(0, scrollPosition.value);
         };
 
         const updateLocalFairyTaleData = (updatedFairyTale) => {
@@ -331,6 +343,13 @@ export default {
             await fetchAllFairyTales();
         });
 
+        onUnmounted(() => {
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+        });
+
         watch(
             () => route.params.id,
             async (newId, oldId) => {
@@ -369,6 +388,7 @@ export default {
             updateFairyTaleViews,
             getCategoryContent,
             updateSelectedFairyTale,
+            isDetailOpen,
             // ... 기타 필요한 메서드들 ...
         };
     },
@@ -445,7 +465,7 @@ export default {
 
 .category {
     margin-bottom: 3vw;
-    scroll-margin-top: 100px; /* 헤더 높이에 따라 조정 */
+    scroll-margin-top: 100px; /* 헤더 높이에 따 조정 */
 }
 
 .category-title {
@@ -667,6 +687,7 @@ export default {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    overflow-y: auto;
 }
 
 .content-type-icon {
@@ -756,7 +777,12 @@ export default {
     opacity: 0;
 }
 
-body.modal-open {
-    overflow: hidden;
+body {
+    transition: none;
+}
+
+.fairy-tale-list-container {
+    position: relative;
+    min-height: 100vh;
 }
 </style>
