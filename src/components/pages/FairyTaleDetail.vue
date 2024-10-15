@@ -443,46 +443,6 @@ const toggleBucket = async (fairyTaleId) => {
         console.error('찜 상태 변경 중 오류 발생:', error);
     }
 };
-// const addBucket = async(fairyTaleId) =>{
-//     try {
-//         console.log(fairyTaleId);
-
-//         await axios.delete(`${TALE_API_URL}/api/bucket/add`, {
-//             params: {
-//                 loginId: profileStore.loginId,
-//                 fairyTaleId: fairyTaleId,
-//             },
-//         });
-//         await checkBucket(fairyTaleId);
-//         console.log('찜목록에서 추가되었습니다.');
-
-//     } catch (error) {
-//         console.error('찜목록 추가 중 오류가 발생했습니다.', error);
-//     }
-// }
-
-// const checkBucket = async(fairyTaleId) =>{
-//     try {
-//         console.log(fairyTaleId);
-
-//         const response = await axios.delete(`${TALE_API_URL}/api/bucket/check`, {
-//             params: {
-//                 loginId: profileStore.loginId,
-//                 fairyTaleId: fairyTaleId,
-//             },
-//         });
-//         const bucket = response.data;
-//         if(bucket){
-//             isBucket.value=true;
-//         }else{
-//             isBucket.value=false;
-//         }
-//         console.log('찜목록에서 추가되었습니다.');
-
-//     } catch (error) {
-//         console.error('찜목록 추가 중 오류가 발생했습니다.', error);
-//     }
-// }
 
 // rentPrice와 buyPrice 계산된 속성 수정
 const rentPrice = computed(() => fairyTale.value.rentalPrice);
