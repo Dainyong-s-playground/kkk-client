@@ -33,21 +33,30 @@
             <div v-if="isSuccess" class="modal-overlay">
                 <img
                     class="success-image"
-                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.JPG"
+                    src="https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.png"
                     @mousedown.prevent
                     @dragstart.prevent
                     alt="Eaten Apple"
                 />
+                <div v-if="showSuccessMessage" class="success-message">
+                    성공! 사과를 다 먹었어요!
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import { inject, ref } from 'vue';
 import GaugeBar from './GaugeBar.vue';
 
 export default {
     components: { GaugeBar },
+    setup() {
+        const handleMotionComplete = inject('handleMotionComplete');
+        const showSuccessMessage = ref(false);
+        return { handleMotionComplete, showSuccessMessage };
+    },
     data() {
         return {
             gauge: 0, // 게이지 값
@@ -56,11 +65,11 @@ export default {
             showGuide: true, // 게임 가이드 모달 표시 여부
             imageStage: 0, // 이미지 단계 (0: 시작, 1: 25%, 2: 50%, 3: 75%, 4: 100%)
             appleImages: [
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple1.JPG', // 초기 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple2.JPG', // 25% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple3.JPG', // 50% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple4.JPG', // 75% 이미지
-                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.JPG', // 100% 이미지 (완료)
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple1.png', // 초기 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple2.png', // 25% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple3.png', // 50% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple4.png', // 75% 이미지
+                'https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.png', // 100% 이미지 (완료)
             ],
         };
     },
@@ -87,10 +96,19 @@ export default {
             }
         },
         startSuccessAnimation() {
-            // 0.5초 후 모달창이 표시되도록 설정
             setTimeout(() => {
-                this.imageStage = 4; // 최종 이미지 (100%)
+                this.imageStage = 4;
                 this.isSuccess = true;
+                
+                // 1초 후 성공 메시지 표시
+                setTimeout(() => {
+                    this.showSuccessMessage = true;
+                    
+                    // 3초 후 FairyPlayer로 돌아가기
+                    setTimeout(() => {
+                        this.handleMotionComplete();
+                    }, 3000);
+                }, 1000);
             }, 500);
         },
         decreaseGauge() {
@@ -120,7 +138,9 @@ export default {
 .game-container {
     position: relative;
     width: 100%;
-    height: 400px;
+    height: -webkit-fill-available;
+    max-height: 86vh;
+    overflow: hidden;
 }
 
 .game-content {
@@ -128,19 +148,20 @@ export default {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 400px;
+    height: 100%;
 }
 
 .apple-container {
-    position: relative;
+    display: flex;
+    justify-content: space-around;
 }
 
 /* 사과 이미지 스타일 */
 .apple {
-    width: 350px;
+    width: 50%;
     cursor: pointer;
-    border-radius: 10px;
-    margin-top: 20px;
+    border-radius: 20px;
+    margin-top: 50px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 .apple:hover {
@@ -149,10 +170,10 @@ export default {
 
 /* 모달 창 스타일 */
 .modal-overlay {
-    position: fixed;
+    position: relative;
     left: 0;
-    width: 100%;
-    height: 400px;
+    width: -webkit-fill-available;
+    height: min-content;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -162,25 +183,26 @@ export default {
 
 /* 가이드 모달 스타일 */
 .guide-modal {
-    position: fixed;
-    left: 0;
-    width: 100%;
-    height: 400px;
+    position: relative;
+    /* left: 0; */
+    width: -webkit-fill-available;
+    height: min-content;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 1000;
+    padding: 50px;
     animation: fade-in 0.5s ease-in-out;
 }
 
 .guide-content {
     width: 500px;
-    height: 300px;
+    height: -webkit-fill-available;
     background: #fff;
     border-radius: 15px;
     text-align: center;
-    padding: 20px;
+    padding: 40px;
     box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
     animation: content-expand 0.5s ease-in-out;
 }
@@ -212,10 +234,10 @@ export default {
 
 /* 성공 시 이미지 확장 애니메이션 */
 .success-image {
-    width: 350px;
+    width: 45%;
     cursor: pointer;
     animation: image-expand 1s ease-in-out;
-    border-radius: 10px;
+    border-radius: 20px;
 }
 .guide-ment {
     margin: 20px;
@@ -245,5 +267,19 @@ export default {
     100% {
         opacity: 1;
     }
+}
+
+.success-message {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #4caf50;
+    animation: fade-in 1s ease-in-out;
 }
 </style>

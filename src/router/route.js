@@ -1,14 +1,15 @@
 import MiddleFront from '@/components/layout/MiddleFront.vue';
-import DashBoard from '@/components/pages/dashboard/DashBoard.vue';
-import ReservationSearch from '@/components/pages/dashboard/ReservationSearch.vue';
 import FairyPlayer from '@/components/pages/FairyPlayer.vue';
+import FairyTaleDetail from '@/components/pages/FairyTaleDetail.vue';
 import FairyTaleList from '@/components/pages/FairyTaleList.vue';
+import FaceLandmark from '@/components/pages/Game/FaceLandmark.vue';
 import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
 import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import MyPage from '@/components/pages/MyPage.vue';
 import PageMain from '@/components/pages/PageMain.vue';
 import ProfileView from '@/components/pages/ProfileView.vue';
-import FairyTaleDetail from '@/components/pages/FairyTaleDetail.vue';
+import DashBoard from '@/components/pages/dashboard/DashBoard.vue';
+import ReservationSearch from '@/components/pages/dashboard/ReservationSearch.vue';
 
 const routes = [
     {
@@ -46,6 +47,10 @@ const routes = [
     {
         path: '/game/hand',
         component: HandLandmark,
+    },
+    {
+        path: '/game/face',
+        component: FaceLandmark,
     },
     {
         path: '/game/ropeCut',

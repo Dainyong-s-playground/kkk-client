@@ -56,11 +56,10 @@
 </template>
 
 <script setup>
-import HandLandmark from '@/components/pages/Game/HandLandmark.vue';
-import RopeCut from '@/components/pages/Game/RopeCut.vue';
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
+import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
 import axios from 'axios';
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
@@ -95,17 +94,42 @@ const skipIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/skipIcon.png`);
 const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 
 const currentComponent = shallowRef('FairyPlayer');
+const isMotionComplete = ref(false);
 const BASE_URL = TALE_API_URL;
+
+// 모션 인식 완료 시 호출될 함수
+const handleMotionComplete = () => {
+    currentComponent.value = 'FairyPlayer';
+    nextLine();
+};
+
+// provide를 사용하여 자식 컴포넌트에 함수 전달
+provide('handleMotionComplete', handleMotionComplete);
+
+const getGameComponent = (fairyTaleId) => {
+    return gameComponentMap[fairyTaleId] || null;
+};
+
+const getMotionComponent = (fairyTaleId) => {
+    return motionComponentMap[fairyTaleId] || null;
+};
 
 const checkSpecialContent = (content) => {
     if (content === '게임') {
-        currentComponent.value = RopeCut;
-        return true;
+        const gameComponent = getGameComponent(fairyTaleId.value);
+        if (gameComponent) {
+            currentComponent.value = gameComponent;
+            return true;
+        }
     } else if (content === '모션인식') {
-        currentComponent.value = HandLandmark;
-        return true;
+        const motionComponent = getMotionComponent(fairyTaleId.value);
+        if (motionComponent) {
+            currentComponent.value = motionComponent;
+            isMotionComplete.value = false; // 모션 인식 시작 시 상태 초기화
+            return true;
+        }
     }
-    currentComponent.value = 'FairyPlayer'; // 일반 동화 플레이어로 돌아가기
+    currentComponent.value = 'FairyPlayer';
     return false;
 };
 
@@ -241,9 +265,9 @@ const nextLine = () => {
     if (currentLineIndex.value < storyLines.value.length - 1) {
         currentLineIndex.value++;
         const nextContent = storyLines.value[currentLineIndex.value];
-        checkSpecialContent(nextContent);
+        const isSpecialContent = checkSpecialContent(nextContent);
         updateCurrentImage(currentLineIndex.value);
-        if (!checkSpecialContent(nextContent) && isPlaying.value) {
+        if (!isSpecialContent && isPlaying.value) {
             playCurrentLine();
         }
     } else {
@@ -618,7 +642,8 @@ onUnmounted(() => {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     position: relative;
-    border: 1px solid #d8d8d8; /* 테두리 추가 */
+    border: 1px solid #d8d8d8;
+    /* 테두리 추가 */
 }
 
 .fairy-player:not(.fullscreen)::before {
@@ -640,7 +665,8 @@ onUnmounted(() => {
     border-radius: 5px;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #d8d8d8; /* 테두리 추가 */
+    border: 1px solid #d8d8d8;
+    /* 테두리 추가 */
 }
 
 .fairy-player:not(.fullscreen) .story-info {
