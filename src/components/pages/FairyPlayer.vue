@@ -84,7 +84,9 @@ const isPlaying = ref(false);
 const playerRef = ref(null);
 
 const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
-const currentStoryImage = computed(() => storyImages.value[currentImageIndex.value] || '');
+const currentStoryImage = computed(() => {
+    return storyImages.value[currentImageIndex.value] || '';
+});
 const progressPercentage = computed(() => {
     return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
 });
@@ -188,7 +190,6 @@ const FairyTaleData = async () => {
             sceneNumbers.value = data.sceneNumber.split('\\n').map(Number);
         } else {
             sceneNumbers.value = [0];
-            console.error('장 번호 데이터가 없습니다.');
         }
 
         if (data.url && Array.isArray(data.url)) {
@@ -200,18 +201,75 @@ const FairyTaleData = async () => {
             console.error('이미지 데이터가 없습니다.');
         }
 
-        currentImageIndex.value = 0;
+        // 히스토리에서 진행률을 가져와 시작 페이지 설정
+        await setStartPageFromHistory();
 
         console.log('처리된 데이터:', {
             storyTitle: storyTitle.value,
             storyLines: storyLines.value,
             sceneNumbers: sceneNumbers.value,
             storyImages: storyImages.value,
+            currentLineIndex: currentLineIndex.value,
         });
     } catch (error) {
         console.error('동화 데이터를 가져오는 중 오류 발생:', error);
     }
 };
+
+const setStartPageFromHistory = async () => {
+    if (profileId.value) {
+        try {
+            const response = await axios.get(`http://localhost:7772/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            if (response.data !== null) {
+                const progress = response.data;
+                const totalPages = storyLines.value.length;
+                const startPage = Math.floor((progress / 100) * totalPages);
+                currentLineIndex.value = Math.min(startPage, totalPages - 1);
+                
+                // 시작 페이지에 해당하는 이미지 인덱스 찾기
+                const startImageIndex = sceneNumbers.value.findIndex((sceneNumber, index) => {
+                    return sceneNumber > currentLineIndex.value || index === sceneNumbers.value.length - 1;
+                });
+                
+                currentImageIndex.value = startImageIndex;  // 여기서 -1을 제거했습니다
+                
+                console.log('시작 페이지:', currentLineIndex.value);
+                console.log('시작 이미지 인덱스:', currentImageIndex.value);
+                console.log('시작 이미지 URL:', currentStoryImage.value);
+            } else {
+                console.log('진행률 데이터가 없습니다. 처음부터 시작합니다.');
+                currentLineIndex.value = 0;
+                currentImageIndex.value = 0;
+            }
+        } catch (error) {
+            console.error('진행률 데이터를 가져오는 중 오류 발생:', error.response ? error.response.data : error.message);
+            currentLineIndex.value = 0;
+            currentImageIndex.value = 0;
+        }
+    } else {
+        console.log('프로필 ID가 없습니다. 처음부터 시작합니다.');
+        currentLineIndex.value = 0;
+        currentImageIndex.value = 0;
+    }
+};
+
+const updateCurrentImage = (index) => {
+    if (storyImages.value.length === 0) return;
+
+    const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
+    if (nextSceneIndex === -1) {
+        currentImageIndex.value = storyImages.value.length - 1;
+    } else {
+        currentImageIndex.value = Math.max(0, nextSceneIndex);
+    }
+    console.log('Updated image index:', currentImageIndex.value);
+    console.log('Updated image URL:', currentStoryImage.value);
+};
+
+// currentLineIndex가 변경될 때마다 updateCurrentImage 호출
+watch(currentLineIndex, (newIndex) => {
+    updateCurrentImage(newIndex);
+});
 
 const playPause = async () => {
     if (isFirstPlay.value && profileId.value) {
@@ -259,22 +317,12 @@ const saveProgress = async () => {
     }
 };
 
-watch(currentLineIndex, (newIndex) => {
-    updateCurrentImage(newIndex);
+// 이미지 변경을 감지하는 watch 추가
+watch(currentImageIndex, (newIndex) => {
+    console.log('Image index changed to:', newIndex);
+    console.log('New image URL:', currentStoryImage.value);
 });
 
-const updateCurrentImage = (index) => {
-    if (storyImages.value.length === 0) return;
-
-    const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
-    if (nextSceneIndex === -1) {
-        currentImageIndex.value = storyImages.value.length - 1;
-    } else {
-        currentImageIndex.value = Math.min(nextSceneIndex, storyImages.value.length - 1);
-    }
-};
-
-const audioElement = ref(null);
 const currentAudio = ref(null);
 
 const playCurrentLine = async () => {
@@ -394,21 +442,24 @@ onMounted(async () => {
     console.log('전체 프로필 스토어 상태:', profileStore.$state);
     
     await FairyTaleData();
+    await setStartPageFromHistory();
+    updateCurrentImage(currentLineIndex.value);  // 여기서 직접 호출
+
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-    updateCurrentImage(0);
-    audioElement.value = new Audio();
 
     const macCloseButton = playerRef.value.querySelector('.mac-close-button');
     if (macCloseButton) {
         macCloseButton.style.backgroundImage = `url(${IMAGE_SERVER_URL}/macCloseButton)`;
     }
 
-    // 윈도우 종료 이벤트 리스너 추가
     window.addEventListener('beforeunload', saveProgress);
+
+    console.log('Initial image index:', currentImageIndex.value);
+    console.log('Initial image URL:', currentStoryImage.value);
 });
 
 onUnmounted(() => {
