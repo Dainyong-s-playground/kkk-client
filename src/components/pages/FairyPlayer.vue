@@ -692,7 +692,7 @@ watch(selectedProfile, (newProfile) => {
     margin: 0;
 }
 
-/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니 */
+/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니다 */
 .fairy-player.fullscreen #fullScreenTooltip {
     width: 120px;
     left: 0;
