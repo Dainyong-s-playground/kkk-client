@@ -99,9 +99,8 @@ const BASE_URL = TALE_API_URL;
 
 // 모션 인식 완료 시 호출될 함수
 const handleMotionComplete = () => {
-  isMotionComplete.value = true;
-  currentComponent.value = 'FairyPlayer';
-  nextLine();
+    currentComponent.value = 'FairyPlayer';
+    nextLine();
 };
 
 // provide를 사용하여 자식 컴포넌트에 함수 전달
@@ -643,7 +642,8 @@ onUnmounted(() => {
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
     overflow: hidden;
     position: relative;
-    border: 1px solid #d8d8d8; /* 테두리 추가 */
+    border: 1px solid #d8d8d8;
+    /* 테두리 추가 */
 }
 
 .fairy-player:not(.fullscreen)::before {
@@ -665,7 +665,8 @@ onUnmounted(() => {
     border-radius: 5px;
     overflow: hidden;
     box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.1);
-    border: 1px solid #d8d8d8; /* 테두리 추가 */
+    border: 1px solid #d8d8d8;
+    /* 테두리 추가 */
 }
 
 .fairy-player:not(.fullscreen) .story-info {

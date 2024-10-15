@@ -50,7 +50,9 @@
 
 <script setup>
 import { IMAGE_SERVER_URL } from '@/constants/api';
-import { onMounted, ref } from 'vue';
+import { inject, onMounted, ref } from 'vue';
+
+const handleMotionComplete = inject('handleMotionComplete');
 
 const showModal = ref(true); // 가이드 모달 표시 여부
 const isDragging = ref(false); // 드래그 여부
@@ -173,6 +175,10 @@ const onDragging = (event) => {
 
                     setTimeout(() => {
                         showSuccessModal.value = true;
+                        // 3초 후에 FairyPlayer로 돌아가기
+                        setTimeout(() => {
+                            handleMotionComplete();
+                        }, 3000);
                     }, 1000); // fade-out 후 성공 모달 표시
                 }, 500); // pop 효과 0.5초 후 fade-out 시작
             }

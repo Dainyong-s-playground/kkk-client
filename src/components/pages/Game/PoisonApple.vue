@@ -38,16 +38,25 @@
                     @dragstart.prevent
                     alt="Eaten Apple"
                 />
+                <div v-if="showSuccessMessage" class="success-message">
+                    성공! 사과를 다 먹었어요!
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
+import { inject, ref } from 'vue';
 import GaugeBar from './GaugeBar.vue';
 
 export default {
     components: { GaugeBar },
+    setup() {
+        const handleMotionComplete = inject('handleMotionComplete');
+        const showSuccessMessage = ref(false);
+        return { handleMotionComplete, showSuccessMessage };
+    },
     data() {
         return {
             gauge: 0, // 게이지 값
@@ -87,10 +96,19 @@ export default {
             }
         },
         startSuccessAnimation() {
-            // 0.5초 후 모달창이 표시되도록 설정
             setTimeout(() => {
-                this.imageStage = 4; // 최종 이미지 (100%)
+                this.imageStage = 4;
                 this.isSuccess = true;
+                
+                // 1초 후 성공 메시지 표시
+                setTimeout(() => {
+                    this.showSuccessMessage = true;
+                    
+                    // 3초 후 FairyPlayer로 돌아가기
+                    setTimeout(() => {
+                        this.handleMotionComplete();
+                    }, 3000);
+                }, 1000);
             }, 500);
         },
         decreaseGauge() {
@@ -249,5 +267,19 @@ export default {
     100% {
         opacity: 1;
     }
+}
+
+.success-message {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    font-size: 24px;
+    font-weight: bold;
+    color: #4caf50;
+    animation: fade-in 1s ease-in-out;
 }
 </style>
