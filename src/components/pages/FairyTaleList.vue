@@ -21,7 +21,7 @@
             </section>
             <!-- 나님이 시청 중인 콘텐츠 -->
             <section id="recentlyWatched" v-if="profileStore.selectedProfile" class="category recently-watched">
-                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 텐츠</h2>
+                <h2 class="category-title">{{ profileStore.selectedProfile.nickname }}님이 시청 중인 콘텐츠</h2>
                 <div class="content-slider">
                     <div
                         v-for="(item, index) in recentlyWatched"
@@ -110,13 +110,13 @@
 </template>
 
 <script>
-import FairyTaleDetail from './FairyTaleDetail.vue';
-import axios from 'axios';
+import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import { useProfileStore } from '@/stores/profile';
+import axios from 'axios';
 import { storeToRefs } from 'pinia';
-import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
-import { watch, ref, onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import FairyTaleDetail from './FairyTaleDetail.vue';
 
 export default {
     components: {

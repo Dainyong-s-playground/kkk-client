@@ -6,15 +6,8 @@
 
             <!-- 사과 이미지 (이미지 단계에 따라 표시) -->
             <div class="apple-container">
-                <img
-                    v-if="!isSuccess && !showGuide"
-                    class="apple"
-                    :src="appleImages[imageStage]"
-                    @click="handleClick"
-                    @mousedown.prevent
-                    @dragstart.prevent
-                    alt="Apple"
-                />
+                <img v-if="!isSuccess && !showGuide" class="apple" :src="appleImages[imageStage]" @click="handleClick"
+                    @mousedown.prevent @dragstart.prevent alt="Apple" />
             </div>
 
             <!-- 게임 가이드 모달 -->
@@ -31,13 +24,9 @@
 
             <!-- 성공 시 모달 표시 -->
             <div v-if="isSuccess" class="modal-overlay">
-                <img
-                    class="success-image"
+                <img class="success-image"
                     src="https://dainyong-s-playground.github.io/imageServer/fairytale/SnowWhite/apple5.png"
-                    @mousedown.prevent
-                    @dragstart.prevent
-                    alt="Eaten Apple"
-                />
+                    @mousedown.prevent @dragstart.prevent alt="Eaten Apple" />
                 <div v-if="showSuccessMessage" class="success-message">
                     성공! 사과를 다 먹었어요!
                 </div>
@@ -53,9 +42,9 @@ import GaugeBar from './GaugeBar.vue';
 export default {
     components: { GaugeBar },
     setup() {
-        const handleMotionComplete = inject('handleMotionComplete');
+        const handleGameComplete = inject('handleGameComplete');
         const showSuccessMessage = ref(false);
-        return { handleMotionComplete, showSuccessMessage };
+        return { handleGameComplete, showSuccessMessage };
     },
     data() {
         return {
@@ -99,16 +88,12 @@ export default {
             setTimeout(() => {
                 this.imageStage = 4;
                 this.isSuccess = true;
-                
+
                 // 1초 후 성공 메시지 표시
                 setTimeout(() => {
                     this.showSuccessMessage = true;
-                    
-                    // 3초 후 FairyPlayer로 돌아가기
-                    setTimeout(() => {
-                        this.handleMotionComplete();
-                    }, 3000);
-                }, 1000);
+                    this.handleGameComplete();
+                }, 3000);
             }, 500);
         },
         decreaseGauge() {
@@ -164,6 +149,7 @@ export default {
     margin-top: 50px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
+
 .apple:hover {
     scale: 1.1;
 }
@@ -212,6 +198,7 @@ export default {
         transform: scale(0);
         opacity: 0;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -239,6 +226,7 @@ export default {
     animation: image-expand 1s ease-in-out;
     border-radius: 20px;
 }
+
 .guide-ment {
     margin: 20px;
     padding-top: 10px;
@@ -249,10 +237,12 @@ export default {
         transform: scale(0);
         opacity: 0;
     }
+
     50% {
         transform: scale(1.5);
         opacity: 0.8;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
@@ -264,6 +254,7 @@ export default {
     0% {
         opacity: 0;
     }
+
     100% {
         opacity: 1;
     }

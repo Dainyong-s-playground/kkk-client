@@ -58,17 +58,23 @@
 <script setup>
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
+import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
+import { storeToRefs } from 'pinia';
 import { computed, onMounted, onUnmounted, provide, ref, shallowRef, watch } from 'vue';
 import { useRoute } from 'vue-router';
 
 const route = useRoute();
+const profileStore = useProfileStore();
+const { selectedProfile } = storeToRefs(profileStore);
+
+const profileId = computed(() => selectedProfile.value?.id);
+
 const fairyTaleId = ref(route.params.id);
+
 const storyTitle = ref(route.query.title || '제목 없음');
-const progress = ref(Number(route.query.progress) || 0);
-const imageUrl = ref(route.query.imageUrl || '기본 이미지 URL');
-const storyImages = ref([]); // 이미지 URL 리스트를 저장할 ref
-const currentImageIndex = ref(0); // 현재 표시 중인 이미지의 인덱스
+const storyImages = ref([]);
+const currentImageIndex = ref(0);
 
 const storyLines = ref([]);
 const currentLineIndex = ref(0);
@@ -78,15 +84,15 @@ const isPlaying = ref(false);
 const playerRef = ref(null);
 
 const currentLine = computed(() => storyLines.value[currentLineIndex.value] || '');
-const currentStoryImage = computed(() => storyImages.value[currentImageIndex.value] || '');
+const currentStoryImage = computed(() => {
+    return storyImages.value[currentImageIndex.value] || '';
+});
 const progressPercentage = computed(() => {
     return storyLines.value.length > 0 ? ((currentLineIndex.value + 1) / storyLines.value.length) * 100 : 0;
 });
 
-// 가이드 캐릭터 이미지 URL
 const guideCharacterImage = ref(`${IMAGE_SERVER_URL}/profile/profileFull01-removebg.png`);
 
-// 컨트롤 아이콘 URL
 const previousIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/previousIcon.png`);
 const playIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/playIcon.png`);
 const stopIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/stopIcon.png`);
@@ -94,17 +100,50 @@ const skipIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/skipIcon.png`);
 const fullscreenIcon = ref(`${IMAGE_SERVER_URL}/fairyPlayer/fullScreen.png`);
 
 const currentComponent = shallowRef('FairyPlayer');
+const isFirstPlay = ref(true);
 const isMotionComplete = ref(false);
+const isGameComplete = ref(false);
 const BASE_URL = TALE_API_URL;
 
-// 모션 인식 완료 시 호출될 함수
-const handleMotionComplete = () => {
+const handleMotionComplete = async () => {
     currentComponent.value = 'FairyPlayer';
+    nextLine();
+    isMotionComplete.value = true;
+
+    if (isMotionComplete.value && profileId.value) {
+        try {
+            const response = await axios.patch(`http://localhost:7772/api/graph/motionCount/${profileId.value}`);
+            console.log('모션 인식 참여 횟수 업데이트 성공:', response.data);
+        } catch (error) {
+            console.error('모션 인식 참여 횟수 업데이트 중 오류 발생:', error.response ? error.response.data : error.message);
+        }
+    } else {
+        console.log('프로필 ID 없음 또는 모션 미완료');
+    }
+};
+
+const handleGameComplete = () => {
+    if (isGameComplete.value) return; // 이미 완료된 경우 함수 실행 중단
+
+    currentComponent.value = 'FairyPlayer';
+    isGameComplete.value = true;
+
+    if (profileId.value) {
+        try {
+            // 게임 카운트 API 호출
+            axios.patch(`http://localhost:7772/api/graph/gameCount/${profileId.value}`);
+            console.log('게임 참여 횟수 업데이트 성공');
+        } catch (error) {
+            console.error('게임 참여 횟수 업데이트 중 오류 발생:', error);
+        }
+    }
+    
+    // 게임 완료 후 다음 대사로 넘어가기
     nextLine();
 };
 
-// provide를 사용하여 자식 컴포넌트에 함수 전달
 provide('handleMotionComplete', handleMotionComplete);
+provide('handleGameComplete', handleGameComplete);
 
 const getGameComponent = (fairyTaleId) => {
     return gameComponentMap[fairyTaleId] || null;
@@ -125,7 +164,7 @@ const checkSpecialContent = (content) => {
         const motionComponent = getMotionComponent(fairyTaleId.value);
         if (motionComponent) {
             currentComponent.value = motionComponent;
-            isMotionComplete.value = false; // 모션 인식 시작 시 상태 초기화
+            isMotionComplete.value = false;
             return true;
         }
     }
@@ -133,7 +172,6 @@ const checkSpecialContent = (content) => {
     return false;
 };
 
-// 동화 플레이어 데이터 가져오기
 const FairyTaleData = async () => {
     try {
         const response = await axios.get(`${BASE_URL}/fairyTales/${fairyTaleId.value}`);
@@ -152,7 +190,6 @@ const FairyTaleData = async () => {
             sceneNumbers.value = data.sceneNumber.split('\\n').map(Number);
         } else {
             sceneNumbers.value = [0];
-            console.error('장면 번호 데이터가 없습니다.');
         }
 
         if (data.url && Array.isArray(data.url)) {
@@ -164,39 +201,86 @@ const FairyTaleData = async () => {
             console.error('이미지 데이터가 없습니다.');
         }
 
-        // 첫 번째 이미지로 초기화
-        currentImageIndex.value = 0;
+        // 히스토리에서 진행률을 가져와 시작 페이지 설정
+        await setStartPageFromHistory();
 
         console.log('처리된 데이터:', {
             storyTitle: storyTitle.value,
             storyLines: storyLines.value,
             sceneNumbers: sceneNumbers.value,
             storyImages: storyImages.value,
+            currentLineIndex: currentLineIndex.value,
         });
     } catch (error) {
         console.error('동화 데이터를 가져오는 중 오류 발생:', error);
     }
 };
 
-watch(currentLineIndex, (newIndex) => {
-    updateCurrentImage(newIndex);
-});
+const setStartPageFromHistory = async () => {
+    if (profileId.value) {
+        try {
+            const response = await axios.get(`http://localhost:7772/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            if (response.data !== null) {
+                const progress = response.data;
+                const totalPages = storyLines.value.length;
+                const startPage = Math.floor((progress / 100) * totalPages);
+                currentLineIndex.value = Math.min(startPage, totalPages - 1);
+                
+                // 시작 페이지에 해당하는 이미지 인덱스 찾기
+                const startImageIndex = sceneNumbers.value.findIndex((sceneNumber, index) => {
+                    return sceneNumber > currentLineIndex.value || index === sceneNumbers.value.length - 1;
+                });
+                
+                currentImageIndex.value = startImageIndex;  // 여기서 -1을 제거했습니다
+                
+                console.log('시작 페이지:', currentLineIndex.value);
+                console.log('시작 이미지 인덱스:', currentImageIndex.value);
+                console.log('시작 이미지 URL:', currentStoryImage.value);
+            } else {
+                console.log('진행률 데이터가 없습니다. 처음부터 시작합니다.');
+                currentLineIndex.value = 0;
+                currentImageIndex.value = 0;
+            }
+        } catch (error) {
+            console.error('진행률 데이터를 가져오는 중 오류 발생:', error.response ? error.response.data : error.message);
+            currentLineIndex.value = 0;
+            currentImageIndex.value = 0;
+        }
+    } else {
+        console.log('프로필 ID가 없습니다. 처음부터 시작합니다.');
+        currentLineIndex.value = 0;
+        currentImageIndex.value = 0;
+    }
+};
 
 const updateCurrentImage = (index) => {
-    if (storyImages.value.length === 0) return; // 이미지가 없으면 함수 종료
+    if (storyImages.value.length === 0) return;
 
     const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
     if (nextSceneIndex === -1) {
         currentImageIndex.value = storyImages.value.length - 1;
     } else {
-        currentImageIndex.value = Math.min(nextSceneIndex, storyImages.value.length - 1);
+        currentImageIndex.value = Math.max(0, nextSceneIndex);
     }
+    console.log('Updated image index:', currentImageIndex.value);
+    console.log('Updated image URL:', currentStoryImage.value);
 };
 
-const audioElement = ref(null);
-const currentAudio = ref(null);
+// currentLineIndex가 변경될 때마다 updateCurrentImage 호출
+watch(currentLineIndex, (newIndex) => {
+    updateCurrentImage(newIndex);
+});
 
 const playPause = async () => {
+    if (isFirstPlay.value && profileId.value) {
+        try {
+            await axios.post(`http://localhost:7772/api/graph/totalCount/${profileId.value}`);
+            isFirstPlay.value = false;
+        } catch (error) {
+            console.error('총 재생 횟수 업데이트 중 오류 발생:', error);
+        }
+    }
+
     isPlaying.value = !isPlaying.value;
     if (isPlaying.value) {
         await playCurrentLine();
@@ -204,6 +288,42 @@ const playPause = async () => {
         currentAudio.value?.pause();
     }
 };
+
+const closeWindow = async () => {
+    await saveProgress();
+    window.close();
+};
+
+const saveProgress = async () => {
+    if (profileId.value) {
+        const progress = (currentLineIndex.value / storyLines.value.length) * 100;
+        const historyData = {
+            profileId: profileId.value,
+            fairyTaleId: fairyTaleId.value,
+            readDate: new Date().toISOString().split('T')[0],
+            progress: progress
+        };
+
+        try {
+            const response = await axios.post(`http://localhost:7772/api/history/`, historyData);
+            if (response.status === 201) {
+                console.log('진행률 저장 성공:', progress);
+            } else {
+                console.error('진행률 저장 실패:', response.status);
+            }
+        } catch (error) {
+            console.error('진행률 저장 중 오류 발생:', error);
+        }
+    }
+};
+
+// 이미지 변경을 감지하는 watch 추가
+watch(currentImageIndex, (newIndex) => {
+    console.log('Image index changed to:', newIndex);
+    console.log('New image URL:', currentStoryImage.value);
+});
+
+const currentAudio = ref(null);
 
 const playCurrentLine = async () => {
     if (currentAudio.value) {
@@ -267,8 +387,12 @@ const nextLine = () => {
         const nextContent = storyLines.value[currentLineIndex.value];
         const isSpecialContent = checkSpecialContent(nextContent);
         updateCurrentImage(currentLineIndex.value);
-        if (!isSpecialContent && isPlaying.value) {
-            playCurrentLine();
+        if (!isSpecialContent) {
+            if (isPlaying.value) {
+                playCurrentLine();
+            }
+        } else {
+            isPlaying.value = false;
         }
     } else {
         isPlaying.value = false;
@@ -280,13 +404,10 @@ const toggleFullscreen = () => {
         if (playerRef.value.requestFullscreen) {
             playerRef.value.requestFullscreen();
         } else if (playerRef.value.mozRequestFullScreen) {
-            // Firefox
             playerRef.value.mozRequestFullScreen();
         } else if (playerRef.value.webkitRequestFullscreen) {
-            // Chrome, Safari and Opera
             playerRef.value.webkitRequestFullscreen();
         } else if (playerRef.value.msRequestFullscreen) {
-            // IE/Edge
             playerRef.value.msRequestFullscreen();
         }
         isFullscreen.value = true;
@@ -294,13 +415,10 @@ const toggleFullscreen = () => {
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.mozCancelFullScreen) {
-            // Firefox
             document.mozCancelFullScreen();
         } else if (document.webkitExitFullscreen) {
-            // Chrome, Safari and Opera
             document.webkitExitFullscreen();
         } else if (document.msExitFullscreen) {
-            // IE/Edge
             document.msExitFullscreen();
         }
         isFullscreen.value = false;
@@ -312,36 +430,36 @@ const handleFullscreenChange = () => {
 };
 
 const handleKeyDown = (event) => {
-    // Escape 키 처리
     if (event.key === 'Escape' && isFullscreen.value) {
         toggleFullscreen();
     }
 };
 
-const closeWindow = () => {
-    window.close();
-};
+onMounted(async () => {
+    await profileStore.checkLoginStatus();
+    console.log('선택된 프로필:', selectedProfile.value);
+    console.log('프로필 ID:', profileId.value);
+    console.log('전체 프로필 스토어 상태:', profileStore.$state);
+    
+    await FairyTaleData();
+    await setStartPageFromHistory();
+    updateCurrentImage(currentLineIndex.value);  // 여기서 직접 호출
 
-onMounted(() => {
-    // 여기에서 fairyTaleId를 사용하여 실제 스토리 데이터를 불러와야 합니다.
-    console.log('동화 ID:', fairyTaleId.value);
-    console.log('제목:', storyTitle.value);
-    console.log('진행률:', progress.value);
-    console.log('이미지 URL:', imageUrl.value);
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.addEventListener('mozfullscreenchange', handleFullscreenChange);
     document.addEventListener('MSFullscreenChange', handleFullscreenChange);
-    FairyTaleData();
-    updateCurrentImage(0);
-    audioElement.value = new Audio();
 
-    // 동적으로 mac close 버튼 배경 이미지 설정
     const macCloseButton = playerRef.value.querySelector('.mac-close-button');
     if (macCloseButton) {
         macCloseButton.style.backgroundImage = `url(${IMAGE_SERVER_URL}/macCloseButton)`;
     }
+
+    window.addEventListener('beforeunload', saveProgress);
+
+    console.log('Initial image index:', currentImageIndex.value);
+    console.log('Initial image URL:', currentStoryImage.value);
 });
 
 onUnmounted(() => {
@@ -350,11 +468,16 @@ onUnmounted(() => {
     document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
-    if (currentAudio.value) {
-        currentAudio.value.pause();
-        currentAudio.value = null;
-    }
+    currentAudio.value?.pause();
+
+    // 윈도우 종료 이벤트 리스너 제거
+    window.removeEventListener('beforeunload', saveProgress);
 });
+
+watch(selectedProfile, (newProfile) => {
+    console.log('선택된 프로필 변경:', newProfile);
+    console.log('새 프로필 ID:', profileId.value);
+}, { immediate: true });
 </script>
 
 <style scoped>
