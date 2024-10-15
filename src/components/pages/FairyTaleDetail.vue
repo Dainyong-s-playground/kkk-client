@@ -83,13 +83,17 @@
                                 />
                                 동화 대여/소장하기
                             </button>
-                            <button class="download-button">
+                            <button class="download-button" @click="toggleBucket(fairyTale.id)">
                                 <img
-                                    :src="`${IMAGE_SERVER_URL}/detailPage/underArrow.png`"
-                                    alt="저장"
+                                    :src="
+                                        isBucket
+                                            ? `${IMAGE_SERVER_URL}/detailPage/closeButton.png`
+                                            : `${IMAGE_SERVER_URL}/detailPage/underArrow.png`
+                                    "
+                                    alt="찜 상태 아이콘"
                                     class="download-icon"
                                 />
-                                저장
+                                {{ isBucket ? '찜 취소' : '찜하기' }}
                             </button>
                         </template>
                         <template v-else>
@@ -189,7 +193,7 @@ const progress = ref(0);
 const showErrorModal = ref(false);
 const errorMessage = ref('');
 const showInsufficientCreditModal = ref(false);
-
+const isBucket = ref(false);
 const props = defineProps({
     fairyTale: {
         type: Object,
@@ -274,6 +278,7 @@ onMounted(async () => {
     try {
         await checkOwnership();
         await fetchRecommendations();
+        await checkBucketStatus(fairyTale.value.id);
     } catch (error) {
         console.error('초기 데이터 로딩 중 오류 발생:', error);
     } finally {
@@ -394,6 +399,48 @@ const buyFairyTale = async () => {
             errorMessage.value = '동화 구매 중 오류가 발생했습니다.';
             showErrorModal.value = true;
         }
+    }
+};
+// 선택한 동화가 찜목록에 있는지 백엔드에서 확인
+const checkBucketStatus = async (fairyTaleId) => {
+    try {
+        const response = await axios.get(`${TALE_API_URL}/api/bucket/check`, {
+            params: {
+                loginId: profileStore.loginId,
+                fairyTaleId: fairyTaleId,
+            },
+        });
+        isBucket.value = response.data; // 백엔드의 응답에 따라 상태 갱신
+    } catch (error) {
+        console.error('찜 상태 확인 중 오류 발생:', error);
+    }
+};
+
+// 찜하기 또는 찜 취소 기능
+const toggleBucket = async (fairyTaleId) => {
+    try {
+        if (isBucket.value) {
+            // 찜 취소
+            await axios.delete(`${TALE_API_URL}/api/bucket/delete`, {
+                params: {
+                    loginId: profileStore.loginId,
+                    fairyTaleId: fairyTaleId,
+                },
+            });
+            console.log('찜목록에서 삭제되었습니다.');
+        } else {
+            const bucket = {
+                loginId: profileStore.loginId,
+                fairyTaleId: fairyTaleId,
+            };
+            // 찜하기
+            console.log(bucket);
+            await axios.post(`${TALE_API_URL}/api/bucket/add`, bucket);
+            console.log('찜목록에 추가되었습니다.');
+        }
+        isBucket.value = !isBucket.value; // 상태 반전
+    } catch (error) {
+        console.error('찜 상태 변경 중 오류 발생:', error);
     }
 };
 

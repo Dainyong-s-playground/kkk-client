@@ -13,6 +13,7 @@ import SidebarCompo from '../layout/SidebarCompo.vue';
 import MyProfileVue from './MyProfile.vue';
 import PurchaseHistoryVue from './PurchaseHistory.vue';
 import RentalHistoryVue from './RentalHistory.vue';
+import MyBucket from './MyBucket.vue';
 
 // 현재 선택된 탭 상태
 const activeTab = ref('info');
@@ -26,6 +27,7 @@ const setActiveTab = (tab) => {
 const activeTabComponent = computed(() => {
     if (activeTab.value === 'rental') return RentalHistoryVue;
     else if (activeTab.value === 'purchase') return PurchaseHistoryVue;
+    else if (activeTab.value === 'bucket') return MyBucket;
     return MyProfileVue;
 });
 </script>

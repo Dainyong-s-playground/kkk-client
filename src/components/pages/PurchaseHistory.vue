@@ -49,6 +49,7 @@
 import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
+import { TALE_API_URL } from '@/constants/api';
 
 const profileStore = useProfileStore();
 const isLoading = ref(true);
@@ -58,7 +59,7 @@ const selectedBooks = ref([]);
 // 백엔드에서 구매 목록 데이터를 가져오는 함수
 const fetchPurchaseBooks = async () => {
     try {
-        const response = await axios.get(`http://localhost:7772/api/mypage/purchase/${profileStore.loginId}`);
+        const response = await axios.get(`${TALE_API_URL}/api/mypage/purchase/${profileStore.loginId}`);
         purchaseBooks.value = response.data; // 데이터 저장
     } catch (error) {
         console.error('Failed to fetch purchase books:', error);

@@ -4,6 +4,7 @@
             <li @click="$emit('changeTab', 'info')">내 정보</li>
             <li @click="$emit('changeTab', 'rental')">대여 이력</li>
             <li @click="$emit('changeTab', 'purchase')">소장 이력</li>
+            <li @click="$emit('changeTab', 'bucket')">찜 목록</li>
         </ul>
     </div>
 </template>
