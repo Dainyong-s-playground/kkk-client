@@ -87,7 +87,7 @@
                                 <img
                                     :src="
                                         isBucket
-                                            ? `${IMAGE_SERVER_URL}/detailPage/filledHeart.png`
+                                            ? `${IMAGE_SERVER_URL}/detailPage/closeButton.png`
                                             : `${IMAGE_SERVER_URL}/detailPage/underArrow.png`
                                     "
                                     alt="찜 상태 아이콘"
