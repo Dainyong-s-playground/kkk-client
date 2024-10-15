@@ -11,9 +11,9 @@
         <div class="bucketList-container">
             <div class="bucketList-content">
                 <div class="bucketList-card" v-for="(bucket, index) in bucketList" :key="index">
-                    <button class="header-img" @click="deleteBucket(bucket.id)">
+                    <div class="header-img" @click="deleteBucket(bucket.id)">
                         <img :src="`${IMAGE_SERVER_URL}/profile/delete.png`" />
-                    </button>
+                    </div>
 
                     <div class="card">
                         <div class="card-left">
@@ -64,11 +64,12 @@ const deleteBucket = async (fairyTaleId) => {
     try {
         console.log(fairyTaleId);
 
-        const selectedBucket = {
-            loginId: profileStore.loginId, // 현재 선택된 프로필의 ID
-            fairyTaleId: fairyTaleId, // 동화 제목
-        };
-        await axios.delete(`${TALE_API_URL}/api/deletebucket/`, selectedBucket);
+        await axios.delete(`${TALE_API_URL}/api/bucket/delete`, {
+            params: {
+                loginId: profileStore.loginId,
+                fairyTaleId: fairyTaleId,
+            },
+        });
         await fetchBucketList();
         console.log('찜목록에서 삭제되었습니다.');
     } catch (error) {
