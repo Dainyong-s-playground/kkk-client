@@ -188,7 +188,7 @@ const FairyTaleData = async () => {
             sceneNumbers.value = data.sceneNumber.split('\\n').map(Number);
         } else {
             sceneNumbers.value = [0];
-            console.error('장면 번호 데이터가 없습니다.');
+            console.error('장 번호 데이터가 없습니다.');
         }
 
         if (data.url && Array.isArray(data.url)) {
@@ -232,28 +232,31 @@ const playPause = async () => {
 };
 
 const closeWindow = async () => {
+    await saveProgress();
+    window.close();
+};
+
+const saveProgress = async () => {
     if (profileId.value) {
-        const progress = Math.round((currentLineIndex.value / storyLines.value.length) * 100);
+        const progress = (currentLineIndex.value / storyLines.value.length) * 100;
         const historyData = {
-            fairyTaleId: fairyTaleId.value,
             profileId: profileId.value,
+            fairyTaleId: fairyTaleId.value,
+            readDate: new Date().toISOString().split('T')[0],
             progress: progress
         };
 
         try {
-            const response = await axios.get(`http://localhost:7772/api/history/${fairyTaleId.value}/${profileId.value}`);
-
-            if (response.data) {
-                await axios.patch(`http://localhost:7772/api/history`, historyData);
+            const response = await axios.post(`http://localhost:7772/api/history/`, historyData);
+            if (response.status === 201) {
+                console.log('진행률 저장 성공:', progress);
             } else {
-                await axios.post(`http://localhost:7772/api/history`, historyData);
+                console.error('진행률 저장 실패:', response.status);
             }
         } catch (error) {
-            console.error('히스토리 데이터 저장 중 오류 발생:', error);
+            console.error('진행률 저장 중 오류 발생:', error);
         }
     }
-
-    window.close();
 };
 
 watch(currentLineIndex, (newIndex) => {
@@ -403,6 +406,9 @@ onMounted(async () => {
     if (macCloseButton) {
         macCloseButton.style.backgroundImage = `url(${IMAGE_SERVER_URL}/macCloseButton)`;
     }
+
+    // 윈도우 종료 이벤트 리스너 추가
+    window.addEventListener('beforeunload', saveProgress);
 });
 
 onUnmounted(() => {
@@ -412,6 +418,9 @@ onUnmounted(() => {
     document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
     document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     currentAudio.value?.pause();
+
+    // 윈도우 종료 이벤트 리스너 제거
+    window.removeEventListener('beforeunload', saveProgress);
 });
 
 watch(selectedProfile, (newProfile) => {
@@ -632,7 +641,7 @@ watch(selectedProfile, (newProfile) => {
     margin: 0;
 }
 
-/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니다 */
+/* 전체 화면일 때만 #fullScreenTooltip의 너비 늘립니 */
 .fairy-player.fullscreen #fullScreenTooltip {
     width: 120px;
     left: 0;
