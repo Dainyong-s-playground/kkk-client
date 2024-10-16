@@ -628,6 +628,7 @@ const goToChargeCredit = () => {
 
 .play-button:hover {
     transform: scale(0.98);
+    background-color: rgba(255, 255, 255, 0.765);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
@@ -661,6 +662,7 @@ const goToChargeCredit = () => {
 }
 
 .download-button:hover {
+    background-color: #ff8c00ac;
     transform: scale(0.97);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
