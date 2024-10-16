@@ -204,6 +204,9 @@ const FairyTaleData = async () => {
             console.error('이미지 데이터가 없습니다.');
         }
 
+        // "끝" 스크립트를 위한 이미지 추가
+        storyImages.value.push(`${IMAGE_SERVER_URL}/fairytale/TheEnd.png`);
+
         // 히스토리에서 진행률을 가져와 시작 페이지 설정
         await setStartPageFromHistory();
 
@@ -264,11 +267,15 @@ const setStartPageFromHistory = async () => {
 const updateCurrentImage = (index) => {
     if (storyImages.value.length === 0) return;
 
-    const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
-    if (nextSceneIndex === -1) {
-        currentImageIndex.value = storyImages.value.length - 1;
+    if (storyLines.value[index] === "끝") {
+        currentImageIndex.value = storyImages.value.length - 1; // "끝" 이미지 인덱스
     } else {
-        currentImageIndex.value = Math.max(0, nextSceneIndex);
+        const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
+        if (nextSceneIndex === -1) {
+            currentImageIndex.value = storyImages.value.length - 2; // 마지막 일반 이미지 인덱스
+        } else {
+            currentImageIndex.value = Math.max(0, nextSceneIndex);
+        }
     }
     console.log('Updated image index:', currentImageIndex.value);
     console.log('Updated image URL:', currentStoryImage.value);
