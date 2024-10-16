@@ -267,7 +267,7 @@ const displayTitle = computed(() => {
 .search-input-container input {
     flex-grow: 1;
     height: 100%;
-    font-size: 18px;
+    font-size: 1.5rem;
     border: none;
     background: none;
     outline: none;
