@@ -464,13 +464,13 @@ export default {
 
 .hero-section {
     position: relative;
-    height: 48vw;
+    height: 40vw;
     max-height: 720px;
     margin-bottom: 3vw;
     margin-top: 5vh;
     border-radius: 20px;
     overflow: hidden;
-    background-color: #131313d2;
+    background-color: white;
     border: 0.5px solid rgb(68, 68, 68);
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
