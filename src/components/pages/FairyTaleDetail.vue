@@ -83,7 +83,11 @@
                                 />
                                 동화 대여/소장하기
                             </button>
-                            <button class="download-button" @click="toggleBucket(fairyTale.id)">
+                            <button
+                                class="download-button"
+                                @click="toggleBucket(fairyTale.id)"
+                                :class="{ 'is-bucket': isBucket }"
+                            >
                                 <img
                                     :src="
                                         isBucket
@@ -91,7 +95,7 @@
                                             : `${IMAGE_SERVER_URL}/detailPage/starIcon.png`
                                     "
                                     alt="찜 상태 아이콘"
-                                    class="download-icon"
+                                    :class="['download-icon', { 'download-icon-small': isBucket }]"
                                 />
                                 {{ isBucket ? '찜 취소' : '찜하기' }}
                             </button>
@@ -154,7 +158,7 @@
         <!-- 크레딧 부족 모달 컴포넌트 -->
         <div v-if="showInsufficientCreditModal" class="modal-overlay" @click="showInsufficientCreditModal = false">
             <div class="modal-content insufficient-credit-modal" @click.stop>
-                <h2>크레��� 부족</h2>
+                <h2>크레 부족</h2>
                 <p>크레딧이 부족합니다. 크레딧을 충전하시겠습니까?</p>
                 <div class="modal-buttons">
                     <button @click="goToChargeCredit" class="charge-button">충전하기</button>
@@ -370,7 +374,7 @@ const rentFairyTale = async () => {
         console.log('동화 대여 성공:', response.data);
         isRented.value = true;
         closeRentBuyModal();
-        showSuccessMessage('대여 성공', '동화가 성공적으로 대여되었습니다.');
+        showSuccessMessage('대여 성공', '동화가 성공적으로 대여되었습다.');
     } catch (error) {
         console.error('동화 대여 실패:', error);
         if (error.response && error.response.status === 402) {
@@ -387,7 +391,7 @@ const buyFairyTale = async () => {
             profileId: profileStore.selectedProfile.id,
             fairyTaleId: fairyTale.value.id,
         });
-        console.log('동화 구매 성공:', response.data);
+        console.log('동화 구 성공:', response.data);
         isOwned.value = true;
         closeRentBuyModal();
         showSuccessMessage('구매 성공', '동화가 성공적으로 구매되었습니다.');
@@ -458,7 +462,7 @@ const calculateProgress = (progressValue) => {
 };
 
 const progressPercentage = computed(() => {
-    return calculateProgress(progress.value);
+    return Math.round(calculateProgress(progress.value));
 });
 
 const playButtonText = computed(() => {
@@ -587,7 +591,7 @@ const goToChargeCredit = () => {
     font-size: 16px;
     color: #aaa;
     margin-bottom: 20px;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1.2; /* 약간 여유를 둔 줄 간격 */
 }
 
 .button-group {
@@ -597,6 +601,39 @@ const goToChargeCredit = () => {
 }
 
 .play-button,
+.download-button {
+    height: 45px;
+    width: 48%;
+    padding: 10px 20px;
+    font-size: 22px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+.play-button {
+    background-color: white;
+    color: black;
+}
+
+.play-button:hover {
+    transform: scale(0.98);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.play-button .fade-in {
+    font-weight: 600;
+}
 .download-button {
     width: 48%;
     padding: 10px 20px;
@@ -613,26 +650,21 @@ const goToChargeCredit = () => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    background-color: #ff8c00e7; /* 찜하기 상태의 골드 옐로우 색상 */
+    color: white; /* 텍스트 색상을 진한 회색으로 변경하여 가독성 향상 */
+    font-weight: 600; /* 글자를 굵게 하여 더 잘 보이게 함 */
 }
 
-.play-button {
-    background-color: white;
-    color: black;
+.download-button.is-bucket {
+    background-color: #808080; /* 찜 취소 상태의 회색 */
+    color: white; /* 찜 취소 상태일 때 텍스트 색상은 흰색 유지 */
 }
 
-.download-button {
-    background-color: rgb(66, 66, 66);
-    color: white;
-}
-
-.play-button:hover,
 .download-button:hover {
     transform: scale(0.97);
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
-.play-button:active,
 .download-button:active {
     transform: scale(0.95);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
@@ -718,7 +750,7 @@ const goToChargeCredit = () => {
     margin-top: 5px;
     text-align: center;
     color: white;
-    line-height: 1.2; /* 약간의 여유를 둔 줄 간격 */
+    line-height: 1; /* 약간의 여유를 둔 줄 간격 */
 }
 
 .content-info {
@@ -1134,11 +1166,24 @@ const goToChargeCredit = () => {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
-    font-weight: bold;
+    font-weight: 600;
     transition: background-color 0.3s;
 }
 
 .success-modal .close-modal-button:hover {
     background-color: #e0e0e0;
+}
+
+.download-icon {
+    width: 26px;
+    height: 26px;
+    margin-right: 8px;
+    vertical-align: middle;
+    filter: brightness(0) invert(1);
+}
+
+.download-icon-small {
+    width: 24px;
+    height: 24px;
 }
 </style>
