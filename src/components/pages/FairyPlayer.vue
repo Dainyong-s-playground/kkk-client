@@ -231,7 +231,7 @@ const setStartPageFromHistory = async () => {
                     return sceneNumber > currentLineIndex.value || index === sceneNumbers.value.length - 1;
                 });
                 
-                currentImageIndex.value = startImageIndex;  // 여기서 -1을 제거했습니다
+                currentImageIndex.value = startImageIndex;
                 
                 console.log('시작 페이지:', currentLineIndex.value);
                 console.log('시작 이미지 인덱스:', currentImageIndex.value);
@@ -444,6 +444,31 @@ onMounted(async () => {
     await FairyTaleData();
     await setStartPageFromHistory();
     updateCurrentImage(currentLineIndex.value);  // 여기서 직접 호출
+
+    // 새로 추가된 코드
+    if (profileId.value && fairyTaleId.value) {
+        try {
+            const progressResponse = await axios.get(`http://localhost:7772/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            const progress = progressResponse.data;
+            
+            if (progress === 100 || progress === 0) {
+                const updatePreferenceDTO = {
+                    profileId: profileId.value,
+                    fairyTaleId: fairyTaleId.value
+                };
+                
+                try {
+                    const preferenceResponse = await axios.patch('http://localhost:7772/api/fairytales/preferences', updatePreferenceDTO);
+                    console.log('선호도 업데이트 응답:', preferenceResponse);
+                    console.log('선호도 업데이트 성공');
+                } catch (error) {
+                    console.error('선호도 업데이트 중 오류 발생:', error.response ? error.response.data : error.message);
+                }
+            }
+        } catch (error) {
+            console.error('선호도 업데이트 중 오류 발생:', error.response ? error.response.data : error.message);
+        }
+    }
 
     window.addEventListener('keydown', handleKeyDown);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
