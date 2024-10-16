@@ -13,7 +13,7 @@
         <!-- 태그 필터링 영역 -->
         <div class="tag-filter-container">
             <label v-for="tag in availableTags" :key="tag" class="tag-item">
-                <input type="checkbox" :value="tag" v-model="selectedTags" @change="filterStories" />
+                <input type="checkbox" :value="tag" v-model="selectedTags" @change="onTagChange" />
                 <span class="tag-text">{{ tag }}</span>
             </label>
         </div>
@@ -179,10 +179,15 @@ const filterStories = () => {
         const normalizedTitle = story.fairyTaleTitle.toLowerCase();
         const matchesKeyword = keyword === '' || normalizedTitle.includes(keyword);
         const matchesTags =
-            selectedTags.value.length === 0 || selectedTags.value.every((tag) => story.tag.includes(tag));
+            selectedTags.value.length === 0 || selectedTags.value.some((tag) => story.tag.includes(tag)); // 'every'를 'some'으로 변경
 
-        return matchesKeyword && matchesTags;
+        return matchesTags && matchesKeyword;
     });
+};
+
+// 태그 선택 변경 시 호출될 메서드 추가
+const onTagChange = () => {
+    filterStories();
 };
 
 onMounted(() => {
@@ -190,6 +195,7 @@ onMounted(() => {
     fetchTags();
     fetchStories();
     fetchTop5AndRecommended();
+    filterStories(); // 초기 필터링 수행
 
     // 컴포넌트가 마운트될 때 스크롤을 최상단으로 이동
     const searchContainer = document.querySelector('.search-container');
