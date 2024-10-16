@@ -5,6 +5,42 @@ import { jwtDecode } from 'jwt-decode';
 import cookies from 'js-cookie';
 import { USER_API_URL } from '@/constants/api';
 
+// axios 인스턴스 생성
+const axiosInstance = axios.create({
+    baseURL: USER_API_URL,
+    withCredentials: true,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+// 요청 인터셉터
+axiosInstance.interceptors.request.use(
+    (config) => {
+        const token = cookies.get('Authorization');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => {
+        return Promise.reject(error);
+    },
+);
+
+// 응답 인터셉터
+axiosInstance.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // 인증 에러 처리 (예: 로그아웃)
+        }
+        return Promise.reject(error);
+    },
+);
+
 export const useProfileStore = defineStore('profile', {
     state: () => ({
         loginId: null,
@@ -37,10 +73,7 @@ export const useProfileStore = defineStore('profile', {
                     this.setLoginId(decodedToken.id);
                     const profileId = decodedToken.profileId;
                     if (profileId) {
-                        const response = await axios.get(`${USER_API_URL}/api/me`, {
-                            headers: { Authorization: `Bearer ${jwt}` },
-                            withCredentials: true,
-                        });
+                        const response = await axiosInstance.get('/api/me');
                         this.setSelectedProfile(response.data);
                         this.setJwtToken(jwt);
                         this.isLoggedIn = true;
@@ -56,15 +89,15 @@ export const useProfileStore = defineStore('profile', {
             }
         },
         async logout() {
-            const jwt = this.getCookie('Authorization');
             try {
-                await axios.post(
-                    `${USER_API_URL}/auth/logout`,
-                    {},
-                    { headers: { Authorization: `Bearer ${jwt}` }, withCredentials: true },
-                );
+                await axiosInstance.post('/auth/logout');
                 this.clearUserData();
                 this.deleteCookie('Authorization');
+                this.deleteCookie('JSESSIONID');
+                cookies.remove('Authorization', { path: '/', domain: '.dainyongplayground.site' });
+                cookies.remove('JSESSIONID', { path: '/', domain: '.dainyongplayground.site' });
+                localStorage.removeItem('Authorization');
+                sessionStorage.removeItem('Authorization');
             } catch (error) {
                 console.error('로그아웃 실패:', error);
                 throw error;
@@ -72,27 +105,13 @@ export const useProfileStore = defineStore('profile', {
         },
         async selectProfile(profileId) {
             try {
-                const jwt = this.getCookie('Authorization');
-                if (!jwt) {
-                    throw new Error('JWT 토큰이 없습니다.');
-                }
-
-                const response = await axios.post(
-                    `${USER_API_URL}/api/selectProfile`,
-                    { profileId },
-                    {
-                        headers: { Authorization: `Bearer ${jwt}` },
-                        withCredentials: true,
-                    },
-                );
-
+                const response = await axiosInstance.post('/api/selectProfile', { profileId });
                 const newToken = response.data.newToken;
                 if (newToken) {
                     this.setJwtToken(newToken);
                     this.setCookie('Authorization', newToken);
                 }
-
-                await this.checkLoginStatus(); // 프로필 선택 후 로그인 상태 다시 확인
+                await this.checkLoginStatus();
                 return response.data;
             } catch (error) {
                 console.error('프로필 선택 중 오류가 발생했습니다.', error);
@@ -125,8 +144,11 @@ export const useProfileStore = defineStore('profile', {
             document.cookie = updatedCookie;
         },
         deleteCookie(name) {
-            this.setCookie(name, '', {
-                'max-age': -1,
+            const domain = '.dainyongplayground.site';
+            const paths = ['/', '/api', ''];
+            paths.forEach((path) => {
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; domain=${domain}; Secure; SameSite=Strict`;
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=${path}; Secure; SameSite=Strict`;
             });
         },
         async validateToken() {

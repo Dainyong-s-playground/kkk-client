@@ -112,10 +112,13 @@ const handleMotionComplete = async () => {
 
     if (isMotionComplete.value && profileId.value) {
         try {
-            const response = await axios.patch(`http://localhost:7772/api/graph/motionCount/${profileId.value}`);
+            const response = await axios.patch(`${TALE_API_URL}/api/graph/motionCount/${profileId.value}`);
             console.log('모션 인식 참여 횟수 업데이트 성공:', response.data);
         } catch (error) {
-            console.error('모션 인식 참여 횟수 업데이트 중 오류 발생:', error.response ? error.response.data : error.message);
+            console.error(
+                '모션 인식 참여 횟수 업데이트 중 오류 발생:',
+                error.response ? error.response.data : error.message,
+            );
         }
     } else {
         console.log('프로필 ID 없음 또는 모션 미완료');
@@ -131,13 +134,13 @@ const handleGameComplete = () => {
     if (profileId.value) {
         try {
             // 게임 카운트 API 호출
-            axios.patch(`http://localhost:7772/api/graph/gameCount/${profileId.value}`);
+            axios.patch(`${TALE_API_URL}/api/graph/gameCount/${profileId.value}`);
             console.log('게임 참여 횟수 업데이트 성공');
         } catch (error) {
             console.error('게임 참여 횟수 업데이트 중 오류 발생:', error);
         }
     }
-    
+
     // 게임 완료 후 다음 대사로 넘어가기
     nextLine();
 };
@@ -219,20 +222,22 @@ const FairyTaleData = async () => {
 const setStartPageFromHistory = async () => {
     if (profileId.value) {
         try {
-            const response = await axios.get(`http://localhost:7772/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            const response = await axios.get(
+                `${TALE_API_URL}/api/history/${profileId.value}/${fairyTaleId.value}/progress`,
+            );
             if (response.data !== null) {
                 const progress = response.data;
                 const totalPages = storyLines.value.length;
                 const startPage = Math.floor((progress / 100) * totalPages);
                 currentLineIndex.value = Math.min(startPage, totalPages - 1);
-                
+
                 // 시작 페이지에 해당하는 이미지 인덱스 찾기
                 const startImageIndex = sceneNumbers.value.findIndex((sceneNumber, index) => {
                     return sceneNumber > currentLineIndex.value || index === sceneNumbers.value.length - 1;
                 });
                 
                 currentImageIndex.value = startImageIndex;
-                
+
                 console.log('시작 페이지:', currentLineIndex.value);
                 console.log('시작 이미지 인덱스:', currentImageIndex.value);
                 console.log('시작 이미지 URL:', currentStoryImage.value);
@@ -242,7 +247,10 @@ const setStartPageFromHistory = async () => {
                 currentImageIndex.value = 0;
             }
         } catch (error) {
-            console.error('진행률 데이터를 가져오는 중 오류 발생:', error.response ? error.response.data : error.message);
+            console.error(
+                '진행률 데이터를 가져오는 중 오류 발생:',
+                error.response ? error.response.data : error.message,
+            );
             currentLineIndex.value = 0;
             currentImageIndex.value = 0;
         }
@@ -274,7 +282,7 @@ watch(currentLineIndex, (newIndex) => {
 const playPause = async () => {
     if (isFirstPlay.value && profileId.value) {
         try {
-            await axios.post(`http://localhost:7772/api/graph/totalCount/${profileId.value}`);
+            await axios.post(`${TALE_API_URL}/api/graph/totalCount/${profileId.value}`);
             isFirstPlay.value = false;
         } catch (error) {
             console.error('총 재생 횟수 업데이트 중 오류 발생:', error);
@@ -301,11 +309,11 @@ const saveProgress = async () => {
             profileId: profileId.value,
             fairyTaleId: fairyTaleId.value,
             readDate: new Date().toISOString().split('T')[0],
-            progress: progress
+            progress: progress,
         };
 
         try {
-            const response = await axios.post(`http://localhost:7772/api/history/`, historyData);
+            const response = await axios.post(`${TALE_API_URL}/api/history/`, historyData);
             if (response.status === 201) {
                 console.log('진행률 저장 성공:', progress);
             } else {
@@ -440,10 +448,10 @@ onMounted(async () => {
     console.log('선택된 프로필:', selectedProfile.value);
     console.log('프로필 ID:', profileId.value);
     console.log('전체 프로필 스토어 상태:', profileStore.$state);
-    
+
     await FairyTaleData();
     await setStartPageFromHistory();
-    updateCurrentImage(currentLineIndex.value);  // 여기서 직접 호출
+    updateCurrentImage(currentLineIndex.value); // 여기서 직접 호출
 
     // 새로 추가된 코드
     if (profileId.value && fairyTaleId.value) {
@@ -499,10 +507,14 @@ onUnmounted(() => {
     window.removeEventListener('beforeunload', saveProgress);
 });
 
-watch(selectedProfile, (newProfile) => {
-    console.log('선택된 프로필 변경:', newProfile);
-    console.log('새 프로필 ID:', profileId.value);
-}, { immediate: true });
+watch(
+    selectedProfile,
+    (newProfile) => {
+        console.log('선택된 프로필 변경:', newProfile);
+        console.log('새 프로필 ID:', profileId.value);
+    },
+    { immediate: true },
+);
 </script>
 
 <style scoped>

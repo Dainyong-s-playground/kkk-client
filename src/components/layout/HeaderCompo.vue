@@ -165,9 +165,12 @@ const logout = async () => {
     try {
         await profileStore.logout();
         router.push('/');
-        window.location.reload(); // 로그아웃 후 페이지 새로고침
+        // 페이지 새로고침 대신 상태 초기화
+        profileStore.clearUserData();
+        showDropdown.value = false;
     } catch (error) {
-        alert('로그아 실패: ' + error.message);
+        console.error('로그아웃 실패:', error);
+        alert('로그아웃 실패: ' + error.message);
     }
 };
 
