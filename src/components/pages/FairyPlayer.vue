@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
+import { IMAGE_SERVER_URL, TALE_API_URL, VUE_APP_TALE_PAI_URL } from '@/constants/api';
 import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
@@ -456,7 +456,7 @@ onMounted(async () => {
     // 새로 추가된 코드
     if (profileId.value && fairyTaleId.value) {
         try {
-            const progressResponse = await axios.get(`http://localhost:7772/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            const progressResponse = await axios.get(`${VUE_APP_TALE_PAI_URL}/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
             const progress = progressResponse.data;
             
             if (progress === 100 || progress === 0) {
@@ -466,7 +466,7 @@ onMounted(async () => {
                 };
                 
                 try {
-                    const preferenceResponse = await axios.patch('http://localhost:7772/api/fairytales/preferences', updatePreferenceDTO);
+                    const preferenceResponse = await axios.patch(`${VUE_APP_TALE_PAI_URL}/api/fairytales/preferences`, updatePreferenceDTO);
                     console.log('선호도 업데이트 응답:', preferenceResponse);
                     console.log('선호도 업데이트 성공');
                 } catch (error) {
