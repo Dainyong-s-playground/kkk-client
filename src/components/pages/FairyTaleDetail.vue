@@ -88,7 +88,7 @@
                                     :src="
                                         isBucket
                                             ? `${IMAGE_SERVER_URL}/detailPage/closeButton.png`
-                                            : `${IMAGE_SERVER_URL}/detailPage/underArrow.png`
+                                            : `${IMAGE_SERVER_URL}/detailPage/starIcon.png`
                                     "
                                     alt="찜 상태 아이콘"
                                     class="download-icon"
