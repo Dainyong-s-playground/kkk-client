@@ -489,10 +489,11 @@ const displayTitle = computed(() => {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 98%;
+    height: 98%;
     object-fit: cover;
     border-radius: 6px;
+    border: 0.5px solid #444;
 }
 
 .play-overlay {
@@ -542,10 +543,11 @@ const displayTitle = computed(() => {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 98%;
+    height: 98%;
     object-fit: cover;
     border-radius: 6px;
+    border: 0.5px solid #444;
 }
 
 .search-play-overlay {

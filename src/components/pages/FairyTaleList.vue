@@ -601,8 +601,8 @@ export default {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 98%;
+    height: 98%;
     object-fit: cover;
     border-radius: 6px;
 }
@@ -683,6 +683,8 @@ export default {
 
 .recently-watched .thumbnail {
     border-radius: 12px 12px 0 0; /* 상단만 둥글게 */
+    width: 100%;
+    height: 100%;
 }
 
 .recently-watched .content-info.recently-watched-info {
@@ -759,8 +761,11 @@ export default {
 .top-5 .thumbnail-container {
     height: 100%;
     padding-top: 0;
-    border: 0.5px solid rgb(68, 68, 68);
     border-radius: 6px;
+}
+
+.top-5 .thumbnail {
+    border: 0.5px solid #444;
 }
 
 .top-5 .rank {
@@ -777,8 +782,11 @@ export default {
 
 .recommended .thumbnail-container {
     padding-top: 150%; /* 2:3 비율로 수정 */
-    border: 0.4px solid rgb(68, 68, 68);
     border-radius: 6px;
+}
+
+.recommended .thumbnail {
+    border: 0.5px solid #444;
 }
 
 /* 동화 상세 페이지 오버레이 스타일 */
