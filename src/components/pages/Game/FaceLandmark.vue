@@ -27,7 +27,7 @@ const semiMajorAxis = 360.0;  // 가로 반지름
 const semiMinorAxis = 548.2;  // 세로 반지름
 
 const faceDetectedTime = ref(null);
-const faceDetectionThreshold = 3000; // 3초
+const faceDetectionThreshold = 3000;
 
 // Mediapipe FaceLandmarker 초기화
 const initFaceLandmarker = async () => {
@@ -71,7 +71,7 @@ const enableWebcam = async () => {
             setTimeout(() => {
                 console.log('얼굴 인식 시작');
                 predictWebcam();  // 얼굴 인식 시작
-            }, 3000);
+            }, 1000);
         };
     } catch (error) {
         console.error("웹캠 접근 오류:", error);
