@@ -2,23 +2,19 @@
     <div v-show="isAnimating" class="search-container">
         <div class="search-area-container">
             <div class="search-close-button" @click="closeSearch">
-                <img :src="`${IMAGE_SERVER_URL}/src/backspace.png`" />
+                <img :src="`${IMAGE_SERVER_URL}/src/backspace.png`" alt="뒤로 가기" />
             </div>
             <div class="search-input-container">
-                <img :src="`${IMAGE_SERVER_URL}/src/search.png`" class="search-img" />
-                <input
-                    type="text"
-                    v-model="searchKeyword"
-                    @input="filterStories"
-                    placeholder="검색어를 입력하세요..."
-                />
+                <img :src="`${IMAGE_SERVER_URL}/src/search.png`" class="search-img" alt="검색" />
+                <input type="text" :value="searchKeyword" @input="onSearchInput" placeholder="검색어를 입력하세요..." />
             </div>
         </div>
 
         <!-- 태그 필터링 영역 -->
         <div class="tag-filter-container">
             <label v-for="tag in availableTags" :key="tag" class="tag-item">
-                <input type="checkbox" :value="tag" v-model="selectedTags" @change="filterStories" /> {{ tag }}
+                <input type="checkbox" :value="tag" v-model="selectedTags" @change="filterStories" />
+                <span class="tag-text">{{ tag }}</span>
             </label>
         </div>
 
@@ -171,26 +167,26 @@ const fetchTop5AndRecommended = async () => {
     top5Series.value = top5Response.data;
 };
 
-// 스토리 필터링
+const onSearchInput = (event) => {
+    searchKeyword.value = event.target.value;
+    filterStories();
+};
+
 const filterStories = () => {
-    const keyword = searchKeyword.value.toLowerCase().split(' ').join(''); // 공백 제거
+    const keyword = searchKeyword.value.toLowerCase().trim();
 
     filteredStories.value = allStories.value.filter((story) => {
-        const normalizedTitle = story.fairyTaleTitle.toLowerCase().split(' ').join(''); // 동화 제목에서 공백 제거
+        const normalizedTitle = story.fairyTaleTitle.toLowerCase();
 
-        // 키워드가 입력된 경우, 태그 조건을 무시하고 키워드로만 필터링
         if (keyword) {
             return normalizedTitle.includes(keyword);
         }
 
-        // 태그 조건이 있을 때 OR 조건으로 계산
         const matchesTags =
             selectedTags.value.length === 0 || selectedTags.value.some((tag) => story.tag.includes(tag));
 
-        return matchesTags; // 키워드가 없을 경우 태그 조건으로 필터링
+        return matchesTags;
     });
-
-    console.log(filteredStories.value);
 };
 
 onMounted(() => {
@@ -214,17 +210,6 @@ const displayTitle = computed(() => {
         return `${keyword} 검색결과`;
     }
 });
-
-// filteredStories를 4의 배수로 조정하여 반환 (단, 4개 미만인 경우에는 그대로 출력)
-// const adjustedStories = computed(() => {
-//     if (filteredStories.value.length < 4) {
-//         return filteredStories.value; // 4개 미만일 경우 전체 출력
-//     } else {
-//         // 4개 이상일 경우 4의 배수로 자르기
-//         const maxStories = Math.floor(filteredStories.value.length / 4) * 4;
-//         return filteredStories.value.slice(0, maxStories);
-//     }
-// });
 </script>
 
 <style scoped>
@@ -235,65 +220,96 @@ const displayTitle = computed(() => {
     padding: 20px;
     width: 100%;
     height: 100vh;
+    overflow-y: auto; /* 수직 스크롤 추가 */
 }
 .search-area-container {
     display: flex;
+    align-items: center;
     width: 100%;
+    margin-bottom: 20px;
 }
 .search-close-button {
-    width: 5%;
-    padding-left: 20px;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    margin-right: 15px;
 }
 .search-close-button img {
     width: 30px;
+    height: 30px;
     object-fit: contain;
-    border-radius: 50%;
 }
 .search-input-container {
     width: 90%;
-    margin-bottom: 20px;
     display: flex;
-    border-radius: 20px;
-    border: 1px solid #007a33;
+    align-items: center;
+    height: 50px;
+    border-radius: 25px;
+    border: 2px solid #007a33;
     background: #ffffff;
+    padding: 0 20px;
 }
 
 .search-input-container input {
-    width: 90%;
-    font-size: 16px;
-    border-radius: 5px;
-    margin-left: 10px;
+    flex-grow: 1;
+    height: 100%;
+    font-size: 18px;
     border: none;
     background: none;
+    outline: none;
 }
 
-.search-input-container input[type='text']:focus {
-    border: none;
-    outline: none; /* outline 제거 */
+.search-input-container input::placeholder {
+    color: #999;
 }
 
 .search-img {
-    margin-left: 20px;
-    width: 20px;
+    width: 24px;
+    height: 24px;
     object-fit: contain;
+    margin-right: 15px;
 }
 
 .tag-filter-container {
     display: flex;
     flex-wrap: wrap;
-    margin-left: 20px;
-    margin-right: 20px;
     justify-content: center;
     width: 100%;
     max-height: 200px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #171717;
+    padding: 10px;
+    border-bottom: 2px solid #e0e0e0;
     box-sizing: border-box;
+    gap: 15px;
 }
 
 .tag-item {
-    margin: 20px;
-    font-size: 14px;
+    display: inline-block;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.tag-item input[type='checkbox'] {
+    display: none;
+}
+
+.tag-text {
+    display: inline-block;
+    padding: 8px 16px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    width: 59px;
+    text-align: center;
+}
+
+.tag-item input[type='checkbox']:checked + .tag-text {
+    background-color: #007a33;
+    color: white;
 }
 
 .story-list-container {
@@ -301,6 +317,7 @@ const displayTitle = computed(() => {
     flex-direction: column;
     justify-content: left;
     width: 90%;
+    overflow-y: visible; /* 내부 스크롤 제거 */
 }
 
 .story-list-content {
@@ -434,6 +451,7 @@ const displayTitle = computed(() => {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
+    padding-bottom: 20px; /* 하단 여백 추가 */
 }
 
 .content-slider::-webkit-scrollbar {
@@ -489,13 +507,14 @@ const displayTitle = computed(() => {
 
 .search-content-slider {
     display: flex;
-    flex-wrap: wrap; /* 줄 넘기기 활성화 */
-    justify-content: flex-start; /* 요소들이 항상 왼쪽부터 시작하도록 설정 */
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 20px; /* 아이템 간 간격 추가 */
 }
 
 .search-content-item {
-    flex: 0 1 calc(20% - 20px); /* 5개씩 배치되도록 고정 너비 설정 */
-    margin: 5px; /* 아이템 간의 여백 */
+    flex: 0 1 calc(20% - 16px); /* 간격을 고려한 너비 조정 */
+    margin: 0; /* 마진 제거 */
     box-sizing: border-box; /* 패딩과 마진이 너비 계산에 포함되도록 설정 */
 }
 
