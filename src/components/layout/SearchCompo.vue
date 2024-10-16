@@ -194,6 +194,12 @@ onMounted(() => {
     fetchTags();
     fetchStories();
     fetchTop5AndRecommended();
+
+    // 컴포넌트가 마운트될 때 스크롤을 최상단으로 이동
+    const searchContainer = document.querySelector('.search-container');
+    if (searchContainer) {
+        searchContainer.scrollTop = 0;
+    }
 });
 
 const displayTitle = computed(() => {
@@ -221,6 +227,11 @@ const displayTitle = computed(() => {
     width: 100%;
     height: 100vh;
     overflow-y: auto; /* 수직 스크롤 추가 */
+    position: fixed; /* 추가 */
+    top: 0; /* 추가 */
+    left: 0; /* 추가 */
+    z-index: 1000; /* 추가 */
+    background-color: #ffffff; /* 추가: 배경색 설정 */
 }
 .search-area-container {
     display: flex;
