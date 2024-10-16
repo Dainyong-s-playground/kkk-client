@@ -47,6 +47,9 @@ let stopLandmarkPrediction = false;
 const isSuccess = ref(false);
 const showAfterImage = ref(false);
 
+const handInImageDuration = ref(0);
+const requiredDuration = 3000;
+
 const getImagePosition = () => {
     if (image.value) {
         const rect = image.value.getBoundingClientRect();
@@ -172,27 +175,36 @@ const checkHandInImage = (landmarks) => {
     );
 
     if (isWristInBottom && areFingertipsInTop) {
-        console.log('성공');
-        isSuccess.value = true;
+        // 손이 올바른 위치에 있을 때 시간 증가
+        handInImageDuration.value += 16.67; // 약 60fps 기준 (1000ms / 60)
 
-        // 카메라 스트림 종료
-        if (video.value && video.value.srcObject) {
-            const stream = video.value.srcObject;
-            const tracks = stream.getTracks();
-            tracks.forEach((track) => track.stop());
-        }
-        // requestAnimationFrame 중단을 위해 종료 플래그 설정
-        stopLandmarkPrediction = true;
+        if (handInImageDuration.value >= requiredDuration) {
+            console.log('성공');
+            isSuccess.value = true;
 
-        // 단계적 전환 시작
-        setTimeout(() => {
-            showAfterImage.value = true;
-            
+            // 카메라 스트림 종료
+            if (video.value && video.value.srcObject) {
+                const stream = video.value.srcObject;
+                const tracks = stream.getTracks();
+                tracks.forEach((track) => track.stop());
+            }
+            // requestAnimationFrame 중단을 위해 종료 플래그 설정
+            stopLandmarkPrediction = true;
+
+            // 단계적 전환 시작
             setTimeout(() => {
-                handleMotionComplete();
-            }, 3000); // 3초 후 FairyPlayer로 돌아가기
-        }, 2000); // 2초 후 성공 이미지 표시
+                showAfterImage.value = true;
+                
+                setTimeout(() => {
+                    handleMotionComplete();
+                }, 3000); // 3초 후 FairyPlayer로 돌아가기
+            }, 500);
+        } else {
+            console.log(`손이 올바른 위치에 있습니다. 유지 시간: ${handInImageDuration.value.toFixed(2)}ms`);
+        }
     } else {
+        // 손이 올바른 위치에 없으면 타이머 리셋
+        handInImageDuration.value = 0;
         console.log('아직 성공하지 않았습니다.');
     }
 };
