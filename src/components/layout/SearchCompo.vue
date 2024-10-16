@@ -177,15 +177,11 @@ const filterStories = () => {
 
     filteredStories.value = allStories.value.filter((story) => {
         const normalizedTitle = story.fairyTaleTitle.toLowerCase();
-
-        if (keyword) {
-            return normalizedTitle.includes(keyword);
-        }
-
+        const matchesKeyword = keyword === '' || normalizedTitle.includes(keyword);
         const matchesTags =
-            selectedTags.value.length === 0 || selectedTags.value.some((tag) => story.tag.includes(tag));
+            selectedTags.value.length === 0 || selectedTags.value.every((tag) => story.tag.includes(tag));
 
-        return matchesTags;
+        return matchesKeyword && matchesTags;
     });
 };
 
