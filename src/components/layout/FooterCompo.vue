@@ -19,18 +19,15 @@
                 <div class="team-members">
                     <div class="member">
                         <strong>김찬희 <span>(팀장)</span></strong>
-                        <div>010-2222-2222</div>
                         <div>______@gmail.com</div>
                     </div>
                     <div class="member">
                         <strong>권대용 <span>(팀원)</span></strong>
-                        <div>010-2222-2222</div>
                         <div>cys964@gmail.com</div>
                     </div>
                     <div class="member">
                         <strong>김범철 <span>(팀원)</span></strong>
-                        <div>010-2222-2222</div>
-                        <div>_______@gmail.com</div>
+                        <div>dnldks12@gmail.com</div>
                     </div>
                 </div>
             </div>

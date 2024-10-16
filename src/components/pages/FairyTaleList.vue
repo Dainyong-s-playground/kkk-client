@@ -10,13 +10,13 @@
             </div>
         </div>
         <div class="main-container" :class="{ 'fade-in': !isLoading }">
-            <section class="hero-section">
-                <img :src="`${IMAGE_SERVER_URL}/Tumb1.png`" alt="Hero Image" class="hero-image" />
+            <section class="hero-section" v-if="heroFairyTale">
+                <img :src="heroFairyTale.imageUrl" :alt="heroFairyTale.title" class="hero-image" />
                 <div class="hero-content">
-                    <h1>잭과 콩나물</h1>
-                    <p>떡상 할끄니꼐~~~ 떡상 가즈아!!</p>
-                    <button class="play-button">▶ 재생</button>
-                    <button class="info-button">ⓘ 상세 정보</button>
+                    <h1>{{ heroFairyTale.title }}</h1>
+                    <p>{{ heroFairyTale.description }}</p>
+                    <button class="play-button" @click="playHeroFairyTale">▶ 재생</button>
+                    <button class="info-button" @click="showHeroDetail">ⓘ 상세 정보</button>
                 </div>
             </section>
             <!-- 나님이 시청 중인 콘텐츠 -->
@@ -115,7 +115,7 @@ import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import { storeToRefs } from 'pinia';
 import { onMounted, onUnmounted, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import FairyTaleDetail from './FairyTaleDetail.vue';
 
 export default {
@@ -126,6 +126,7 @@ export default {
         const profileStore = useProfileStore();
         const { selectedProfile } = storeToRefs(profileStore);
         const route = useRoute();
+        const router = useRouter();
 
         const categories = ref([]);
         const allFairyTales = ref([]);
@@ -139,6 +140,7 @@ export default {
         const fairyTales = ref({});
         const scrollPosition = ref(0);
         const isDetailOpen = ref(false);
+        const heroFairyTale = ref(null);
 
         const calculateProgress = (progress) => {
             let numericProgress = parseFloat(progress);
@@ -333,6 +335,47 @@ export default {
             }
         };
 
+        const fetchHeroFairyTale = async () => {
+            try {
+                // 임의의 ID를 사용하여 추천 동화를 가져옵니다.
+                const randomId = Math.floor(Math.random() * 100) + 1; // 1부터 100 사이의 랜덤 ID
+                const response = await axios.get(`${TALE_API_URL}/api/fairytales/${randomId}/recommendations`, {
+                    headers: {
+                        Authorization: `Bearer ${profileStore.jwtToken}`,
+                    },
+                });
+                const recommendations = response.data;
+                if (recommendations && recommendations.length > 0) {
+                    // 추천 동화 중 랜덤하게 하나를 선택합니다.
+                    const randomIndex = Math.floor(Math.random() * recommendations.length);
+                    heroFairyTale.value = recommendations[randomIndex];
+                }
+            } catch (error) {
+                console.error('추천 동화를 가져오는데 실패했습니다:', error);
+            }
+        };
+
+        const playHeroFairyTale = () => {
+            if (heroFairyTale.value) {
+                const url = router.resolve({
+                    name: 'FairyPlayer',
+                    params: { id: heroFairyTale.value.id },
+                    query: {
+                        title: heroFairyTale.value.title,
+                        progress: 0,
+                        imageUrl: heroFairyTale.value.imageUrl,
+                    },
+                }).href;
+                window.open(url, '_blank');
+            }
+        };
+
+        const showHeroDetail = () => {
+            if (heroFairyTale.value) {
+                showDetail(heroFairyTale.value);
+            }
+        };
+
         onMounted(async () => {
             if (!(await validateTokenAndRedirect())) {
                 return;
@@ -346,6 +389,7 @@ export default {
                 isLoading.value = false; // 데이터가 이미 로드된 경우 로딩 상태를 false로 설정
             }
             await fetchAllFairyTales();
+            await fetchHeroFairyTale();
         });
 
         onUnmounted(() => {
@@ -394,6 +438,9 @@ export default {
             getCategoryContent,
             updateSelectedFairyTale,
             isDetailOpen,
+            heroFairyTale,
+            playHeroFairyTale,
+            showHeroDetail,
         };
     },
 };
@@ -416,57 +463,94 @@ export default {
 }
 
 .hero-section {
-    display: flex;
     position: relative;
-    height: 56.25vw;
+    height: 48vw;
     max-height: 720px;
     margin-bottom: 3vw;
-    align-items: center;
-    justify-content: center;
     margin-top: 5vh;
+    border-radius: 20px;
+    overflow: hidden;
+    background-color: #131313d2;
+    border: 0.5px solid rgb(68, 68, 68);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-section:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
 }
 
 .hero-image {
-    width: 80%;
+    width: 100%;
     height: 100%;
     object-fit: contain;
+    border-radius: 20px;
 }
 
 .hero-content {
     position: absolute;
-    bottom: 10%;
-    left: 4%;
-    width: 36%;
+    bottom: 1%;
+    left: 1%;
+    width: 90%;
+    padding: 20px;
+    /* background: linear-gradient(to top, 
+    
+    
+    rgba(0, 0, 0, 0.8), 
+    
+    rgba(0, 0, 0, 0)); */
+    border-radius: 0 0 20px 20px;
 }
 
 .hero-content h1 {
-    font-size: 3vw;
+    font-size: 2.5vw;
     margin-bottom: 0.5vw;
+    color: white;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0);
 }
 
 .hero-content p {
-    font-size: 1.4vw;
+    font-size: 1.5vw;
     margin-bottom: 1.5vw;
+    color: rgb(249, 248, 248);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 .play-button,
 .info-button {
-    font-size: 1.2vw;
-    padding: 0.5vw 1.5vw;
+    width: 28%;
+    font-size: 30px;
+    padding: 0.6vw 1.8vw;
     margin-right: 1vw;
     border: none;
-    border-radius: 4px;
+    border-radius: 10px;
     cursor: pointer;
+
+    transition: background-color 0.3s ease, transform 0.3s ease;
 }
 
 .play-button {
-    background-color: white;
-    color: black;
+    background-color: rgb(155, 190, 78, 0.9);
+    color: white;
 }
 
 .info-button {
-    background-color: rgba(109, 109, 110, 0.7);
+    background-color: rgba(109, 109, 110, 0.85);
     color: white;
+}
+
+.play-button:hover,
+.info-button:hover {
+    transform: scale(1.05);
+}
+
+.play-button:hover {
+    background-color: rgb(128, 158, 65, 0.9);
+}
+
+.info-button:hover {
+    background-color: rgba(90, 90, 90, 0.9);
 }
 
 .category {
@@ -499,6 +583,11 @@ export default {
     margin-right: 20px;
     position: relative;
     cursor: pointer;
+    transition: transform 0.3s ease; /* 애니메이션 추가 */
+}
+
+.content-item:hover {
+    transform: scale(0.95); /* 호버 시 0.95배 축소 */
 }
 
 .thumbnail-container {
@@ -581,6 +670,9 @@ export default {
 .recently-watched .content-item {
     width: 250px;
     overflow: hidden;
+    border: 0.5px solid rgb(68, 68, 68);
+    border-radius: 12.5px;
+    background-color: #333333;
 }
 
 .recently-watched .thumbnail-container {
@@ -657,11 +749,18 @@ export default {
     width: 240px;
     height: 320px; /* 높이 증가 */
     margin-right: 100px;
+    transition: transform 0.3s ease; /* 애니메이션 추가 */
+}
+
+.top-5 .content-item:hover {
+    transform: scale(0.95); /* 호버 시 0.95배 축소 */
 }
 
 .top-5 .thumbnail-container {
     height: 100%;
     padding-top: 0;
+    border: 0.5px solid rgb(68, 68, 68);
+    border-radius: 6px;
 }
 
 .top-5 .rank {
@@ -671,13 +770,15 @@ export default {
     bottom: 2px;
     font-size: 240px;
     font-weight: bold;
-    color: #90b4e2;
+    color: rgb(155, 190, 78, 0.73);
     -webkit-text-stroke: 4px #000000;
     line-height: 0.8;
 }
 
 .recommended .thumbnail-container {
     padding-top: 150%; /* 2:3 비율로 수정 */
+    border: 0.4px solid rgb(68, 68, 68);
+    border-radius: 6px;
 }
 
 /* 동화 상세 페이지 오버레이 스타일 */
