@@ -25,8 +25,8 @@
                             <td>{{ index + 1 }}</td>
                             <td>{{ book.id }}</td>
                             <td>{{ book.title }}</td>
-                            <td>{{ book.startDate }}</td>
-                            <td>{{ book.endDate }}</td>
+                            <td>{{ formatDate(book.startDate) }}</td>
+                            <td>{{ formatDate(book.endDate) }}</td>
                         </tr>
                         <tr v-if="isRowSelected(index)" class="details-row">
                             <td colspan="5">
@@ -34,8 +34,8 @@
                                     <img :src="book.imageUrl" alt="Book Image" />
                                     <div class="book-info">
                                         <h3>{{ book.title }}</h3>
-                                        <p>{{ book.author }}</p>
-                                        <p>{{ book.rentalPrice }}</p>
+                                        <p>저자: {{ book.author }}</p>
+                                        <p>대여 가격: {{ formatPrice(book.rentalPrice) }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -68,8 +68,8 @@ const fetchRentalBooks = async () => {
     }
     try {
         const response = await axios.get(`${TALE_API_URL}/api/mypage/rental/${profileStore.loginId}`);
-
-        rentalBooks.value = response.data; // 데이터를 상태에 저장
+        console.log('Received rental books:', response.data);
+        rentalBooks.value = response.data;
     } catch (error) {
         console.error('Failed to fetch rental books:', error);
     }
@@ -101,6 +101,35 @@ const isRowSelected = (index) => {
     return selectedBooks.value.includes(index);
 };
 
+const formatDate = (dateString) => {
+    if (!dateString) return '날짜 없음';
+
+    // 날짜 문자열에서 KST 제거
+    const cleanDateString = dateString.replace(' KST', '');
+
+    const date = new Date(cleanDateString);
+    if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return '유효하지 않은 날짜';
+    }
+
+    // UTC 시간을 KST로 변환 (UTC+9)
+    const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+    const year = kstDate.getUTCFullYear();
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
+    const hours = String(kstDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+const formatPrice = (price) => {
+    if (price == null) return '가격 정보 없음';
+    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price);
+};
+
 // 컴포넌트가 마운트될 때 대여 목록 데이터 가져오기
 onMounted(async () => {
     await fetchRentalBooks();
@@ -116,123 +145,92 @@ onMounted(async () => {
 <style scoped>
 .rental-history {
     width: 100%;
-    padding: 0;
-    margin: 0;
+    padding: 20px;
+    margin-top: 7vh;
     box-sizing: border-box;
-    display: flex;
-    justify-content: center;
 }
 
 table {
-    width: 80%;
-    border-collapse: collapse;
-    margin-top: 20px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
     background-color: #fff;
-    border-radius: 15px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    font-family: 'Nunito', 'Comic Sans MS', 'Arial', sans-serif;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Noto Sans KR', sans-serif;
 }
 
 th {
-    background-color: #a5d6a7;
+    background-color: #4caf50;
     color: white;
     font-weight: bold;
     padding: 15px;
-    text-align: center;
-    text-transform: capitalize;
-    letter-spacing: 0.05em;
-    font-size: 18px;
-    border-bottom: 2px solid #81c784;
+    text-align: left;
+    font-size: 16px;
 }
 
 td {
-    border-bottom: 2px solid #e8f5e9;
     padding: 15px;
-    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
     color: #333;
-    font-size: 16px;
-    background-color: #f1f8e9;
+    font-size: 14px;
 }
 
 tr:hover {
-    background-color: #c8e6c9;
+    background-color: #f5f5f5;
     cursor: pointer;
-    transition: background-color 0.3s ease;
 }
 
 .details-row td {
     padding: 20px;
-    background-color: #dcedc8;
-    border-bottom: none;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    background-color: #f9f9f9;
 }
 
 .book-details {
     display: flex;
     align-items: center;
-    justify-content: start;
-    background-color: #f9fbe7;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .book-details img {
-    width: 130px;
-    height: 170px;
-    object-fit: cover;
-    border-radius: 10px;
+    width: 100px;
+    height: auto;
+    border-radius: 5px;
     margin-right: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.book-details img:hover {
-    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .book-info h3 {
     margin: 0 0 10px 0;
-    font-size: 23px;
-    font-style: bold;
-    color: #388e3c;
+    font-size: 18px;
+    color: #333;
 }
 
 .book-info p {
-    margin: 4px 0;
-    font-size: 16px;
-    text-align: left;
-    color: #4e342e;
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
 }
 
-tr.details-row:last-child td {
-    border-bottom: none;
-}
+/* 반응형 디자인을 위한 미디어 쿼리 */
+@media (max-width: 768px) {
+    table {
+        font-size: 12px;
+    }
 
-button {
-    background-color: #388e3c;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+    th,
+    td {
+        padding: 10px;
+    }
 
-button:hover {
-    background-color: #66bb6a;
+    .book-details {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .book-details img {
+        margin-bottom: 10px;
+    }
 }
 
 .loading-overlay {

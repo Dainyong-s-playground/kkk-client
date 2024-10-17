@@ -8,7 +8,7 @@
                 <div></div>
             </div>
         </div>
-        <div class="purchase-history" v-if="!isLoading">
+        <div v-if="!isLoading" class="purchase-history">
             <table>
                 <thead>
                     <tr>
@@ -24,16 +24,16 @@
                             <td>{{ index + 1 }}</td>
                             <td>{{ book.id }}</td>
                             <td>{{ book.title }}</td>
-                            <td>{{ book.purchaseDate }}</td>
+                            <td>{{ formatDate(book.purchaseDate) }}</td>
                         </tr>
                         <tr v-if="isRowSelected(index)" class="details-row">
-                            <td colspan="5">
+                            <td colspan="4">
                                 <div class="book-details">
                                     <img :src="book.imageUrl" alt="Book Image" />
                                     <div class="book-info">
                                         <h3>{{ book.title }}</h3>
-                                        <p>{{ book.creator }}</p>
-                                        <p>{{ book.price }}</p>
+                                        <p>저자: {{ book.creator }}</p>
+                                        <p>구매 가격: {{ formatPrice(book.price) }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -56,19 +56,40 @@ const isLoading = ref(true);
 const purchaseBooks = ref([]);
 const selectedBooks = ref([]);
 
-// 백엔드에서 구매 목록 데이터를 가져오는 함수
+const formatDate = (dateString) => {
+    if (!dateString) return '날짜 없음';
+    const cleanDateString = dateString.replace(' KST', '');
+    const date = new Date(cleanDateString);
+    if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return '유효하지 않은 날짜';
+    }
+    const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+    const year = kstDate.getUTCFullYear();
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
+    const hours = String(kstDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+const formatPrice = (price) => {
+    if (price == null) return '가격 정보 없음';
+    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price);
+};
+
 const fetchPurchaseBooks = async () => {
     try {
         const response = await axios.get(`${TALE_API_URL}/api/mypage/purchase/${profileStore.loginId}`);
-        purchaseBooks.value = response.data; // 데이터 저장
+        console.log('Received purchase books:', response.data);
+        purchaseBooks.value = response.data;
     } catch (error) {
         console.error('Failed to fetch purchase books:', error);
     } finally {
-        isLoading.value = false; // 로딩 종료
+        isLoading.value = false;
     }
 };
 
-// 선택된 행 관리
 const toggleDetails = (index) => {
     if (selectedBooks.value.includes(index)) {
         selectedBooks.value = selectedBooks.value.filter((i) => i !== index);
@@ -81,7 +102,6 @@ const isRowSelected = (index) => {
     return selectedBooks.value.includes(index);
 };
 
-// 컴포넌트가 마운트될 때 데이터 로딩
 onMounted(async () => {
     if (profileStore.selectedProfile) {
         await fetchPurchaseBooks();
@@ -95,176 +115,91 @@ onMounted(async () => {
 <style scoped>
 .purchase-history {
     width: 100%;
-    padding: 0;
-    margin: 0;
+    padding: 20px;
+    margin-top: 7vh;
     box-sizing: border-box;
-    display: flex;
-    justify-content: center;
 }
 
 table {
-    width: 80%;
-    border-collapse: collapse;
-    margin-top: 20px;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
     background-color: #fff;
-    border-radius: 15px;
+    border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-    font-family: 'Nunito', 'Comic Sans MS', 'Arial', sans-serif;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Noto Sans KR', sans-serif;
 }
 
 th {
-    background-color: #a5d6a7;
+    background-color: #4caf50;
     color: white;
     font-weight: bold;
     padding: 15px;
-    text-align: center;
-    text-transform: capitalize;
-    letter-spacing: 0.05em;
-    font-size: 18px;
-    border-bottom: 2px solid #81c784;
+    text-align: left;
+    font-size: 16px;
 }
 
 td {
-    border-bottom: 2px solid #e8f5e9;
     padding: 15px;
-    text-align: center;
+    border-bottom: 1px solid #e0e0e0;
     color: #333;
-    font-size: 16px;
-    background-color: #f1f8e9;
+    font-size: 14px;
 }
 
 tr:hover {
-    background-color: #c8e6c9;
+    background-color: #f5f5f5;
     cursor: pointer;
-    transition: background-color 0.3s ease;
 }
 
 .details-row td {
     padding: 20px;
-    background-color: #dcedc8;
-    border-bottom: none;
-    animation: fadeIn 0.5s ease;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
+    background-color: #f9f9f9;
 }
 
 .book-details {
     display: flex;
     align-items: center;
-    justify-content: start;
-    background-color: #f9fbe7;
-    padding: 15px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .book-details img {
-    width: 130px;
-    height: 170px;
-    object-fit: cover;
-    border-radius: 10px;
+    width: 100px;
+    height: auto;
+    border-radius: 5px;
     margin-right: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease;
-}
-
-.book-details img:hover {
-    transform: scale(1.05);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .book-info h3 {
     margin: 0 0 10px 0;
-    font-size: 23px;
-    font-style: bold;
-    color: #388e3c;
+    font-size: 18px;
+    color: #333;
 }
 
 .book-info p {
-    margin: 4px 0;
-    font-size: 16px;
-    text-align: left;
-    color: #4e342e;
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
 }
 
-tr.details-row:last-child td {
-    border-bottom: none;
-}
-
-button {
-    background-color: #388e3c;
-    border: none;
-    color: white;
-    padding: 10px 20px;
-    font-size: 16px;
-    font-weight: bold;
-    border-radius: 10px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-button:hover {
-    background-color: #66bb6a;
-}
-
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-.loading-spinner {
-    display: inline-block;
-    position: relative;
-    width: 80px;
-    height: 80px;
-}
-
-.loading-spinner div {
-    box-sizing: border-box;
-    display: block;
-    position: absolute;
-    width: 64px;
-    height: 64px;
-    margin: 8px;
-    border: 8px solid #fff;
-    border-radius: 50%;
-    animation: loading-spinner 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-    border-color: #fff transparent transparent transparent;
-}
-
-.loading-spinner div:nth-child(1) {
-    animation-delay: -0.3s;
-}
-
-.loading-spinner div:nth-child(2) {
-    animation-delay: -0.25s;
-}
-
-.loading-spinner div:nth-child(3) {
-    animation-delay: -0.1s;
-}
-
-@keyframes loading-spinner {
-    0% {
-        transform: rotate(0deg);
+/* 반응형 디자인을 위한 미디어 쿼리 */
+@media (max-width: 768px) {
+    table {
+        font-size: 12px;
     }
-    100% {
-        transform: rotate(360deg);
+
+    th,
+    td {
+        padding: 10px;
+    }
+
+    .book-details {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .book-details img {
+        margin-bottom: 10px;
     }
 }
 </style>

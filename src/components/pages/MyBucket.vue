@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="mybucket-container">
         <div v-if="isLoading" class="loading-overlay">
             <div class="loading-spinner">
                 <div></div>
@@ -15,7 +15,7 @@
                         <img :src="`${IMAGE_SERVER_URL}/profile/delete.png`" />
                     </div>
 
-                    <div class="card">
+                    <div class="card" @click="showFairyTaleDetail(bucket)">
                         <div class="card-left">
                             <img class="bucket-img" :src="bucket.image" />
                         </div>
@@ -27,14 +27,31 @@
                             </div>
                             <div class="card-data">
                                 <div class="bucket-title">{{ bucket.title }}</div>
-                                <div class="bucket-rental">{{ bucket.rentalPrice }}</div>
-                                <div class="bucket-purchase">{{ bucket.purchasePrice }}</div>
+                                <div class="bucket-rental">{{ formatPrice(bucket.rentalPrice) }}</div>
+                                <div class="bucket-purchase">{{ formatPrice(bucket.purchasePrice) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 전체 페이지 오버레이 추가 -->
+        <div v-if="selectedFairyTale || isDetailLoading" class="page-overlay">
+            <div v-if="isDetailLoading" class="loading-spinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+
+        <!-- 동화 상세 정보 컴포넌트 추가 -->
+        <FairyTaleDetail
+            v-if="selectedFairyTale && !isDetailLoading"
+            :fairyTale="selectedFairyTale"
+            @close="closeFairyTaleDetail"
+        />
     </div>
 </template>
 
@@ -43,10 +60,13 @@ import { ref, onMounted } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
+import FairyTaleDetail from './FairyTaleDetail.vue';
 
 const profileStore = useProfileStore();
 const isLoading = ref(true);
 const bucketList = ref([]);
+const selectedFairyTale = ref(null);
+const isDetailLoading = ref(false);
 
 // 백엔드에서 구매 목록 데이터를 가져오는 함수
 const fetchBucketList = async () => {
@@ -77,6 +97,28 @@ const deleteBucket = async (fairyTaleId) => {
     }
 };
 
+const showFairyTaleDetail = async (fairyTale) => {
+    isDetailLoading.value = true;
+    try {
+        // 여기서 동화 상세 정보를 가져오는 API 호출을 수행합니다.
+        const response = await axios.get(`${TALE_API_URL}/api/fairytales/${fairyTale.id}`);
+        selectedFairyTale.value = response.data;
+    } catch (error) {
+        console.error('동화 상세 정보를 가져오는 데 실패했습니다:', error);
+    } finally {
+        isDetailLoading.value = false;
+    }
+};
+
+const closeFairyTaleDetail = () => {
+    selectedFairyTale.value = null;
+};
+
+// 가격을 포맷하는 함수 추가
+const formatPrice = (price) => {
+    return price === 0 ? '무료' : `${price.toLocaleString()}원`;
+};
+
 // 컴포넌트가 마운트될 때 데이터 로딩
 onMounted(async () => {
     if (profileStore.selectedProfile) {
@@ -91,6 +133,9 @@ onMounted(async () => {
 <style scoped>
 .bucketList-container {
     width: 100%;
+    margin-top: 5vh;
+    padding: 20px;
+    font-size: 16px;
 }
 
 .bucketList-content {
@@ -99,95 +144,127 @@ onMounted(async () => {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    gap: 20px;
 }
 
 .bucketList-card {
     position: relative;
-    height: 200px;
-    width: 80%;
+    height: auto;
+    width: 90%;
+    max-width: 800px;
     display: flex;
-    justify-content: center;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
-    box-shadow: #ccc;
-    border-radius: 20px;
+    box-shadow: 2px 8px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    background-color: #ffffff;
+    padding: 20px;
+    transition: all 0.3s ease;
+}
+
+.bucketList-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .header-img {
-    background: none;
     position: absolute;
-    width: 25px;
-    height: 25px;
-    right: 100px;
-    border: none;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.header-img:hover {
+    background-color: #e9ecef;
 }
 
 .header-img img {
-    width: 20px;
-    height: 20px;
-    object-fit: cover;
-    border-radius: 5px;
+    width: 15px;
+    height: 15px;
+    object-fit: contain;
 }
 
 .card {
     width: 100%;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
+    cursor: pointer;
 }
+
 .card-left {
-    width: 15%;
+    width: 30%;
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
 .card-right {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    width: 60%;
+    justify-content: space-between;
+    width: 65%;
     height: 100%;
-    border-top: 1px solid;
+    border-left: 1px solid #e9ecef;
+    padding-left: 20px;
+}
+
+.header-card,
+.card-data {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 0;
 }
 
 .header-card {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 20%;
-    border-bottom: 1px solid #ccc;
-}
-
-.card-data {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 80%;
-    border-bottom: 1px solid #ccc;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: bold;
+    color: #495057;
+    font-size: 18px;
 }
 
 .bucket-img {
-    width: 150px;
-    height: 150px;
-    object-fit: contain;
+    width: 120px;
+    height: 160px;
+    object-fit: cover;
     border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-title,
 .bucket-title {
-    width: 70%;
-    text-align: center;
+    width: 60%;
+    text-align: left;
 }
 
 .header-rental,
 .header-purchase,
 .bucket-purchase,
 .bucket-rental {
-    width: 15%;
+    width: 20%;
     text-align: center;
+}
+
+.bucket-title {
+    font-weight: bold;
+    color: #212529;
+    font-size: 18px;
+}
+
+.bucket-rental,
+.bucket-purchase {
+    color: #495057;
+    font-size: 16px;
 }
 
 .loading-overlay {
@@ -242,5 +319,29 @@ onMounted(async () => {
     100% {
         transform: rotate(360deg);
     }
+}
+
+.mybucket-container {
+    position: relative;
+    min-height: 100vh;
+}
+
+.page-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 1000;
+    transition: opacity 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* FairyTaleDetail 컴포넌트가 오버레이 위에 표시되도록 z-index 조정 */
+:deep(.fairy-tale-detail-overlay) {
+    z-index: 1001;
 }
 </style>

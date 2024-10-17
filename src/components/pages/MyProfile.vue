@@ -415,6 +415,7 @@ label {
 .card p {
     margin: 0px 0 10px 0;
     font-family: 'CookieRun-Regular', sans-serif;
+    font-size: 1.5rem;
 }
 
 p {

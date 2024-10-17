@@ -39,10 +39,10 @@ const activeTabComponent = computed(() => {
 
 .content-container {
     flex-grow: 1;
-    min-height: 80dvh;
+    min-height: 100dvh;
     padding: 20px;
-    margin-top: 10vh;
-    margin-left: 150px;
+    margin-top: 7vh;
+    margin-left: 190px;
     transition: margin-left 0.3s ease;
     background-color: #fff;
 }
