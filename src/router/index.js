@@ -27,6 +27,9 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const token = Cookies.get('Authorization'); // JWT 토큰을 쿠키에서 가져옴
 
+    // 모든 페이지의 타이틀을 '다이뇽의 놀이터'로 설정
+    document.title = '다이뇽의 놀이터';
+
     if (to.matched.some((record) => record.meta.requiresAuth)) {
         if (!token) {
             // 인증이 필요한 페이지에 JWT 토큰이 없으면 메인 페이지로 리다이렉트
