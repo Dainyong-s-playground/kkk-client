@@ -32,8 +32,8 @@
                                     <img :src="book.imageUrl" alt="Book Image" />
                                     <div class="book-info">
                                         <h3>{{ book.title }}</h3>
-                                        <p>저자: {{ book.creator }}</p>
-                                        <p>구매 가격: {{ formatPrice(book.price) }}</p>
+                                        <p>저자: {{ book.author }}</p>
+                                        <p>구매 가격: {{ formatPrice(book.purchasePrice) }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -56,29 +56,11 @@ const isLoading = ref(true);
 const purchaseBooks = ref([]);
 const selectedBooks = ref([]);
 
-const formatDate = (dateString) => {
-    if (!dateString) return '날짜 없음';
-    const cleanDateString = dateString.replace(' KST', '');
-    const date = new Date(cleanDateString);
-    if (isNaN(date.getTime())) {
-        console.error('Invalid date:', dateString);
-        return '유효하지 않은 날짜';
-    }
-    const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
-    const year = kstDate.getUTCFullYear();
-    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(kstDate.getUTCDate()).padStart(2, '0');
-    const hours = String(kstDate.getUTCHours()).padStart(2, '0');
-    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0');
-    return `${year}-${month}-${day} ${hours}:${minutes}`;
-};
-
-const formatPrice = (price) => {
-    if (price == null) return '가격 정보 없음';
-    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price);
-};
-
 const fetchPurchaseBooks = async () => {
+    if (!profileStore.loginId) {
+        console.error('로그인 ID가 없습니다.');
+        return;
+    }
     try {
         const response = await axios.get(`${TALE_API_URL}/api/mypage/purchase/${profileStore.loginId}`);
         console.log('Received purchase books:', response.data);
@@ -102,13 +84,37 @@ const isRowSelected = (index) => {
     return selectedBooks.value.includes(index);
 };
 
-onMounted(async () => {
-    if (profileStore.selectedProfile) {
-        await fetchPurchaseBooks();
-    } else {
-        console.error('선택된 프로필이 없습니다.');
-        isLoading.value = false;
+const formatDate = (dateString) => {
+    if (!dateString) return '날짜 없음';
+
+    // 날짜 문자열에서 KST 제거
+    const cleanDateString = dateString.replace(' KST', '');
+
+    const date = new Date(cleanDateString);
+    if (isNaN(date.getTime())) {
+        console.error('Invalid date:', dateString);
+        return '유효하지 않은 날짜';
     }
+
+    // UTC 시간을 KST로 변환 (UTC+9)
+    const kstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+
+    const year = kstDate.getUTCFullYear();
+    const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(kstDate.getUTCDate()).padStart(2, '0');
+    const hours = String(kstDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0');
+
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
+};
+
+const formatPrice = (price) => {
+    if (price == null) return '가격 정보 없음';
+    return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price);
+};
+
+onMounted(async () => {
+    await fetchPurchaseBooks();
 });
 </script>
 

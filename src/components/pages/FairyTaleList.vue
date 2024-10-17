@@ -464,7 +464,7 @@ export default {
 
 .hero-section {
     position: relative;
-    height: 40vw;
+    height: 35vw;
     max-height: 720px;
     margin-bottom: 3vw;
     margin-top: 5vh;
