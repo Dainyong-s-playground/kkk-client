@@ -86,7 +86,7 @@
         <div v-if="showEdit" class="modal" @click.self="closeEdit">
             <div class="modal-content">
                 <button class="close-btn" @click="closeEdit">X</button>
-                <h2>프로필 생성</h2>
+                <h2>프로필 수정</h2>
 
                 <div class="img-profile">
                     <p>프로필 이미지 선택</p>
