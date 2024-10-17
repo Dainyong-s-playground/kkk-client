@@ -65,8 +65,14 @@
                         <input v-model="newProfile.nickname" placeholder="닉네임" required type="text" />
                         <p>성별</p>
                         <div class="radio-group">
-                            <label><input type="radio" value="M" v-model="newProfile.gender" /> 남자</label>
-                            <label><input type="radio" value="F" v-model="newProfile.gender" /> 여자</label>
+                            <label>
+                                <input type="radio" value="M" v-model="newProfile.gender" />
+                                <span>남자</span>
+                            </label>
+                            <label>
+                                <input type="radio" value="F" v-model="newProfile.gender" />
+                                <span>여자</span>
+                            </label>
                         </div>
                         <p>생년월일</p>
                         <input v-model="newProfile.birth" type="date" required />
@@ -103,8 +109,14 @@
                         <input v-model="newProfile.nickname" placeholder="닉네임" required type="text" />
                         <p>성별</p>
                         <div class="radio-group">
-                            <label><input type="radio" value="M" v-model="newProfile.gender" /> 남자</label>
-                            <label><input type="radio" value="F" v-model="newProfile.gender" /> 여자</label>
+                            <label>
+                                <input type="radio" value="M" v-model="newProfile.gender" />
+                                <span>남자</span>
+                            </label>
+                            <label>
+                                <input type="radio" value="F" v-model="newProfile.gender" />
+                                <span>여자</span>
+                            </label>
                         </div>
                         <p>생년월일</p>
                         <input v-model="newProfile.birth" type="date" required />
@@ -334,6 +346,26 @@ export default {
 </script>
 
 <style>
+@font-face {
+    font-family: 'CookieRun-Regular';
+    src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/CookieRun-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 전역 폰트 설정 */
+* {
+    font-family: 'CookieRun-Regular', sans-serif;
+}
+
+/* 인풋 요소에 대한 명시적 폰트 설정 */
+input[type='text'],
+input[type='date'],
+input[type='radio'] + span,
+button {
+    font-family: 'CookieRun-Regular', sans-serif;
+}
+
 .profile-container {
     width: 100%;
 }
@@ -428,10 +460,10 @@ export default {
 }
 
 .modal-content {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background-color: #f9f9f9;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     width: 90%;
     max-width: 500px;
     position: relative;
@@ -440,35 +472,50 @@ export default {
 
 .close-btn {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 15px;
+    right: 15px;
     background: none;
     border: none;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
+    color: #888;
+    transition: color 0.3s;
+}
+
+.close-btn:hover {
+    color: #333;
+}
+
+.modal-content h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 28px;
+}
+
+.img-profile p {
+    text-align: center;
+    color: #555;
+    margin-bottom: 15px;
 }
 
 .image-list {
     display: flex;
     justify-content: space-around;
+    margin-bottom: 10px;
 }
 
 .image-option {
     cursor: pointer;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
+    border-radius: 50%;
     padding: 5px;
-    transition: border-color 0.3s;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 120px;
-    height: 120px;
+    transition: all 0.3s ease;
 }
 
 .image-option.selected {
-    border-color: blue; /* 선택된 이미지의 테두리 강조 */
-    transition: transform 0.3s ease;
-    transform: scale(1.1); /* 선택된 이미지에 크기 변화 */
+    border-color: #4caf50;
+    transform: scale(1.1);
 }
 
 .profile-image {
@@ -476,41 +523,129 @@ export default {
     height: 100px;
     object-fit: cover;
     border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.image-option:hover .profile-image {
+    transform: scale(1.05);
+}
+
+.profile-dataform {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.profile-dataform p {
+    font-size: 18px;
+    color: #555;
+    margin: 10px 0 5px 0;
 }
 
 input[type='text'],
 input[type='date'] {
     width: 100%;
-    height: 30px;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    height: 40px;
+    padding: 10px 15px; /* 왼쪽 여백을 15px로 증가 */
+    border: 1px solid #ddd;
+    border-radius: 8px;
     box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+input[type='text']:focus,
+input[type='date']:focus {
+    outline: none;
+    border-color: #4caf50;
+}
+
+.profile-dataform p {
+    font-size: 1.5rem;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+.radio-group {
+    display: flex;
+    justify-content: space-around;
+    margin: 5px 0;
+}
+
+.radio-group label {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 20px;
+    border: 2px solid #ddd;
+    border-radius: 30px;
+    transition: all 0.3s ease;
+    width: 150px;
+    font-size: 1.5rem;
+    justify-content: center;
+}
+
+.radio-group label:hover {
+    background-color: #f0f0f0;
+}
+
+.radio-group input[type='radio'] {
+    display: none;
+}
+
+.radio-group input[type='radio'] + span {
+    padding-left: 0;
+    font-size: 1.2rem;
+    color: #555;
+}
+
+.radio-group input[type='radio']:checked + span {
+    font-weight: bold;
+}
+
+.radio-group input[type='radio']:checked + span::before {
+    content: '✓';
+    display: inline-block;
+    margin-right: 5px;
+}
+
+.radio-group label:has(input[value='M']:checked) {
+    border-color: #4caf50;
+    background-color: #e8f5e9;
+}
+
+.radio-group label:has(input[value='M']:checked) span {
+    color: #4caf50;
+}
+
+.radio-group label:has(input[value='F']:checked) {
+    border-color: #ff69b4;
+    background-color: #fff0f5;
+}
+
+.radio-group label:has(input[value='F']:checked) span {
+    color: #ff69b4;
 }
 
 button[type='submit'] {
     background-color: #4caf50;
     color: white;
-    padding: 10px;
+    padding: 12px;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 20px;
-    width: 150px;
-    margin-top: 50px;
+    font-size: 18px;
+    width: 100%;
+    max-width: 200px;
+    margin: 30px auto 0;
+    display: block;
+    transition: background-color 0.3s, transform 0.3s;
 }
 
 button[type='submit']:hover {
     background-color: #45a049;
+    transform: translateY(-2px);
 }
 
-input[type='radio'] {
-    margin-right: 5px;
-}
-
-label {
-    font-size: 20px;
-}
 .card p {
     margin: 0px 0 10px 0;
     font-family: 'CookieRun-Regular', sans-serif;
@@ -532,7 +667,21 @@ p {
     width: 100%;
 }
 
-.profile-dataform input[type='text']:focus {
+.profile-dataform input[type='text'],
+.profile-dataform input[type='date'] {
+    width: 100%;
+    height: 40px;
+    padding: 10px 15px; /* 왼쪽 여백을 15px로 증가 */
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    font-family: 'CookieRun-Regular', sans-serif;
+}
+
+.profile-dataform input[type='text']:focus,
+.profile-dataform input[type='date']:focus {
     outline: none; /* outline 제거 */
 }
 

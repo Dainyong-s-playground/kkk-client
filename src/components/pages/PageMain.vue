@@ -4,7 +4,7 @@
         <div class="content-wrapper">
             <div class="content-container">
                 <h1>다이뇽에 오신 것을 환영합니다!</h1>
-                <hr />
+                <h2>“아이들의 상상력과 창의력을 키우는 참여형 동화 서비스, 다이뇽의 이야기 놀이터!”</h2>
                 <button v-if="!isLoggedIn" @click="onNaverLogin" class="login-button">네이버로 로그인</button>
                 <button v-else @click="goToProfiles" class="profile-button">프로필 선택</button>
             </div>
@@ -123,7 +123,19 @@ const mainPageStyle = computed(() => ({
     max-width: 1200px;
     height: 30dvh;
     margin: 0 auto;
+    top: 10vh;
     padding: 20px;
+}
+
+.content-wrapper h1 {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.content-wrapper h2 {
+    font-size: 1.8rem;
+    margin-bottom: 40px;
 }
 
 .content-container {
