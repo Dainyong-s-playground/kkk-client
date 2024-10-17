@@ -311,7 +311,13 @@ const closeWindow = async () => {
 
 const saveProgress = async () => {
     if (profileId.value) {
-        const progress = (currentLineIndex.value / storyLines.value.length) * 100;
+        let progress;
+        if (currentLineIndex.value === storyLines.value.length - 1) {
+            progress = 100;
+        } else {
+            progress = (currentLineIndex.value / (storyLines.value.length - 1)) * 100;
+        }
+        
         const historyData = {
             profileId: profileId.value,
             fairyTaleId: fairyTaleId.value,
