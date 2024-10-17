@@ -56,7 +56,7 @@
 </template>
 
 <script setup>
-import { IMAGE_SERVER_URL, TALE_API_URL, VUE_APP_TALE_PAI_URL } from '@/constants/api';
+import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import { gameComponentMap, motionComponentMap } from '@/constants/fairyTaleComponents';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
@@ -238,7 +238,7 @@ const setStartPageFromHistory = async () => {
                 const startImageIndex = sceneNumbers.value.findIndex((sceneNumber, index) => {
                     return sceneNumber > currentLineIndex.value || index === sceneNumbers.value.length - 1;
                 });
-                
+
                 currentImageIndex.value = startImageIndex;
 
                 console.log('시작 페이지:', currentLineIndex.value);
@@ -267,7 +267,7 @@ const setStartPageFromHistory = async () => {
 const updateCurrentImage = (index) => {
     if (storyImages.value.length === 0) return;
 
-    if (storyLines.value[index] === "끝") {
+    if (storyLines.value[index] === '끝') {
         currentImageIndex.value = storyImages.value.length - 1; // "끝" 이미지 인덱스
     } else {
         const nextSceneIndex = sceneNumbers.value.findIndex((sceneNumber) => sceneNumber > index);
@@ -317,7 +317,7 @@ const saveProgress = async () => {
         } else {
             progress = (currentLineIndex.value / (storyLines.value.length - 1)) * 100;
         }
-        
+
         const historyData = {
             profileId: profileId.value,
             fairyTaleId: fairyTaleId.value,
@@ -469,21 +469,29 @@ onMounted(async () => {
     // 새로 추가된 코드
     if (profileId.value && fairyTaleId.value) {
         try {
-            const progressResponse = await axios.get(`${VUE_APP_TALE_PAI_URL}/api/history/${profileId.value}/${fairyTaleId.value}/progress`);
+            const progressResponse = await axios.get(
+                `${TALE_API_URL}/api/history/${profileId.value}/${fairyTaleId.value}/progress`,
+            );
             const progress = progressResponse.data;
-            
+
             if (progress === 100 || progress === 0) {
                 const updatePreferenceDTO = {
                     profileId: profileId.value,
-                    fairyTaleId: fairyTaleId.value
+                    fairyTaleId: fairyTaleId.value,
                 };
-                
+
                 try {
-                    const preferenceResponse = await axios.patch(`${VUE_APP_TALE_PAI_URL}/api/fairytales/preferences`, updatePreferenceDTO);
+                    const preferenceResponse = await axios.patch(
+                        `${TALE_API_URL}/api/fairytales/preferences`,
+                        updatePreferenceDTO,
+                    );
                     console.log('선호도 업데이트 응답:', preferenceResponse);
                     console.log('선호도 업데이트 성공');
                 } catch (error) {
-                    console.error('선호도 업데이트 중 오류 발생:', error.response ? error.response.data : error.message);
+                    console.error(
+                        '선호도 업데이트 중 오류 발생:',
+                        error.response ? error.response.data : error.message,
+                    );
                 }
             }
         } catch (error) {
