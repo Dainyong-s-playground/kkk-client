@@ -571,7 +571,7 @@ export default {
     -ms-overflow-style: none;
     scrollbar-width: none;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
 }
 
 .content-slider::-webkit-scrollbar {
