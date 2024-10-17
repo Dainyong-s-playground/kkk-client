@@ -289,7 +289,7 @@ watch(currentLineIndex, (newIndex) => {
 const playPause = async () => {
     if (isFirstPlay.value && profileId.value) {
         try {
-            await axios.post(`${TALE_API_URL}/api/graph/totalCount/${profileId.value}`);
+            await axios.patch(`${TALE_API_URL}/api/graph/totalCount/${profileId.value}`);
             isFirstPlay.value = false;
         } catch (error) {
             console.error('총 재생 횟수 업데이트 중 오류 발생:', error);
@@ -311,7 +311,13 @@ const closeWindow = async () => {
 
 const saveProgress = async () => {
     if (profileId.value) {
-        const progress = (currentLineIndex.value / storyLines.value.length) * 100;
+        let progress;
+        if (currentLineIndex.value === storyLines.value.length - 1) {
+            progress = 100;
+        } else {
+            progress = (currentLineIndex.value / (storyLines.value.length - 1)) * 100;
+        }
+        
         const historyData = {
             profileId: profileId.value,
             fairyTaleId: fairyTaleId.value,
