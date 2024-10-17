@@ -580,6 +580,32 @@ const goToChargeCredit = () => {
     height: 40vh;
     padding: 20px;
     overflow-y: auto; /* 세로 스크롤 추가 */
+    scrollbar-width: thin; /* Firefox를 위한 스타일 */
+    scrollbar-color: rgba(255, 255, 255, 0.5) transparent; /* Firefox를 위한 스타일 */
+}
+
+.detail-info::-webkit-scrollbar {
+    width: 6px;
+}
+
+.detail-info::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.detail-info::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 3px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+.detail-info::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 스크롤바가 있을 때 내용이 밀리지 않도록 패딩 조정 */
+.detail-info {
+    padding-right: 10px;
 }
 
 .description {
