@@ -289,7 +289,7 @@ watch(currentLineIndex, (newIndex) => {
 const playPause = async () => {
     if (isFirstPlay.value && profileId.value) {
         try {
-            await axios.post(`${TALE_API_URL}/api/graph/totalCount/${profileId.value}`);
+            await axios.patch(`${TALE_API_URL}/api/graph/totalCount/${profileId.value}`);
             isFirstPlay.value = false;
         } catch (error) {
             console.error('총 재생 횟수 업데이트 중 오류 발생:', error);
