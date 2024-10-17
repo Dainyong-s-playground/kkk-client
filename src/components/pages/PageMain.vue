@@ -143,7 +143,7 @@ const mainPageStyle = computed(() => ({
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100%;
+    height: 80%;
 }
 
 .login-button {

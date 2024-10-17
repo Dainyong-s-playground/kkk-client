@@ -184,6 +184,7 @@ import { useRouter } from 'vue-router';
 import { useProfileStore } from '@/stores/profile';
 import axios from 'axios';
 import { TALE_API_URL, IMAGE_SERVER_URL } from '@/constants/api';
+import { eventBus } from '@/utils/eventBus';
 
 const router = useRouter();
 const profileStore = useProfileStore();
@@ -432,15 +433,16 @@ const toggleBucket = async (fairyTaleId) => {
                 },
             });
             console.log('찜목록에서 삭제되었습니다.');
+            eventBus.emit('bucketUpdated', fairyTaleId, false); // 이벤트 발생
         } else {
+            // 찜하기
             const bucket = {
                 loginId: profileStore.loginId,
                 fairyTaleId: fairyTaleId,
             };
-            // 찜하기
-            console.log(bucket);
             await axios.post(`${TALE_API_URL}/api/bucket/add`, bucket);
             console.log('찜목록에 추가되었습니다.');
+            eventBus.emit('bucketUpdated', fairyTaleId, true); // 이벤트 발생
         }
         isBucket.value = !isBucket.value; // 상태 반전
     } catch (error) {

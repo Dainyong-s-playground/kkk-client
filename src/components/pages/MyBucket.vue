@@ -56,11 +56,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
 import { useProfileStore } from '@/stores/profile';
 import { IMAGE_SERVER_URL, TALE_API_URL } from '@/constants/api';
 import FairyTaleDetail from './FairyTaleDetail.vue';
+import { eventBus } from '@/utils/eventBus';
 
 const profileStore = useProfileStore();
 const isLoading = ref(true);
@@ -82,7 +83,8 @@ const fetchBucketList = async () => {
 
 const deleteBucket = async (fairyTaleId) => {
     try {
-        console.log(fairyTaleId);
+        console.log('삭제할 ID:', fairyTaleId);
+        console.log('삭제 전 bucketList:', bucketList.value);
 
         await axios.delete(`${TALE_API_URL}/api/bucket/delete`, {
             params: {
@@ -90,10 +92,14 @@ const deleteBucket = async (fairyTaleId) => {
                 fairyTaleId: fairyTaleId,
             },
         });
-        await fetchBucketList();
+
+        // 찜 목록에서 해당 아이템 제거
+        bucketList.value = bucketList.value.filter((item) => item.id !== fairyTaleId);
+
+        console.log('삭제 후 bucketList:', bucketList.value);
         console.log('찜목록에서 삭제되었습니다.');
     } catch (error) {
-        console.error('찜목록 삭제 중 오류가 발생했습니다.', error);
+        console.error('찜목록 ��제 중 오류가 발생했습니다.', error);
     }
 };
 
@@ -119,14 +125,28 @@ const formatPrice = (price) => {
     return price === 0 ? '무료' : `${price.toLocaleString()}원`;
 };
 
-// 컴포넌트가 마운트될 때 데이터 로딩
-onMounted(async () => {
+const updateBucketList = (fairyTaleId, isAdded) => {
+    if (!isAdded) {
+        bucketList.value = bucketList.value.filter((item) => item.id !== fairyTaleId);
+    } else {
+        // 필요한 경우 여기에 찜 목록에 아이템을 추가하는 로직을 구현합니다.
+        // 일반적으로 전체 목록을 다시 불러오는 것이 좋습니다.
+        fetchBucketList();
+    }
+};
+
+onMounted(() => {
     if (profileStore.selectedProfile) {
-        await fetchBucketList();
+        fetchBucketList();
     } else {
         console.error('선택된 프로필이 없습니다.');
         isLoading.value = false;
     }
+    eventBus.on('bucketUpdated', updateBucketList);
+});
+
+onUnmounted(() => {
+    eventBus.off('bucketUpdated', updateBucketList);
 });
 </script>
 
