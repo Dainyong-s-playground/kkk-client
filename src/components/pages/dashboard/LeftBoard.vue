@@ -44,7 +44,7 @@
                         @click.stop
                     />
                     <img
-                        v-if="day?.date && futureEvents?.[day.date] && isFutureDay(day.date)"
+                        v-if="day?.date && futureEvents?.[day.date] && isFutureDate(day.date)"
                         class="has-data"
                         @click.stop
                         :src="getFutureEventImage(day.date)"
@@ -440,7 +440,7 @@ export default {
             const selectedDate = new Date(dateString);
 
             // 오늘 날짜보다 이후인 경우에만 true 반환
-            return selectedDate >= today.setHours(0, 0, 0, 0);
+            return selectedDate > today.setHours(0, 0, 0, 0);
         },
 
         async submitDailyComment(date) {
