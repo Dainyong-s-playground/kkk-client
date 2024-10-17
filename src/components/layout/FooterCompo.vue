@@ -19,7 +19,7 @@
                 <div class="team-members">
                     <div class="member">
                         <strong>김찬희 <span>(팀장)</span></strong>
-                        <div>______@gmail.com</div>
+                        <div>cksgml8797@gmail.com</div>
                     </div>
                     <div class="member">
                         <strong>권대용 <span>(팀원)</span></strong>
