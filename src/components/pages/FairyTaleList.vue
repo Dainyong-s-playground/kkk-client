@@ -456,6 +456,7 @@ export default {
     transition: opacity 0.3s ease-in-out;
     position: relative;
     z-index: 1;
+    margin-top: 5vh;
 }
 
 .main-container.fade-in {
@@ -520,8 +521,8 @@ export default {
 .play-button,
 .info-button {
     width: 28%;
-    font-size: 30px;
-    padding: 0.6vw 1.8vw;
+    font-size: 26px;
+    padding: 0.3vw 1.2vw;
     margin-right: 1vw;
     border: none;
     border-radius: 10px;
@@ -579,7 +580,7 @@ export default {
 
 .content-item {
     flex: 0 0 auto;
-    width: 250px;
+    width: 230px;
     margin-right: 20px;
     position: relative;
     cursor: pointer;
@@ -638,13 +639,13 @@ export default {
 .title {
     display: block;
     font-weight: bold;
-    font-size: 1.2vw;
+    font-size: 23px;
     margin-bottom: 0.2vw;
 }
 
 .episode,
 .status {
-    font-size: 0.8vw;
+    font-size: 15px;
     color: #cbcbcbed !important;
 }
 
@@ -668,7 +669,7 @@ export default {
 
 /* 나님이 시청 중인 콘텐츠 스타일 */
 .recently-watched .content-item {
-    width: 250px;
+    width: 230px;
     overflow: hidden;
     border: 0.5px solid rgb(68, 68, 68);
     border-radius: 12.5px;
@@ -748,8 +749,8 @@ export default {
 }
 
 .top-5 .content-item {
-    width: 240px;
-    height: 320px; /* 높이 증가 */
+    width: 230px;
+    height: 300px; /* 높이 증가 */
     margin-right: 100px;
     transition: transform 0.3s ease; /* 애니메이션 추가 */
 }

@@ -53,6 +53,7 @@ import { TALE_API_URL } from '@/constants/api';
 
 const profileStore = useProfileStore();
 const isLoading = ref(true);
+const showContent = ref(false);
 const purchaseBooks = ref([]);
 const selectedBooks = ref([]);
 
@@ -113,8 +114,26 @@ const formatPrice = (price) => {
     return new Intl.NumberFormat('ko-KR', { style: 'currency', currency: 'KRW' }).format(price);
 };
 
+const loadAllData = async () => {
+    try {
+        isLoading.value = true;
+        showContent.value = false;
+        await fetchPurchaseBooks();
+    } catch (error) {
+        console.error('데이터 로딩 중 오류 발생:', error);
+    } finally {
+        isLoading.value = false;
+        showContent.value = true;
+    }
+};
+
 onMounted(async () => {
-    await fetchPurchaseBooks();
+    if (profileStore.selectedProfile) {
+        await loadAllData();
+    } else {
+        console.error('선택된 프로필이 없습니다.');
+        isLoading.value = false;
+    }
 });
 </script>
 
@@ -206,6 +225,60 @@ tr:hover {
 
     .book-details img {
         margin-bottom: 10px;
+    }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-spinner {
+    display: inline-block;
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.loading-spinner div {
+    box-sizing: border-box;
+    display: block;
+    position: absolute;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border: 8px solid #fff;
+    border-radius: 50%;
+    animation: loading-spinner 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: #fff transparent transparent transparent;
+}
+
+.loading-spinner div:nth-child(1) {
+    animation-delay: -0.3s;
+}
+
+.loading-spinner div:nth-child(2) {
+    animation-delay: -0.25s;
+}
+
+.loading-spinner div:nth-child(3) {
+    animation-delay: -0.1s;
+}
+
+@keyframes loading-spinner {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
     }
 }
 </style>

@@ -128,14 +128,14 @@ const mainPageStyle = computed(() => ({
 }
 
 .content-wrapper h1 {
-    font-size: 2.5rem;
+    font-size: 2.3rem;
     font-weight: bold;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .content-wrapper h2 {
     font-size: 1.8rem;
-    margin-bottom: 40px;
+    margin-bottom: 30px;
 }
 
 .content-container {
